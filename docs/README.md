@@ -15,6 +15,7 @@ In-repo mirror of the planning artifacts. Planning happens in Traycer; this `/do
 | [execution-log](./execution-log/index.md)                           | Accepted deviations recorded during implementation                                   |
 | [design-package](./design-package/index.md)                         | "Ledger" design system — tokens + recipes                                            |
 | [deployment](./deployment.md)                                       | Production topology — app image + **external** Postgres, env contract, compose files |
+| [foundation-walkthrough.html](./foundation-walkthrough.html)        | Visual review guide for the built foundation (open in a browser)                     |
 
 ## Not mirrored here
 

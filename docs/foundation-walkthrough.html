@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Genie Workspace — Foundation Walkthrough</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@500;600&display=swap");
+
+      :root {
+        --bg: #f4f6f8;
+        --surface: #ffffff;
+        --panel: #f7f9fb;
+        --ink: #14161b;
+        --ink2: #3a4250;
+        --ink3: #717b8a;
+        --line: #e3e7ec;
+        --line2: #eef1f5;
+        --brand: #2360c4;
+        --brandtint: #eaf0fb;
+        --ok: #1a7f4b;
+        --oktint: #e6f4ec;
+        --warn: #9a6700;
+        --warntint: #fbf3e2;
+        --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+        --ui: "Geist", system-ui, -apple-system, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      html { -webkit-text-size-adjust: 100%; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--ui);
+        font-size: 15px;
+        line-height: 1.55;
+      }
+      .wrap { max-width: 1060px; margin: 0 auto; padding: 40px 24px 80px; }
+      .eyebrow {
+        font-family: var(--mono);
+        font-weight: 600;
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink3);
+      }
+      h1 { font-size: 34px; font-weight: 800; letter-spacing: -0.02em; margin: 8px 0 6px; }
+      h2 {
+        font-size: 13px;
+        font-family: var(--mono);
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink3);
+        margin: 44px 0 14px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid var(--ink);
+      }
+      h3 { font-size: 17px; font-weight: 700; margin: 22px 0 6px; }
+      p { color: var(--ink2); margin: 0 0 12px; }
+      a { color: var(--brand); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      code {
+        font-family: var(--mono);
+        font-size: 0.86em;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        padding: 1px 5px;
+        color: var(--ink);
+      }
+      .lead { font-size: 16px; color: var(--ink2); max-width: 80ch; }
+      .pill {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 3px 9px;
+        background: var(--oktint);
+        color: var(--ok);
+        border: 1px solid #cfe6da;
+      }
+      .meta { color: var(--ink3); font-size: 13px; margin-top: 14px; }
+
+      .stats { display: flex; flex-wrap: wrap; gap: 1px; background: var(--line); border: 1px solid var(--line); margin: 26px 0; }
+      .stat { flex: 1 1 120px; background: var(--surface); padding: 16px 18px; }
+      .stat .n { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
+      .stat .l { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink3); margin-top: 2px; }
+
+      table { width: 100%; border-collapse: collapse; margin: 6px 0 4px; font-size: 14px; }
+      th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+      thead th {
+        background: var(--panel);
+        font-family: var(--mono);
+        font-weight: 600;
+        font-size: 10.5px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink3);
+        border-bottom: 1px solid var(--line);
+      }
+      tbody tr:hover { background: var(--panel); }
+      td strong { color: var(--ink); }
+
+      .diagram { border: 1px solid var(--line); background: var(--surface); padding: 20px; margin: 8px 0 4px; }
+      .layer { border: 1px solid var(--line); background: var(--panel); padding: 10px 14px; margin: 0 0 10px; }
+      .layer:last-child { margin-bottom: 0; }
+      .layer .lbl { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink3); margin-bottom: 8px; }
+      .nodes { display: flex; flex-wrap: wrap; gap: 8px; }
+      .node { font-family: var(--mono); font-size: 12px; background: var(--surface); border: 1px solid var(--line); padding: 6px 10px; }
+      .node.brand { border-color: var(--brand); color: var(--brand); background: var(--brandtint); }
+      .arrow { text-align: center; color: var(--ink3); font-size: 13px; margin: 2px 0; font-family: var(--mono); }
+
+      ol.review { counter-reset: r; list-style: none; padding: 0; margin: 6px 0; }
+      ol.review li { position: relative; padding: 10px 0 10px 42px; border-bottom: 1px solid var(--line2); }
+      ol.review li::before {
+        counter-increment: r; content: counter(r);
+        position: absolute; left: 0; top: 9px;
+        width: 26px; height: 26px; display: grid; place-items: center;
+        background: var(--ink); color: #fff; font-family: var(--mono); font-size: 12px; font-weight: 600;
+      }
+      ul.tight { margin: 6px 0; padding-left: 18px; }
+      ul.tight li { margin: 5px 0; color: var(--ink2); }
+      .ok { color: var(--ok); font-weight: 700; }
+      .todo { color: var(--warn); font-weight: 700; }
+      .note { background: var(--brandtint); border: 1px solid #cfddf6; padding: 12px 14px; margin: 14px 0; font-size: 14px; }
+      footer { margin-top: 50px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--ink3); font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="eyebrow">Genie Workspace · Changeset Walkthrough</div>
+      <h1>Platform Foundation</h1>
+      <p class="lead">
+        The foundation slice: a deployable Next.js 16 app with identity, the data model, the Ledger component
+        kit, and the production container — <strong>no feature UI yet</strong> (auth / admin / workspace / chat
+        screens are tickets 04+). Built by 4 ticket agents, reviewed by 3 fresh agents, then an 11-finding
+        fixup pass.
+      </p>
+      <p>
+        <span class="pill">● Foundation built</span>
+        &nbsp; <span class="pill" style="background:var(--brandtint);color:var(--brand);border-color:#cfddf6">tsc · oxlint · oxfmt green</span>
+      </p>
+      <p class="meta">
+        Tickets <a href="./tickets/01-scaffold-infra/index.md">01</a> ·
+        <a href="./tickets/02-ledger-component-kit/index.md">02</a> ·
+        <a href="./tickets/03-identity-schema-migrations/index.md">03</a> ·
+        <a href="./tickets/03b-docker-runtime/index.md">03b</a>, per the
+        <a href="./tech-plan/index.md">tech-plan</a>. Uncommitted on <code>main</code>.
+      </p>
+
+      <div class="stats">
+        <div class="stat"><div class="n">~2,900</div><div class="l">src LOC (TS/TSX)</div></div>
+        <div class="stat"><div class="n">55</div><div class="l">src files</div></div>
+        <div class="stat"><div class="n">17</div><div class="l">Ledger components</div></div>
+        <div class="stat"><div class="n">12</div><div class="l">DB tables · 1 migration</div></div>
+        <div class="stat"><div class="n">4 / 4</div><div class="l">tickets done</div></div>
+      </div>
+
+      <h2>What's here</h2>
+      <table>
+        <thead><tr><th>Area</th><th>Lands as</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Scaffold &amp; infra</strong></td><td>Next 16 app-router skeleton, route groups, tRPC + TanStack Query, Drizzle client, Ledger tokens, oxlint/oxfmt + lefthook</td><td>pnpm + Node 24 pinned; <code>output: 'standalone'</code></td></tr>
+          <tr><td><strong>Ledger component kit</strong></td><td>17 primitives on shadcn-<strong>Base UI</strong>, RHF-compatible</td><td>shared Toast + Confirm providers; generic TransferList</td></tr>
+          <tr><td><strong>Identity</strong></td><td>better-auth: email/password, additive <code>user</code>/<code>admin</code> roles, DB sessions, true 15-min idle, pending-block + mustChange enforcement, guarded bootstrap</td><td>authz centralized in <code>authz.ts</code>; one domain service wraps admin calls</td></tr>
+          <tr><td><strong>Data model</strong></td><td>12-table Drizzle schema (better-auth + groups / solutions / grants / themes / favorites / recents / chat-handle)</td><td>drizzle-kit is sole migration owner</td></tr>
+          <tr><td><strong>Container</strong></td><td><code>node:24</code> multi-stage image, advisory-locked migrate-on-start + bootstrap, zod-validated env, 3 compose files</td><td>prod connects to an <strong>external</strong> Postgres</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Architecture</h2>
+      <div class="diagram">
+        <div class="layer">
+          <div class="lbl">Client</div>
+          <div class="nodes">
+            <span class="node">Ledger kit · components/ui/* (17)</span>
+            <span class="node">providers.tsx · Theme → Query(+devtools) → Toast → Confirm</span>
+          </div>
+        </div>
+        <div class="arrow">▼ tRPC / better-auth client</div>
+        <div class="layer">
+          <div class="lbl">Server (node runtime)</div>
+          <div class="nodes">
+            <span class="node brand">auth.ts + passwordStrengthPlugin</span>
+            <span class="node brand">authz.ts · getServerAuth · can · assertCanSee/Run</span>
+            <span class="node">trpc/ · public → protected → admin</span>
+            <span class="node">features/ · user-service · solution-access · password</span>
+            <span class="node">bootstrap · config · entrypoint</span>
+          </div>
+        </div>
+        <div class="arrow">▼ Drizzle</div>
+        <div class="layer">
+          <div class="lbl">Data</div>
+          <div class="nodes">
+            <span class="node">schema.ts — 12 tables (better-auth + domain)</span>
+            <span class="node">drizzle/0000_init.sql — single migration</span>
+          </div>
+        </div>
+        <div class="arrow">▼ DATABASE_URL (external in prod)</div>
+        <div class="layer">
+          <div class="lbl">Infra</div>
+          <div class="nodes">
+            <span class="node">External Postgres</span>
+            <span class="node">Dockerfile (node:24) + dev / app / full compose</span>
+          </div>
+        </div>
+      </div>
+
+      <h2>Review order — highest risk first</h2>
+      <ol class="review">
+        <li><strong><code>server/auth.ts</code> + <code>features/password.ts</code></strong> — the security core. Idle config, the <code>session.create.before</code> pending block, <code>onPasswordReset</code> activation, and the plugin enforcing password strength on <em>every</em> password endpoint (review's #1 critical).</li>
+        <li><strong><code>server/authz.ts</code></strong> — <code>getServerAuth</code> is the single accessor used by RSC, tRPC, and (later) <code>/api/chat</code>; returns <code>password-change-required</code> and derives the FR tri-state. Everything trusts it.</li>
+        <li><strong><code>server/bootstrap.ts</code> + <code>entrypoint.ts</code></strong> — fresh-deploy path: config-first, advisory-locked migrate, <strong>atomic</strong> admin seed (one <code>createUser</code> call, no follow-up update).</li>
+        <li><strong><code>db/schema.ts</code> + <code>drizzle/0000_init.sql</code></strong> — 12 tables, FK cascades, <code>chat_session_handle.generation</code>. Committed SQL matches a fresh <code>drizzle generate</code>.</li>
+        <li><strong><code>Dockerfile</code> + <code>docker-compose.*.yml</code></strong> — confirm prod (<code>app.yml</code>) runs <strong>no</strong> Postgres; <code>HOSTNAME=0.0.0.0</code>; secrets via env only.</li>
+        <li><strong><code>components/ui/</code></strong> — spot-check <code>confirm.tsx</code>, <code>transfer-list.tsx</code>, <code>select.tsx</code> (fixup edits) and <code>(workspace)/layout.tsx</code> (off-canvas reflow).</li>
+      </ol>
+
+      <h2>Important decisions</h2>
+      <table>
+        <thead><tr><th>Decision</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Password strength via a better-auth plugin</strong>, not a wrapper</td><td>better-auth's reset/change endpoints only check length; a <code>hooks.before</code> middleware enforces the shared zod rule before the token is consumed / password hashed.</td></tr>
+          <tr><td><strong>Atomic bootstrap</strong> (role + flag + status in one <code>createUser</code>)</td><td>The two-step create-then-update could strand a fresh deploy with a non-admin user if the 2nd write failed — and bootstrap never retries once any user exists.</td></tr>
+          <tr><td><strong>Entrypoint holds one <code>PoolClient</code></strong> for lock+migrate+bootstrap</td><td>Session advisory locks bind to a backend; migrating on a different pooled connection would let the lock slip and let replicas race the migration.</td></tr>
+          <tr><td><strong>No tenant/org table</strong></td><td>One deployment per customer — isolation at the deployment level; <code>DATABASE_URL</code> is the only dev→prod change.</td></tr>
+          <tr><td><strong>Status is derived</strong> (<code>banned</code>→disabled, <code>status</code>→pending/active)</td><td>Avoids dual-write drift between better-auth's enforcement flag and our lifecycle field.</td></tr>
+          <tr><td><strong>AI Elements ported to Base UI</strong> (decided, not yet built)</td><td>One primitive system, no Radix island; the kit's controls are already RHF-ready.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Gotchas</h2>
+      <ul class="tight">
+        <li><strong><code>server-only</code> vs the better-auth CLI / esbuild</strong> — the entrypoint is bundled with <code>--alias:server-only=…/server-only-empty.ts</code> and run with <code>node --conditions react-server</code>. Don't remove those.</li>
+        <li><strong><code>next build</code> needs env present</strong> — server modules are evaluated for page-data; the Dockerfile passes throwaway placeholders (standalone reads <code>process.env</code> at runtime — secrets aren't baked).</li>
+        <li><strong>Migrations ⇒ drizzle-kit only</strong> — never run better-auth's own <code>migrate</code>; auth tables are CLI-generated into <code>auth-schema.ts</code>, then owned by the single drizzle history.</li>
+        <li><strong>TransferList TS 71007</strong> — a benign Next RSC-serializability hint on a client-only <code>onChange</code>; <code>tsc</code>/<code>oxlint</code>/<code>build</code> are clean.</li>
+        <li><strong>lefthook re-stamps the hook</strong> on every <code>pnpm install</code> (via <code>prepare</code>) — expected.</li>
+      </ul>
+
+      <h2>Verification</h2>
+      <table>
+        <thead><tr><th>Checked</th><th>How</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Types / lint / format</td><td><code>pnpm typecheck</code> · <code>oxlint</code> · <code>oxfmt --check</code> (whole tree)</td><td><span class="ok">✓ green</span></td></tr>
+          <tr><td>Identity invariants</td><td><code>scripts/smoke-identity.ts</code> vs real Postgres — 6 groups incl. weak-reset rejection + pending-only activation</td><td><span class="ok">✓ pass</span></td></tr>
+          <tr><td>Fresh-deploy</td><td><code>docker compose -f docker-compose.full.yml up --build</code> on empty volume → migrate → seed → <code>GET /</code> 200, <code>/api/health</code> ok</td><td><span class="ok">✓ pass</span></td></tr>
+          <tr><td>Prod topology</td><td><code>docker-compose.app.yml</code> (no db service) against an external Postgres → boots + serves</td><td><span class="ok">✓ pass</span></td></tr>
+          <tr><td>Migration fidelity</td><td>committed <code>0000_init.sql</code> == fresh <code>drizzle generate</code></td><td><span class="ok">✓ review</span></td></tr>
+          <tr><td>Pre-commit hook</td><td>lefthook blocks a staged lint error</td><td><span class="ok">✓ pass</span></td></tr>
+          <tr><td>Real-browser DOM / responsive</td><td>no headless Chrome here — &lt;920px drawer + dark-contrast fix are code-correct but unviewed</td><td><span class="todo">⌛ deferred</span></td></tr>
+          <tr><td>Idle-window timing across HTTP surfaces</td><td>accessor is shared → harness gap, not enforcement gap</td><td><span class="todo">⌛ deferred</span></td></tr>
+          <tr><td>Email delivery</td><td><code>sendResetPassword</code> logs the link in foundation</td><td><span class="todo">⌛ deferred</span></td></tr>
+        </tbody>
+      </table>
+
+      <div class="note">
+        <strong>Not in scope (next tickets):</strong> Auth screens (04), account/sessions (05), admin
+        People/Groups/Solutions/Themes (06–09), workspace hub + viewer (10–12), chat proxy + UI (13–14).
+        Native solution runtime, 2FA, chat transcripts, attachments — explicitly deferred.
+      </div>
+
+      <footer>
+        Genie Workspace foundation walkthrough · see also
+        <a href="./README.md">docs index</a> ·
+        <a href="./tech-plan/index.md">tech-plan</a> ·
+        <a href="./deployment.md">deployment</a> ·
+        <a href="./execution-log/index.md">execution log</a>.
+        Canonical markdown source lives in the Traycer <code>changeset-walkthroughs/foundation</code> artifact.
+      </footer>
+    </div>
+  </body>
+</html>

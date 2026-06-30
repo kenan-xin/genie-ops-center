@@ -60,3 +60,22 @@ Accepted deviations / notes:
 - **Two compose files (intentional):** `docker-compose.yml` (app image + db, prod-shaped) and `docker-compose.dev.yml` (db only, for `pnpm dev` on the host) — added during the pnpm switch. Both use the same `DATABASE_URL` contract.
 - `next build` needs env present for page-data collection; the Dockerfile uses throwaway **placeholders** (verified standalone reads `process.env` at runtime — secrets not baked).
 - **Env limitation persists:** no headless browser, so real-browser DOM checks still can't run here.
+
+## Review fixup pass — all 11 findings resolved
+
+Cohesive `traycer-review` (3 fresh agents: `review-identity`, `review-ui`, `review-infra`) surfaced 11 findings; all fixed in one pass. Final sweep: `tsc` / `oxlint` / `oxfmt --check` all green across the tree.
+
+Critical:
+
+1. **Password strength on the invite/reset path** — added a better-auth `passwordStrengthPlugin()` (`hooks.before` via `createAuthMiddleware`) enforcing the shared rule on `/reset-password`, `/change-password`, `/set-password`, `/sign-up/email`, `/admin/create-user`, `/admin/set-user-password`; plus `assertStrongPassword` in `adminSetPassword`. Verified by a new weak-reset rejection in the smoke test.
+2. **Bootstrap atomicity** — seed in one `createUser` call (`role:["user","admin"]`, `data:{ mustChangePassword:true, status:"active" }`); dropped the follow-up `db.update`.
+3. **parseConfig ordering** — `entrypoint.ts` no longer static-imports bootstrap; `parseConfig()` is first, `bootstrapAdmin` is dynamically imported after migrations.
+4. **Compose HOSTNAME** — Dockerfile runner sets `HOSTNAME=0.0.0.0` so the `/api/health` healthcheck (localhost) resolves against standalone.
+
+Drift / correctness: 5. `inviteUser` now forwards `headers` to `createUser` (admin-session enforced; bootstrap stays the sessionless exception). 6. `onPasswordReset` scoped to `pending → active` only. 7. Confirm dialog resolves a prior pending Promise as `false` before opening a new one. 8. TransferList prunes stale selections against the current side + dedupes emitted ids. 9. Workspace sidebar reflows to an off-canvas drawer + hamburger + scrim under 920px (reduced-motion safe). 10. Dark `--chrome` fixed to a light ink (`#e7ecf3`) — brand wordmark readable on dark sidebar. 11. `Select` wrapper exposes `name`/`required`/`form` + `onBlur` (via `onOpenChange`) for clean RHF `Controller` binding.
+
+Minor: removed the unused `EXTERNAL_CHAT_API_TOKEN` from app compose + deployment doc (the external chat API is public); `docker-compose.full.yml` comment now shows the `-f` flag; markdown docs reformatted.
+
+Tooling change (user request): git hooks migrated from simple-git-hooks + lint-staged to **lefthook** (`lefthook.yml`, pre-commit: oxfmt → oxlint on staged files; installed via `prepare`). Verified it blocks a lint error.
+
+Review artifacts: `review-identity`, `review-ui`, `review-infra` (findings + validation). Verified-sound items from the reviews: non-root runtime, build env placeholders don't leak, app-only compose runs no Postgres, committed migration matches a fresh `drizzle generate`.
