@@ -1,0 +1,70 @@
+/* Genie · Ledger — COLOR
+   Brand blue is reserved for the primary action + current selection.
+   Every other hue is semantic (success / warning / error). No decorative color.
+   Surface direction: "Cool near-white" (Option 1) — bright, clean chrome. */
+:root {
+  /* Ink scale — text, top → bottom = strongest → faintest */
+  --ink: #14161b; /* primary text, dark fills, rules */
+  --ink2: #4a515c; /* secondary text */
+  --ink3: #8b929c; /* tertiary / muted labels, placeholders */
+  --faint: #aab0ba; /* disabled text, faint marks */
+  --on-ink: #ffffff; /* text/icons on dark or brand fills */
+
+  /* Surfaces & structure */
+  --bg: #fbfcfd; /* app content background (cool near-white) */
+  --surface: #ffffff; /* cards, panels, inputs, chrome */
+  --panel: #f2f4f7; /* recessed/header fills, mono-icon tiles */
+  --line: #c8cdd5; /* standard hairline keyline */
+  --line2: #e2e5ea; /* lighter hairline (inner dividers) */
+  --rule: #14161b; /* heavy 2px rule (section underline) */
+
+  /* Chrome — app shell (sidebar + top bar) */
+  --sidebar: #ffffff; /* sidebar fill (matches surface in Option 1) */
+  --chrome: #14161b; /* logo mark / chrome accent */
+
+  /* Brand — primary & selection ONLY */
+  --brand: #2360c4;
+  --brandink: #2360c4; /* brand text (lightens in dark mode) */
+  --brandtint: #eef4fc; /* brand wash behind selection / callouts */
+  --onbrand: #ffffff;
+
+  /* Semantic — each pairs a foreground with a tint background */
+  --success: #1f9a5c;
+  --successtint: #eafaf1; /* Ready · Active · On */
+  --warn: #b07d10;
+  --warntint: #fbf3df; /* Maintenance · Pending */
+  --error: #d94032;
+  --errortint: #fbeae8; /* Down · Failed · Delete */
+}
+
+/* Dark mode — same structure, deep slate base, lightened brand.
+   Apply by setting data-theme="dark" on a container (or :root). */
+[data-theme="dark"] {
+  --ink: #eef1f4;
+  --ink2: #9aa3b0;
+  --ink3: #6b7585;
+  --faint: #5c6675;
+  --on-ink: #0f1319;
+
+  --bg: #13171e;
+  --surface: #181d25;
+  --panel: #1d242e;
+  --line: #313a46;
+  --line2: #262e38;
+  --rule: #3a4454;
+
+  --sidebar: #13171e;
+  --chrome: #0f1319;
+
+  --brand: #2360c4;
+  --brandink: #7fb2f0;
+  --brandtint: #1c2738;
+  --onbrand: #ffffff;
+
+  --success: #5fcf94;
+  --successtint: #16271d;
+  --warn: #d6a743;
+  --warntint: #2a2310;
+  --error: #e06a5e;
+  --errortint: #2a1714;
+}

@@ -1,0 +1,14 @@
+# Lefthook git hooks — https://lefthook.dev
+# Installed on `pnpm install` via the `prepare` script (`lefthook install`).
+# Pre-commit: format staged files, then lint them; block the commit on lint errors.
+
+pre-commit:
+  parallel: false
+  jobs:
+    - name: format
+      glob: "*.{ts,tsx,js,jsx,mjs,cjs,json}"
+      run: pnpm exec oxfmt --write {staged_files}
+    - name: lint
+      glob: "*.{ts,tsx,js,jsx,mjs,cjs}"
+      run: pnpm exec oxlint {staged_files}
+      stage_fixed: true

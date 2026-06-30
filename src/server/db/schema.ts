@@ -1,0 +1,137 @@
+/**
+ * Single schema source for drizzle-kit and the better-auth drizzle adapter.
+ *
+ * The auth tables (`user`, `session`, `account`, `verification`) are GENERATED
+ * by the better-auth CLI into `./auth-schema.ts` and committed — we never
+ * hand-write them. Domain tables reference `user.id` (text). One migration
+ * history (drizzle-kit) owns both; better-auth's own `migrate` is never run.
+ *
+ * `import * as schema` (see src/server/auth.ts) lets the drizzle adapter resolve
+ * every model by name. Keep this file as the one re-export point.
+ */
+import {
+  boolean,
+  integer,
+  jsonb,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
+
+import * as authSchema from "./auth-schema";
+
+export const { user, session, account, verification } = authSchema;
+
+// ─── Domain tables ───────────────────────────────────────────────────────────
+// people ↔ groups (membership) and groups ↔ solutions (the ONLY access grant).
+// One deployment = one customer → no tenant/org column anywhere.
+
+export const group = pgTable("group", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const groupMember = pgTable(
+  "group_member",
+  {
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => group.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+  },
+  (t) => [primaryKey({ columns: [t.groupId, t.userId] })],
+);
+
+export const solution = pgTable("solution", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(), // derived from name at registration; /s/[slug] viewer key
+  type: text("type", { enum: ["chat", "native", "embedded"] }).notNull(),
+  status: text("status", { enum: ["ready", "draft", "maintenance", "down"] })
+    .notNull()
+    .default("draft"),
+  description: text("description"),
+  monogram: text("monogram"), // e.g. "PT"
+  archived: boolean("archived").notNull().default(false),
+  themeId: uuid("theme_id").references(() => theme.id), // chat-only, nullable
+  config: jsonb("config").notNull().default({}), // type-specific, zod-validated at the tRPC boundary
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const groupSolution = pgTable(
+  "group_solution", // access grant
+  {
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => group.id, { onDelete: "cascade" }),
+    solutionId: uuid("solution_id")
+      .notNull()
+      .references(() => solution.id, { onDelete: "cascade" }),
+  },
+  (t) => [primaryKey({ columns: [t.groupId, t.solutionId] })],
+);
+
+export const theme = pgTable(
+  "theme", // chat-only
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    name: text("name").notNull(),
+    config: jsonb("config").notNull().default({}), // header color, bubble color, radius, font, placeholder, customCss, preset
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+);
+
+export const favorite = pgTable(
+  "favorite",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    solutionId: uuid("solution_id")
+      .notNull()
+      .references(() => solution.id, { onDelete: "cascade" }),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.solutionId] })],
+);
+
+export const recent = pgTable(
+  "recent",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    solutionId: uuid("solution_id")
+      .notNull()
+      .references(() => solution.id, { onDelete: "cascade" }),
+    openedAt: timestamp("opened_at").defaultNow().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.solutionId] })], // upsert openedAt; query top-6
+);
+
+export const chatSessionHandle = pgTable(
+  "chat_session_handle",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    solutionId: uuid("solution_id")
+      .notNull()
+      .references(() => solution.id, { onDelete: "cascade" }),
+    externalSessionUuid: text("external_session_uuid"), // the Genie conversation id; null ⇒ next send starts a fresh conversation
+    generation: integer("generation").notNull().default(0), // bumped by "New chat"; the chat route upserts the returned uuid only if generation is unchanged → guards the in-flight-stream race
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.solutionId] })],
+);
+
+// Re-export relations so drizzle adapter / queries see the full picture.
+export const { userRelations, sessionRelations, accountRelations } = authSchema;

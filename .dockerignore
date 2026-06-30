@@ -1,0 +1,35 @@
+# Version control — never in the build context (ticket 03b: prepare's git hooks
+# would no-op anyway, and .git bloats the context).
+.git
+.gitignore
+.gitattributes
+
+# Build outputs & deps — regenerated inside the image.
+node_modules
+.next
+dist
+out
+build
+coverage
+
+# Local env / secrets — NEVER enter the image. Supplied at runtime only.
+.env
+.env.*
+!.env.example
+
+# Local Docker artifacts.
+docker-compose*.yml
+Dockerfile
+.dockerignore
+
+# Editor / OS noise.
+.vscode
+.idea
+.DS_Store
+*.log
+npm-debug.log*
+.pnpm-debug.log*
+
+# Traycer / planning artifacts — not needed in the deployable image.
+.traycer
+docs

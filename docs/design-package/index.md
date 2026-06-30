@@ -1,0 +1,38 @@
+---
+kind: spec
+title: "Design Package (Reference)"
+---
+
+# Design Package — Reference
+
+The original Claude Design output for the prototype, copied here verbatim so it survives (`/tmp` is ephemeral). This is **source reference**, not a planning artifact — read the _Genie Workspace — Epic Brief_ and _External Genie Chat API_ artifacts for what production actually does, and the **Prototype → production deltas** table in the brief for where production intentionally diverges from these files.
+
+> ⚠️ These files use prototype-era names ("Genie Control Station", "Demo Hub") and, in older prose, the **wrong fonts** (Archivo / Hanken Grotesk / IBM Plex Mono). Production naming is **Genie Workspace** and the font authority is `design-system/tokens/` (**Geist / Geist Mono**). When a doc conflicts with the brief, the brief wins.
+
+## Authoritative sources
+
+| File                                   | What it is                                                                                                                                    | Use for                                                                                                                |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `Genie Control Station.dc.html` (244K) | The full interactive **prototype** — auth, workspace, viewer, admin console.                                                                  | Source of truth for **behavior & UX** — lift exact interactions/values from here.                                      |
+| `Requirements Spec.dc.html` (44K)      | Reverse-engineered **FR/NFR spec** (stable requirement IDs).                                                                                  | The behavior checklist — interaction reference, superseded only where the brief's deltas say so.                       |
+| `Genie Style Guide.dc.html` (48K)      | The living **"Ledger" visual spec** — renders every foundation + component.                                                                   | Visual reference.                                                                                                      |
+| `design-system/`                       | The **maintained design system**: `styles.css` → `tokens/{colors,typography,spacing,fonts}.css`, plus `readme.md` + `SKILL.md`.               | **Token source of truth** carried into production code (Geist/Geist Mono, color/space/type scales, component recipes). |
+| `CLAUDE.md`                            | Prototype product rules (customer-vs-admin separation, theming Chat-only, access via groups, Ledger aesthetic).                               | Product-rule reference.                                                                                                |
+| `screenshots/` (139 PNGs)              | Captured prototype screens across breakpoints (`01-`/`02-`/`03-` = mobile/desktop/wide tiers; e.g. `02-p4-hub`, `02-p4-chat`, `02-ov-fixed`). | Visual ground-truth for each screen.                                                                                   |
+
+## Prototype runtime & designer tooling (not product spec)
+
+Support files that ship with the package but don't define product behavior — background only.
+
+| File                                         | What it is                                                                                                                                                                                                        |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `support.js` (~1.6k lines)                   | The prototype's **generated runtime** (from `dc-runtime/src/*.ts`) that drives the `.dc.html` interactions. Reference for how the prototype behaves; not code we carry over.                                      |
+| `uploads/unslop/` + `unslop-ui.skill`        | The **"unslop-ui" skill** the designer used to strip AI-generated visual tells (`SKILL.md`, `references/{choosing-a-look,tells}.md`, `scripts/devibe_scan.py`). Design-process tooling, not product requirements. |
+| `uploads/draw-*.png`, `uploads/pasted-*.png` | Designer scratch images pasted during the design session.                                                                                                                                                         |
+
+> **Sync note:** mirrored to the updated package (`Genie Control Station Design.zip`, 2026-06-30 17:29). The only content change vs. the prior package is that **5 exploration docs were dropped** (Access Redesign, Build Roadmap, Chrome Options, Look and Feel v5, Type Scale Re-tune) — non-binding scratch, recoverable from the prior zip if ever needed. All authoritative files (prototype, requirements spec, style guide, design-system tokens, `CLAUDE.md`) are **byte-identical** to before — the Epic Brief and chat-API contract are unaffected.
+
+## Reading HTML docs
+
+The `.dc.html` files are self-contained Claude Design exports. Open in a browser, or strip tags for text:
+`python3 -c "import re,html;t=open('Requirements Spec.dc.html').read();t=re.sub(r'<[^>]+>',' ',t);print(html.unescape(re.sub(r'\s+',' ',t)))"`

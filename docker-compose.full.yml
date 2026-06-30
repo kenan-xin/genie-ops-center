@@ -1,0 +1,64 @@
+# One-command all-in-one smoke / fresh-deploy test (app + Postgres). NOT the
+# production topology — prod runs the app image against an EXTERNAL Postgres
+# (see docker-compose.app.yml + docs/deployment.md).
+#
+#   docker compose -f docker-compose.full.yml up --build
+#   docker compose -f docker-compose.full.yml down -v   # wipe the DB volume
+#
+# Secrets are supplied via a top-level .env file (docker compose loads it
+# automatically) — see .env.example. Nothing is baked into the image. One image,
+# one deployment per customer.
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: genie-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-genie}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-genie}
+      POSTGRES_DB: ${POSTGRES_DB:-genie}
+    volumes:
+      - genie-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-genie} -d ${POSTGRES_DB:-genie}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: genie-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Postgres URL pointing at the compose service (not localhost).
+      DATABASE_URL: postgres://${POSTGRES_USER:-genie}:${POSTGRES_PASSWORD:-genie}@db:5432/${POSTGRES_DB:-genie}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
+      # First-admin bootstrap. Seeded only on a fresh (empty-user) DB; clear after.
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      EXTERNAL_CHAT_API_BASE: ${EXTERNAL_CHAT_API_BASE:-}
+      ALLOWED_IFRAME_ORIGINS: ${ALLOWED_IFRAME_ORIGINS:-}
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+
+volumes:
+  genie-db:

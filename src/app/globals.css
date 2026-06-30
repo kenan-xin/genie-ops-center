@@ -1,0 +1,352 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* Tailwind `dark:` variant follows Ledger's [data-theme="dark"] (set by next-themes). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ============================================================
+   Genie · "Ledger" design tokens — SOURCE OF TRUTH.
+   Copied from design-package/design-system/tokens/*.
+   Fonts load via next/font (layout.tsx) and surface as
+   --font-geist-sans / --font-geist-mono; family tokens bind to them.
+   ============================================================ */
+
+/* --- COLOR (tokens/colors.css) --- */
+:root {
+  --ink: #14161b;
+  --ink2: #4a515c;
+  --ink3: #8b929c;
+  --faint: #aab0ba;
+  --on-ink: #ffffff;
+
+  --bg: #fbfcfd;
+  --surface: #ffffff;
+  --panel: #f2f4f7;
+  --line: #c8cdd5;
+  --line2: #e2e5ea;
+  --rule: #14161b;
+
+  --sidebar: #ffffff;
+  --chrome: #14161b;
+
+  --brand: #2360c4;
+  --brandink: #2360c4;
+  --brandtint: #eef4fc;
+  --onbrand: #ffffff;
+
+  --success: #1f9a5c;
+  --successtint: #eafaf1;
+  --warn: #b07d10;
+  --warntint: #fbf3df;
+  --error: #d94032;
+  --errortint: #fbeae8;
+}
+
+[data-theme="dark"] {
+  --ink: #eef1f4;
+  --ink2: #9aa3b0;
+  --ink3: #6b7585;
+  --faint: #5c6675;
+  --on-ink: #0f1319;
+
+  --bg: #13171e;
+  --surface: #181d25;
+  --panel: #1d242e;
+  --line: #313a46;
+  --line2: #262e38;
+  --rule: #3a4454;
+
+  --sidebar: #13171e;
+  --chrome: #e7ecf3;
+
+  --brand: #2360c4;
+  --brandink: #7fb2f0;
+  --brandtint: #1c2738;
+  --onbrand: #ffffff;
+
+  --success: #5fcf94;
+  --successtint: #16271d;
+  --warn: #d6a743;
+  --warntint: #2a2310;
+  --error: #e06a5e;
+  --errortint: #2a1714;
+}
+
+/* --- TYPOGRAPHY (tokens/typography.css) — families bound to next/font --- */
+:root {
+  --font-display: var(--font-geist-sans), system-ui, sans-serif;
+  --font-ui: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* token → --fs-* aliases (never redefined per breakpoint) */
+  --t-display: var(--fs-xl);
+  --t-h2: var(--fs-xl);
+  --t-cardhead: var(--fs-card);
+  --t-h3: var(--fs-lg);
+  --t-title: var(--fs-lg);
+  --t-body: var(--fs-md);
+  --t-sm: var(--fs-sm);
+  --t-xs: var(--fs-sm);
+  --m-xs: var(--fs-lbl);
+  --m-sm: var(--fs-lbl);
+  --m-md: var(--fs-lblmd);
+  --m-lg: var(--fs-lbllg);
+
+  /* 8 --fs-* sizes derived from 3 knobs via fixed ratios */
+  --fs-xl: var(--base-h);
+  --fs-card: calc(var(--base-h) * 0.78);
+  --fs-lg: calc(var(--base-h) * 0.6);
+  --fs-md: var(--base-b);
+  --fs-sm: calc(var(--base-b) * 0.88);
+  --fs-lbl: var(--base-l);
+  --fs-lblmd: calc(var(--base-l) * 1.13);
+  --fs-lbllg: calc(var(--base-l) * 1.27);
+
+  /* base tier (<480) — 3 knobs: heading / body / label */
+  --base-h: 25px;
+  --base-b: 15px;
+  --base-l: 11px;
+}
+@media (min-width: 480px) {
+  :root {
+    --base-h: 26px;
+    --base-b: 15px;
+    --base-l: 11px;
+  }
+}
+@media (min-width: 768px) {
+  :root {
+    --base-h: 28px;
+    --base-b: 15.5px;
+    --base-l: 11.5px;
+  }
+}
+@media (min-width: 1024px) {
+  :root {
+    --base-h: 30px;
+    --base-b: 15.5px;
+    --base-l: 11.5px;
+  }
+}
+@media (min-width: 1280px) {
+  :root {
+    --base-h: 31px;
+    --base-b: 16px;
+    --base-l: 12px;
+  }
+}
+@media (min-width: 1440px) {
+  :root {
+    --base-h: 33px;
+    --base-b: 16px;
+    --base-l: 12px;
+  }
+}
+@media (min-width: 1920px) {
+  :root {
+    --base-h: 37px;
+    --base-b: 17.5px;
+    --base-l: 13px;
+  }
+}
+@media (min-width: 2560px) {
+  :root {
+    --base-h: 40px;
+    --base-b: 19px;
+    --base-l: 14px;
+  }
+}
+
+/* --- SPACING / RADIUS / ELEVATION / MOTION (tokens/spacing.css) --- */
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  --radius-0: 0px;
+  --radius-1: 2px;
+  --radius-2: 3px;
+  --radius-pill: 11px;
+
+  --shadow-toast: 0 8px 26px rgba(20, 30, 50, 0.16);
+  --shadow-dialog: 0 12px 34px rgba(20, 30, 50, 0.18);
+  --shadow-side: -16px 0 40px rgba(20, 30, 50, 0.18);
+
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 0.15s;
+  --dur-base: 0.22s;
+
+  --auth-w: 400px;
+  --auth-pad: 26px 22px 24px;
+  --content-wide: 1180px;
+  --content-mid: 900px;
+  --content-list: 1000px;
+  --sidebar-w: 212px;
+}
+@media (min-width: 1024px) {
+  :root {
+    --auth-w: 440px;
+    --auth-pad: 38px 38px 34px;
+    --content-wide: 1240px;
+    --content-mid: 960px;
+    --content-list: 1060px;
+  }
+}
+@media (min-width: 1280px) {
+  :root {
+    --auth-w: 460px;
+    --content-wide: 1320px;
+    --content-mid: 1000px;
+    --content-list: 1120px;
+  }
+}
+@media (min-width: 1440px) {
+  :root {
+    --auth-w: 480px;
+    --content-wide: 1400px;
+    --content-mid: 1080px;
+    --content-list: 1200px;
+    --sidebar-w: 236px;
+  }
+}
+@media (min-width: 1920px) {
+  :root {
+    --auth-w: 520px;
+    --auth-pad: 48px 48px 44px;
+    --content-wide: 1560px;
+    --content-mid: 1180px;
+    --content-list: 1320px;
+    --sidebar-w: 264px;
+  }
+}
+@media (min-width: 2560px) {
+  :root {
+    --auth-w: 600px;
+    --auth-pad: 56px 56px 52px;
+    --content-wide: 1880px;
+    --content-mid: 1320px;
+    --content-list: 1500px;
+    --sidebar-w: 320px;
+  }
+}
+
+/* ============================================================
+   shadcn ⇄ Ledger bridge — map shadcn semantic tokens onto Ledger.
+   Defined once; dark mode tracks automatically because the Ledger
+   vars themselves flip under [data-theme="dark"]. Brand blue stays
+   reserved for primary + focus ring/selection.
+   ============================================================ */
+:root {
+  --radius: var(--radius-0);
+  --background: var(--bg);
+  --foreground: var(--ink);
+  --card: var(--surface);
+  --card-foreground: var(--ink);
+  --popover: var(--surface);
+  --popover-foreground: var(--ink);
+  --primary: var(--brand);
+  --primary-foreground: var(--onbrand);
+  --secondary: var(--panel);
+  --secondary-foreground: var(--ink);
+  --muted: var(--panel);
+  --muted-foreground: var(--ink3);
+  --accent: var(--panel);
+  --accent-foreground: var(--ink);
+  --destructive: var(--error);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--brand);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: var(--onbrand);
+  --sidebar-accent: var(--panel);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--brand);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-geist-sans);
+  /* Ledger type scale as utilities (text-display … text-mono-lg) so the kit
+     never hard-codes a px font size — each maps to a responsive Ledger token. */
+  --text-display: var(--t-display);
+  --text-cardhead: var(--t-cardhead);
+  --text-title: var(--t-title);
+  --text-body: var(--t-body);
+  --text-small: var(--t-sm);
+  --text-mono-xs: var(--m-xs);
+  --text-mono-sm: var(--m-sm);
+  --text-mono-md: var(--m-md);
+  --text-mono-lg: var(--m-lg);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-size: var(--t-body);
+  }
+  /* Ledger focus ring for form controls (NFR-A11Y-01). */
+  :where(input, select, textarea):focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: -1px;
+  }
+}
+
+/* Honor reduced-motion across the whole kit — one place, every component. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

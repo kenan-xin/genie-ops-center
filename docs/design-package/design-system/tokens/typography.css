@@ -1,0 +1,110 @@
+/* Genie · Ledger — TYPOGRAPHY
+   Two families, three roles:
+   - Geist  → display/headings (wt 800, tight tracking) AND UI/body (wt 400–700). One typeface, both roles by weight.
+   - Geist Mono → data & labels: eyebrows, status, IDs, timestamps, counts (wt 600, uppercase, tracked .06–.14em). */
+:root {
+  --font-display:
+    "Geist", system-ui, sans-serif; /* headlines, numbers — wt 800, letter-spacing ~ -0.02em */
+  --font-ui: "Geist", system-ui, sans-serif; /* everything interactive + prose — wt 400–700 */
+  --font-mono:
+    "Geist Mono", ui-monospace, monospace; /* eyebrows, status, IDs, timestamps, counts */
+}
+
+/* ===== Responsive type — base size curves (mobile → 4K) =====
+   12 token names ALIAS to 8 --fs-* sizes, which derive from just THREE base knobs
+   via fixed ratios: --base-h (headings), --base-b (body), --base-l (labels).
+   So each breakpoint sets only 3 numbers. Duplicates (display=h2, h3=title,
+   sm=xs, m-xs=m-sm) can never drift; reshape a whole role by editing one ratio.
+   All roles step at the SAME breakpoints — nothing stays frozen tiny while
+   neighbours grow. The scale is intentionally SHORT (~5 text sizes + mono).
+   Reference markup unchanged: font-size: var(--t-body);  font: 600 var(--m-sm) var(--font-mono); */
+:root {
+  /* token → --fs-* aliases — fixed, never redefined per breakpoint */
+  --t-display: var(--fs-xl);
+  --t-h2: var(--fs-xl); /* page / section display */
+  --t-cardhead: var(--fs-card); /* card/dialog titles */
+  --t-h3: var(--fs-lg);
+  --t-title: var(--fs-lg); /* sub-heads / card titles */
+  --t-body: var(--fs-md); /* body + inputs */
+  --t-sm: var(--fs-sm);
+  --t-xs: var(--fs-sm); /* small text */
+  --m-xs: var(--fs-lbl);
+  --m-sm: var(--fs-lbl); /* mono eyebrows */
+  --m-md: var(--fs-lblmd); /* mono mid (counts) */
+  --m-lg: var(--fs-lbllg); /* mono large (chips/data) */
+  /* 8 --fs-* sizes derived from the 3 knobs via fixed ratios */
+  --fs-xl: var(--base-h);
+  --fs-card: calc(var(--base-h)*0.78);
+  --fs-lg: calc(var(--base-h)*0.6);
+  --fs-md: var(--base-b);
+  --fs-sm: calc(var(--base-b)*0.88);
+  --fs-lbl: var(--base-l);
+  --fs-lblmd: calc(var(--base-l)*1.13);
+  --fs-lbllg: calc(var(--base-l)*1.27);
+  /* base tier (<480) — 3 knobs: heading / body / label */
+  --base-h: 25px;
+  --base-b: 15px;
+  --base-l: 11px;
+}
+@media (min-width: 480px) {
+  :root {
+    --base-h: 26px;
+    --base-b: 15px;
+    --base-l: 11px;
+  }
+}
+@media (min-width: 768px) {
+  :root {
+    --base-h: 28px;
+    --base-b: 15.5px;
+    --base-l: 11.5px;
+  }
+}
+@media (min-width: 1024px) {
+  :root {
+    --base-h: 30px;
+    --base-b: 15.5px;
+    --base-l: 11.5px;
+  }
+}
+@media (min-width: 1280px) {
+  :root {
+    --base-h: 31px;
+    --base-b: 16px;
+    --base-l: 12px;
+  }
+}
+@media (min-width: 1440px) {
+  :root {
+    --base-h: 33px;
+    --base-b: 16px;
+    --base-l: 12px;
+  }
+}
+@media (min-width: 1920px) {
+  :root {
+    --base-h: 37px;
+    --base-b: 17.5px;
+    --base-l: 13px;
+  }
+}
+@media (min-width: 2560px) {
+  :root {
+    --base-h: 40px;
+    --base-b: 19px;
+    --base-l: 14px;
+  }
+}
+
+/* Effective scale (desktop, --base-h:31 --base-b:16 --base-l:12) — five text sizes + mono:
+     31    --base-h            → display / h2          page & section titles (Geist 800)
+     24    --base-h ×0.78      → cardhead              headings in fixed-width cards/dialogs
+     18.5  --base-h ×0.60      → h3 / title            sub-headers & card titles (Geist 700)
+     16    --base-b            → body                  default reading size, table cells
+     14    --base-b ×0.88      → sm / xs               secondary & tertiary text
+     12 / 13.5 / 15  --base-l ×(1 / 1.13 / 1.27) → m-* mono labels: eyebrows, counts, chips
+   Reshape a whole role by editing its RATIO; resize a group by editing its --base-* knob. */
+
+/* Signature pattern — the "mono eyebrow":
+   <div style="font:600 var(--m-sm) var(--font-mono);letter-spacing:.12em;color:var(--brand)">● UNDER MAINTENANCE</div>
+   …sits ABOVE a Geist headline and REPLACES decorative status icons. */
