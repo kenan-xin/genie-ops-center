@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { solutionsRouter } from "@/features/solutions/server/router";
 import { themesRouter } from "@/features/themes/server/router";
 import { usersRouter } from "@/features/users/server/router";
 
@@ -15,6 +16,7 @@ export const appRouter = createTRPCRouter({
     greeting: `Hello, ${input?.name ?? "operator"}.`,
   })),
   themes: themesRouter,
+  solutions: solutionsRouter,
   users: usersRouter,
 });
 
