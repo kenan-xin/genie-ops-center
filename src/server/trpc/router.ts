@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { themesRouter } from "@/features/themes/server/router";
+
 import { createTRPCRouter, publicProcedure } from "./init";
 
 /**
@@ -11,6 +13,7 @@ export const appRouter = createTRPCRouter({
   hello: publicProcedure.input(z.object({ name: z.string() }).optional()).query(({ input }) => ({
     greeting: `Hello, ${input?.name ?? "operator"}.`,
   })),
+  themes: themesRouter,
 });
 
 export type AppRouter = typeof appRouter;
