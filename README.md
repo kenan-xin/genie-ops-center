@@ -18,48 +18,119 @@ See **[`docs/`](./docs/README.md)** for the full design: [what & why](./docs/epi
 
 ## Prerequisites
 
-- **Node 24+** (current LTS; pinned via `engines` and `.nvmrc`) and **pnpm** (pinned via `packageManager`; enable with `corepack enable`)
-- **Docker** (only to run the local dev database)
+- **Node 24+** (current LTS; pinned via `engines` and `.nvmrc`) and **pnpm** (pinned via `packageManager`; enable once with `corepack enable`)
+- **Docker** + Docker Compose (to run the local database and the fresh-deploy smoke test)
+- A **PostgreSQL** connection — either the local Docker DB (default, zero setup) or an external one (see [External DB](#connecting-an-external-database))
 
-## Getting started
+## Developing after cloning
 
 ```bash
-corepack enable             # enables the pnpm version pinned in package.json (once)
-pnpm install                # installs deps + sets up the git pre-commit hook
-cp .env.example .env        # DATABASE_URL already points at the dev DB below
-pnpm db:dev                 # start the local Postgres container (persists in a volume)
-pnpm db:migrate             # apply schema
-pnpm dev                    # http://localhost:3000
+# 1. Install pnpm (once per machine) — matches the version pinned in package.json
+corepack enable
+
+# 2. Clone & install deps (also installs the lefthook pre-commit hook)
+git clone git@github.com:kenan-xin/genie-ops-center.git
+cd genie-ops-center
+pnpm install
+
+# 3. Configure env — copy the template and fill in the required secrets
+cp .env.example .env
+#    At minimum set in .env:
+#      BETTER_AUTH_SECRET="$(openssl rand -base64 32)"   # ≥32 chars, required
+#      ADMIN_EMAIL=...                                    # first-admin bootstrap
+#      ADMIN_PASSWORD=...                                 #   (strength-checked; clear after first boot)
+#    DATABASE_URL already points at the local Docker DB below.
+
+# 4. Start the dev database (Postgres in a container, data in a volume)
+pnpm db:dev
+
+# 5. Apply migrations (creates all tables)
+pnpm db:migrate
+
+# 6. Run the app on your host
+pnpm dev    # → http://localhost:3000
 ```
 
-The first time the app boots (or a container starts) against an empty DB, it seeds a bootstrap admin from `ADMIN_EMAIL`/`ADMIN_PASSWORD` (set in `.env`), flagged `mustChangePassword`. Clear those after first boot.
+On first boot against an empty DB, the app seeds a bootstrap admin from `ADMIN_EMAIL`/`ADMIN_PASSWORD`, flagged `mustChangePassword` (you'll be prompted to change it on first sign-in). Clear `ADMIN_PASSWORD` from the env after that first boot.
 
-### Dev database
+> **Tip — `next build` needs env present.** Server modules are evaluated during the build, so if you run `pnpm build` locally, set the same env (a throwaway `DATABASE_URL` + `BETTER_AUTH_SECRET` is fine — secrets aren't baked; the standalone server reads `process.env` at runtime).
 
-A Postgres-in-container for local development is provided by [`docker-compose.dev.yml`](./docker-compose.dev.yml). It runs **only the database** — you run the app itself on your host with `pnpm dev`.
+### Daily commands
 
-| Command                         | Does                                                          |
-| ------------------------------- | ------------------------------------------------------------- |
-| `pnpm db:dev`                   | Start the Postgres container (background)                     |
-| `pnpm db:dev:stop`              | Stop it (data kept)                                           |
-| `pnpm db:dev:down`              | Remove the container (data volume kept)                       |
-| `pnpm db:dev:reset`             | **Wipe** the volume and start clean                           |
-| `pnpm db:migrate` / `db:studio` | Apply migrations / open Drizzle Studio against `DATABASE_URL` |
+| Command                         | Does                                                            |
+| ------------------------------- | --------------------------------------------------------------- |
+| `pnpm dev`                      | Next dev server (http://localhost:3000)                         |
+| `pnpm typecheck` / `lint` / `format` | `tsc --noEmit` / oxlint / oxfmt                             |
+| `pnpm db:migrate`               | Apply new migrations to the dev DB                              |
+| `pnpm db:generate`              | Generate a migration from schema changes (`src/server/db/schema.ts`) |
+| `pnpm db:studio`                | Open Drizzle Studio against `DATABASE_URL`                      |
+| `pnpm db:dev` / `db:dev:stop`   | Start / stop the Postgres container (data kept)                 |
+| `pnpm db:dev:down`              | Remove the container (data volume kept)                         |
+| `pnpm db:dev:reset`             | **Wipe** the volume and start clean                             |
 
-It defaults to `genie:genie@localhost:5432/genie` (matching `.env.example`). Override credentials/port with a `.env` file (`POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `POSTGRES_PORT`).
+The dev DB defaults to `genie:genie@localhost:5432/genie` (matches `.env.example`). Override via `.env`: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `POSTGRES_PORT`.
 
-### Dev vs production database
+## Connecting an external database
 
-There is **one connection string — `DATABASE_URL`** — and it is the only thing that changes between environments:
+There is **one connection string — `DATABASE_URL`** — and it's the only thing that changes between environments. The Drizzle client, the migrator, and drizzle-kit all read it, so the **same code and migrations run against any Postgres**.
 
-- **Dev:** `DATABASE_URL=postgres://genie:genie@localhost:5432/genie` → the local container above.
-- **Prod:** `DATABASE_URL=postgres://…your-managed/cloud/dedicated-Postgres…` (RDS, Cloud SQL, Crunchy, Neon, a bare-metal server, etc.).
+- **Local Docker DB (default dev):** `DATABASE_URL=postgres://genie:genie@localhost:5432/genie` — the `pnpm db:dev` container.
+- **External / managed Postgres (staging, prod, or a cloud DB for dev):** point `DATABASE_URL` at it — RDS, Cloud SQL, Crunchy Bridge, Neon, Supabase, or a bare-metal server. Example:
+  ```bash
+  DATABASE_URL="postgres://user:pass@db.host.example.com:5432/genie?sslmode=require"
+  pnpm db:migrate   # apply the schema to the external DB
+  pnpm dev          # run against it
+  ```
+  If your external DB requires `sslmode`, append it to the URL (`?sslmode=require` / `verify-full`).
 
-No code changes between the two. The Drizzle client and drizzle-kit both read `DATABASE_URL`, so the same migrations and queries run against either.
+**Production does NOT run Postgres inside the app image.** For performance, backups, and operational control, the database is a separate, externally-managed resource; the container connects to the external `DATABASE_URL`, migrates-on-start under a Postgres advisory lock, seeds the first admin, then serves. See **[docs/deployment.md](./docs/deployment.md)** for the full topology, env contract, and run recipes.
 
-**In production the app image does NOT run its own Postgres** — for performance, backups, and operational control the database is a separate, externally-managed resource. The container connects to the external `DATABASE_URL`, migrates-on-start under an advisory lock, then serves. See **[docs/deployment.md](./docs/deployment.md)** for the topology and required env.
+### Docker DB vs external DB at a glance
 
-### Compose files at a glance
+| Want to…                                  | Do this                                                                 |
+| ----------------------------------------- | ----------------------------------------------------------------------- |
+| Develop locally with zero setup           | `pnpm db:dev` (Docker Postgres) + the default `DATABASE_URL`            |
+| Point dev/staging at a managed/cloud DB   | Set `DATABASE_URL` to it in `.env`, then `pnpm db:migrate`              |
+| Run the prod-shaped app image             | `docker compose -f docker-compose.app.yml up -d --build` (external DB)  |
+| Test a full fresh deploy (app + DB image) | The smoke test below                                                     |
+
+## Fresh-deploy smoke test
+
+End-to-end test of a brand-new deployment: build the app image, start it with its own ephemeral Postgres, and verify the boot sequence (env validate → advisory-locked migrate → seed the first admin → serve). Use this before a release or to verify a Dockerfile/entrypoint change.
+
+```bash
+# 1. Required env for the run (use throwaway values — nothing is baked into the image)
+export BETTER_AUTH_SECRET="$(openssl rand -base64 32)"   # ≥32 chars
+export ADMIN_EMAIL="admin@example.com"
+export ADMIN_PASSWORD="Sup3rSecret!pw"                   # must pass the strength rule
+# Optional: export BETTER_AUTH_URL="http://localhost:3000"  (default)
+
+# 2. Build + boot app + ephemeral Postgres on a fresh volume
+docker compose -f docker-compose.full.yml up --build -d
+
+# 3. Wait for the app to be healthy, then watch the boot sequence
+docker logs genie-app | grep -E 'entrypoint|bootstrap|Ready'
+# Expect:
+#   [entrypoint] booting (config validated)
+#   [entrypoint] advisory lock acquired
+#   [entrypoint] applying drizzle migrations
+#   [bootstrap] seeded initial admin admin@example.com (mustChangePassword set)…
+#   [entrypoint] starting standalone server
+#   ✓ Ready in …
+
+# 4. Verify it serves
+curl -sS http://localhost:3000/            # → 200 (sign-in page)
+curl -sS http://localhost:3000/api/health  # → {"status":"ok"}
+
+# 5. Tear down (add -v to also wipe the ephemeral DB volume)
+docker compose -f docker-compose.full.yml down
+```
+
+This uses [`docker-compose.full.yml`](./docker-compose.full.yml) — an **all-in-one smoke / fresh-deploy test only**, not the production topology (prod uses [`docker-compose.app.yml`](./docker-compose.app.yml) against an external DB).
+
+> **App-only smoke (prod-shaped):** to verify the image against an *already-running* external Postgres, use `docker-compose.app.yml` with `DATABASE_URL` pointed at it instead — it runs the app image with no `db` service.
+
+## Compose files at a glance
 
 | File                      | Use                                                                     | Runs Postgres?    |
 | ------------------------- | ----------------------------------------------------------------------- | ----------------- |
