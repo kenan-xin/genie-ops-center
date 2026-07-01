@@ -82,8 +82,10 @@ export async function getServerAuth(incoming?: Headers): Promise<ServerAuth> {
 
 /** FR tri-state derived from two independent fields, never dual-written.
  * Fails CLOSED on unknown/null status — only an explicit "active" counts; a
- * bad/garbage value is never implicitly active. */
-function deriveFrStatus(u: {
+ * bad/garbage value is never implicitly active. Exported so the People
+ * directory (ticket 06) derives the same tri-state from raw user rows instead
+ * of re-implementing the rule. */
+export function deriveFrStatus(u: {
   status?: string | null;
   banned?: boolean | null;
 }): AuthUser["frStatus"] {

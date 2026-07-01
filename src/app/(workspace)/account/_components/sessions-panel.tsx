@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { useToast } from "@/components/ui/toast";
 import { authClient } from "@/lib/auth-client";
+import { relativeTime } from "@/lib/relative-time";
 
 const SESSIONS_KEY = ["account", "sessions"] as const;
 
@@ -185,20 +186,6 @@ export function SessionsPanel() {
       </CardFooter>
     </Card>
   );
-}
-
-const RTF = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
-const MINUTE = 60_000;
-const HOUR = 60 * MINUTE;
-const DAY = 24 * HOUR;
-
-/** Compact "last active" — native Intl, no date library. */
-function relativeTime(when: string | Date): string {
-  const diff = new Date(when).getTime() - Date.now();
-  const abs = Math.abs(diff);
-  if (abs < HOUR) return RTF.format(Math.round(diff / MINUTE), "minute");
-  if (abs < DAY) return RTF.format(Math.round(diff / HOUR), "hour");
-  return RTF.format(Math.round(diff / DAY), "day");
 }
 
 /**

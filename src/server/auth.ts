@@ -42,7 +42,7 @@ export const auth = betterAuth({
       // Delivery hook. Better Auth runs this via runInBackgroundOrAwait, which
       // swallows rejections (logs only) — so throwing here CANNOT fail the
       // request. Production fail-closed enforcement therefore lives at the
-      // callers (see requireMailerConfigured in user-service.ts), which guard
+      // callers (see requireMailerConfigured in features/users/server/user-service.ts), which guard
       // BEFORE a token/user is created. Here we just never log the bearer URL in
       // prod; dev/test log it so the flow is usable without a mailer.
       if (process.env.NODE_ENV === "production") {

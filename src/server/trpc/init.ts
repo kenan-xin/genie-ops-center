@@ -1,4 +1,5 @@
 import { initTRPC, TRPCError } from "@trpc/server";
+import { headers as nextHeaders } from "next/headers";
 import { cache } from "react";
 
 import { assertAdmin, getServerAuth, type ServerAuth } from "@/server/authz";
@@ -8,10 +9,16 @@ import { assertAdmin, getServerAuth, type ServerAuth } from "@/server/authz";
  * {@link getServerAuth} — the same accessor RSC and `/api/chat` use — so the
  * limited-session rules (pending blocked, mustChangePassword enforced) apply
  * identically across all three surfaces. `cache` dedupes within an RSC pass.
+ *
+ * `headers` is also exposed on ctx: better-auth's admin endpoints
+ * (banUser/createUser/setRole/...) authenticate via the caller's session
+ * cookie, so the domain service (features/users/server/user-service.ts) needs
+ * the raw request headers to forward, not just the derived `auth` shape.
  */
 export const createTRPCContext = cache(async (opts?: { headers?: Headers }) => {
-  const auth = await getServerAuth(opts?.headers);
-  return { auth };
+  const headers = opts?.headers ?? (await nextHeaders());
+  const auth = await getServerAuth(headers);
+  return { auth, headers };
 });
 
 const t = initTRPC.context<Awaited<ReturnType<typeof createTRPCContext>>>().create();

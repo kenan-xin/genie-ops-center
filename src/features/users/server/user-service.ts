@@ -40,11 +40,30 @@ function requireMailerConfigured(action: "invite" | "reset"): void {
   }
 }
 
+/**
+ * Email better-auth's reset-token link. `variant` only changes the landing
+ * page copy (both consume the same token via `authClient.resetPassword`):
+ * `activate` → `/set-password` (invite-activation copy, also flips
+ * pending→active via the `onPasswordReset` hook); `reset` → `/reset-password`
+ * (generic reset copy) for an already-active person.
+ */
+export async function sendPasswordReset(
+  email: string,
+  variant: "activate" | "reset" = "reset",
+): Promise<void> {
+  requireMailerConfigured("reset");
+  const path = variant === "activate" ? "/set-password" : "/reset-password";
+  await auth.api.requestPasswordReset({
+    body: { email, redirectTo: `${process.env.PUBLIC_BASE_URL ?? ""}${path}` },
+  });
+}
+
 /** Invite a person: credential account + generated throwaway password, pending. */
 export async function inviteUser(args: {
   email: string;
   name: string;
   headers: Headers;
+  role?: "user" | "admin";
   sendReset?: boolean;
 }): Promise<{ id: string }> {
   // Fail BEFORE creating anything: better-auth's delivery hook can't surface a
@@ -60,7 +79,7 @@ export async function inviteUser(args: {
       email: args.email,
       name: args.name,
       password: generatedPassword,
-      role: USER_ROLES,
+      role: args.role === "admin" ? ADMIN_ROLES : USER_ROLES,
     },
     headers: args.headers,
   });
@@ -69,16 +88,18 @@ export async function inviteUser(args: {
   await db.update(user).set({ status: "pending" }).where(eq(user.id, created.user.id));
 
   if (args.sendReset !== false) {
-    // Point the invite link at /set-password (the activation landing) instead of
-    // better-auth's default reset callback — otherwise /set-password has no caller.
-    await auth.api.requestPasswordReset({
-      body: {
-        email: args.email,
-        redirectTo: `${process.env.PUBLIC_BASE_URL ?? ""}/set-password`,
-      },
-    });
+    await sendPasswordReset(args.email, "activate");
   }
   return { id: created.user.id };
+}
+
+/** Update a person's editable profile fields — never password/role/banned (those have their own calls). */
+export async function updateUserProfile(
+  userId: string,
+  data: { name?: string; email?: string },
+  headers: Headers,
+): Promise<void> {
+  await auth.api.adminUpdateUser({ body: { userId, data }, headers });
 }
 
 /** Disable a person (ban) — the only disabled-enforcement field. Revokes sessions. */
@@ -118,6 +139,32 @@ export async function adminSetPassword(
   await db.update(user).set({ mustChangePassword: false }).where(eq(user.id, userId));
 }
 
+/**
+ * Admin-generated temporary password (FR-ADM-P-05) — the person must change it
+ * on next sign-in. Unlike {@link adminSetPassword} this sets, not clears,
+ * `mustChangePassword`. The fixed prefix guarantees every strength class
+ * (upper/lower/digit/symbol) regardless of the random suffix, so it always
+ * clears the shared password schema. `activate: true` additionally flips a
+ * still-pending person straight to `active` (FR-ADM-P-04's "activate" action —
+ * for when the reset-link email isn't a viable channel), since a raw admin
+ * password write doesn't go through the reset flow that normally does this.
+ * The plaintext is returned once for the admin to hand off out of band; it is
+ * never logged or stored.
+ */
+export async function adminSetTempPassword(
+  userId: string,
+  headers: Headers,
+  opts?: { activate?: boolean },
+): Promise<{ tempPassword: string }> {
+  const tempPassword = `Tmp1!${crypto.randomUUID().replace(/-/g, "")}`;
+  await auth.api.setUserPassword({ body: { userId, newPassword: tempPassword }, headers });
+  await db
+    .update(user)
+    .set({ mustChangePassword: true, ...(opts?.activate ? { status: "active" as const } : {}) })
+    .where(eq(user.id, userId));
+  return { tempPassword };
+}
+
 /** Force a password change on next entry. (Direct DB write — not a better-auth concept.) */
 export async function setMustChangePassword(userId: string, value: boolean): Promise<void> {
   await db.update(user).set({ mustChangePassword: value }).where(eq(user.id, userId));
@@ -126,6 +173,11 @@ export async function setMustChangePassword(userId: string, value: boolean): Pro
 /** Admin force-sign-out: revoke every session for a user. */
 export async function revokeUserSessions(userId: string, headers: Headers): Promise<void> {
   await auth.api.revokeUserSessions({ body: { userId }, headers });
+}
+
+/** Remove a person (FR-ADM-P-06). `group_member` rows cascade via the FK. */
+export async function removeUser(userId: string, headers: Headers): Promise<void> {
+  await auth.api.removeUser({ body: { userId }, headers });
 }
 
 /** Idempotent guard for bootstrap callers. */
