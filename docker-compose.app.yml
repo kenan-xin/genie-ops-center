@@ -9,7 +9,7 @@
 # Put your real secrets in a top-level .env (docker compose loads it):
 #   DATABASE_URL=postgres://...your-external-postgres...
 #   BETTER_AUTH_SECRET=...                 # openssl rand -base64 32
-#   BETTER_AUTH_URL=https://workspace.example.com
+#   PUBLIC_BASE_URL=https://workspace.example.com
 #   ADMIN_EMAIL=... ADMIN_PASSWORD=...     # only for first boot; clear after
 
 services:
@@ -24,7 +24,7 @@ services:
       # External Postgres — supplied by you, NOT run in this compose.
       DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required (external Postgres)}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required}
-      BETTER_AUTH_URL: ${BETTER_AUTH_URL:?BETTER_AUTH_URL is required}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?PUBLIC_BASE_URL is required}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       EXTERNAL_CHAT_API_BASE: ${EXTERNAL_CHAT_API_BASE:-}

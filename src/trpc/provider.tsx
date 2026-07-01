@@ -8,15 +8,9 @@ import { useState } from "react";
 
 import type { AppRouter } from "@/server/trpc/router";
 
-export const { TRPCProvider, useTRPC } = createTRPCContext<AppRouter>();
+import { makeQueryClient } from "./query-client";
 
-function makeQueryClient() {
-  return new QueryClient({
-    defaultOptions: {
-      queries: { staleTime: 30 * 1000 },
-    },
-  });
-}
+export const { TRPCProvider, useTRPC } = createTRPCContext<AppRouter>();
 
 let browserQueryClient: QueryClient | undefined;
 
@@ -30,7 +24,11 @@ function getQueryClient() {
 }
 
 function getUrl() {
-  const base = typeof window !== "undefined" ? "" : `http://localhost:${process.env.PORT ?? 3000}`;
+  if (typeof window !== "undefined") return "/api/trpc";
+  // Server: this app is one Docker image per customer deployment (not
+  // serverless), so PUBLIC_BASE_URL (also used by src/server/auth.ts for
+  // cookies/redirects) is the right base, not a platform-specific host var.
+  const base = process.env.PUBLIC_BASE_URL ?? `http://localhost:${process.env.PORT ?? 3000}`;
   return `${base}/api/trpc`;
 }
 

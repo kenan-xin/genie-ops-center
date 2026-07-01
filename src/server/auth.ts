@@ -28,7 +28,7 @@ const FIFTEEN_MINUTES = 15 * ONE_MINUTE;
  */
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg", schema }),
-  baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
+  baseURL: process.env.PUBLIC_BASE_URL ?? "http://localhost:3000",
   secret: process.env.BETTER_AUTH_SECRET,
   emailAndPassword: {
     enabled: true,

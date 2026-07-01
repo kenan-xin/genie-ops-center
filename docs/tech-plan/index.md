@@ -36,6 +36,7 @@ flowchart TB
 ```
 
 - **Route groups:** `(auth)` (`/login`, `/admin/login`, `/forgot-password`, `/reset-password`, `/set-password`), `(workspace)` (`/`, `/recent`, `/favorites`, `/account`, `/s/[slug]`), `(admin)` (`/admin/...`). Feature-organized folders (per global CLAUDE.md: by feature, not file type).
+- **Folder contract (north star):** app router by surface, features by domain, shared UI by abstraction, server by infrastructure. The living source of truth is **`AGENTS.md` → "Code organization & folder structure"** (folder-contract table + import-direction rules); adopt it as a boundary now and grow `src/features/<domain>/` **per ticket**, not pre-created. In brief: `app/` = routing/layouts/route-handlers + route-local `_components`/`_lib` (thin); `features/*` = a domain's UI+hooks+schemas+server+API colocated (first slice: `features/users/` at ticket 06); `components/ui` = design-system primitives only; `server/` = cross-cutting infra only (`auth.ts`, `authz.ts`, `config`, `db`, tRPC core) — domain server logic goes in `features/*/server/`; `lib/` = small shared helpers (e.g. the client-safe `password-strength`), not a junk drawer. Import direction: `ui/lib/types → everywhere`; `features/* → shared+infra`; `app/* → features+shared`; features don't freely import each other; `server/` has no React/client imports.
 - **Data flow:** RSC fetch initial data through a **server-side tRPC caller**; interactive mutations/queries through `@trpc/tanstack-react-query` hooks. Chat is the one exception — a streaming Route Handler.
 - **Three API surfaces, one session:** better-auth's mounted handler owns auth; tRPC owns all CRUD; the chat Route Handler owns streaming. All three read the same better-auth session.
 - **Client state & forms (conventions):** server/cache state via **tanstack-query** (+ `ReactQueryDevtools`, dev-only); complex client/UI state via **zustand** (stores wrapped in the `devtools` middleware in dev); forms via **react-hook-form + zod** (`@hookform/resolvers` `zodResolver`, reusing the shared zod schemas). Don't reach for zustand for trivial local state (`useState`) or for server data (tanstack-query owns that).
@@ -46,53 +47,53 @@ flowchart TB
 
 ### Roles — additive, not exclusive
 
-| Role    | Holds                    | Grants                                                                   |
-| ------- | ------------------------ | ------------------------------------------------------------------------ |
-| `user`  | every account            | Sign in; workspace; solutions granted via their groups                   |
-| `admin` | _added on top of_ `user` | Everything `user` has **plus** the Admin Portal and all admin operations |
+| Role | Holds | Grants |
+| --- | --- | --- |
+| `user` | every account | Sign in; workspace; solutions granted via their groups |
+| `admin` | *added on top of* `user` | Everything `user` has **plus** the Admin Portal and all admin operations |
 
-- Stored as better-auth's multi-value `role` string: `"user"` or `"user,admin"`; config `adminRoles: ["admin"]`. UI label: **"Admin"**. _(Verified: better-auth admin plugin supports comma-separated multi-roles.)_
+- Stored as better-auth's multi-value `role` string: `"user"` or `"user,admin"`; config `adminRoles: ["admin"]`. UI label: **"Admin"**. *(Verified: better-auth admin plugin supports comma-separated multi-roles.)*
 - An admin is a normal member too — matches the FR's "elevated member."
 
 ### The boundary is server-enforced, in three layers
 
-| Layer                                | Job                                    | Note                                                                                        |
-| ------------------------------------ | -------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Edge middleware                      | Coarse redirect if no session cookie   | **Not** an authz check — no DB at edge                                                      |
-| Server layout (`(admin)/layout.tsx`) | Redirect non-admins away from `/admin` | UX guard                                                                                    |
-| tRPC middleware                      | **The real guard**                     | `publicProcedure` → `protectedProcedure` (valid session) → `adminProcedure` (roles ∋ admin) |
+| Layer | Job | Note |
+| --- | --- | --- |
+| Edge middleware | Coarse redirect if no session cookie | **Not** an authz check — no DB at edge |
+| Server layout (`(admin)/layout.tsx`) | Redirect non-admins away from `/admin` | UX guard |
+| tRPC middleware | **The real guard** | `publicProcedure` → `protectedProcedure` (valid session) → `adminProcedure` (roles ∋ admin) |
 
 - Authorization centralized behind **one guard** (`can(user, action)` / `assertAdmin(ctx)`) — never inline `role === 'admin'`. This seam lets a future ST-operator vs customer-admin split be a permission-set change, not a refactor. (Capability taxonomy deferred.)
 - **"Separate admin sign-in" is UX routing only** — `/admin/login` routes admins to `/admin`, rejects non-admins. One session cookie.
 
-### Two access guards — _see_ vs _run_ (was a single `assertCanOpen`)
+### Two access guards — *see* vs *run* (was a single `assertCanOpen`)
 
 Status must control **whether and how** a solution opens (FR-ADM-S-05), and the chat Route Handler — not just tRPC — is what calls the external API. So the guard splits:
 
-| Guard                          | Check                                              | Allows                                                               |
-| ------------------------------ | -------------------------------------------------- | -------------------------------------------------------------------- |
-| `assertCanSee(user, solution)` | granted via the user's groups **and** not archived | Render the viewer shell + a `Maintenance`/`Down` status notice       |
-| `assertCanRun(user, solution)` | `assertCanSee` **and** `status = ready`            | `/api/chat` streaming, live embedded iframe, (future native runtime) |
+| Guard | Check | Allows |
+| --- | --- | --- |
+| `assertCanSee(user, solution)` | granted via the user's groups **and** not archived | Render the viewer shell + a `Maintenance`/`Down` status notice |
+| `assertCanRun(user, solution)` | `assertCanSee` **and** `status = ready` | `/api/chat` streaming, live embedded iframe, (future native runtime) |
 
 - Hub/catalogue query lists **granted + unarchived** solutions, surfaces `ready | maintenance | down`, and **hides `draft`** from customers. `Draft` is never openable.
-- **Recents & Favorites** are gated by the _same_ access predicate (granted + unarchived + visible), not just the stored per-user rows — so revoking/archiving/drafting a solution drops it from those lists immediately. The `favorite`/`recent` rows are a cache, not the access source.
+- **Recents & Favorites** are gated by the *same* access predicate (granted + unarchived + visible), not just the stored per-user rows — so revoking/archiving/drafting a solution drops it from those lists immediately. The `favorite`/`recent` rows are a cache, not the access source.
 - Solution access itself = `solutionId ∈ (solutions granted to the user's groups)` (the union query). Used inside both guards.
 
 ### Sessions & lifecycle
 
-- DB-backed sessions (better-auth `session` table) → revocable, enumerable. This is _why_ better-auth over JWTs.
-- **Idle timeout (15 min):** `session: { expiresIn: 15m, updateAge: ~0 }` so the expiry slides forward on each authenticated request → the session dies 15 min after the _last activity_ (idle, not absolute). **Disable `cookieCache`** (or cap it well below 15 min) so requests hit the DB and refresh/revocation are exact. The 60s warning modal + "stay signed in" ping is client-side. **Verification gate:** a test that simulates activity-before-expiry (expiry extends) and idle-past-15m (rejected across tRPC, RSC, `/api/chat`).
+- DB-backed sessions (better-auth `session` table) → revocable, enumerable. This is *why* better-auth over JWTs.
+- **Idle timeout (15 min):** `session: { expiresIn: 15m, updateAge: ~0 }` so the expiry slides forward on each authenticated request → the session dies 15 min after the *last activity* (idle, not absolute). **Disable `cookieCache`** (or cap it well below 15 min) so requests hit the DB and refresh/revocation are exact. The 60s warning modal + "stay signed in" ping is client-side. **Verification gate:** a test that simulates activity-before-expiry (expiry extends) and idle-past-15m (rejected across tRPC, RSC, `/api/chat`).
 - **Devices & sessions** (FR-ACCT-03) → `listSessions` / `revokeSession` / `revokeOtherSessions`. **Admin force-sign-out** (FR-ADM-P-05) → admin-plugin revoke-user-sessions.
 - **Password reset / change** → `sendResetPassword` + `revokeSessionsOnPasswordReset: true`; strength ≥3 in a shared zod schema (UI meter + server).
 
 ### Person lifecycle — invite, disable, status (single source per state)
 
 - **Invite / "pending"** (decided): admin `createUser` **with a generated throwaway password** (so a credential `account` exists), then email better-auth's reset link as the "set your password" message. Activation is explicit, not assumed:
-  - **No separate email-verification step** in foundation — clicking the link and setting a password _is_ the verification.
+  - **No separate email-verification step** in foundation — clicking the link and setting a password *is* the verification.
   - better-auth's **`onPasswordReset` hook** (or the reset-callback route) flips `status` `pending → active` atomically, only for pending users.
   - A **sign-in guard rejects `status = 'pending'`** accounts except on the set-password path, so an un-activated invite can't get a workspace session.
   - **Fallback** (verify at impl): if better-auth's reset can't activate an admin-created unverified account, switch to a custom invite-token + admin `set-user-password` flow rather than discovering it mid-build.
-- **Disabled** is enforced solely by better-auth `banUser`/`unbanUser` (`banned`). The custom **`status` field is invite-lifecycle only (`pending | active`)** — it does _not_ carry "disabled".
+- **Disabled** is enforced solely by better-auth `banUser`/`unbanUser` (`banned`). The custom **`status` field is invite-lifecycle only (`pending | active`)** — it does *not* carry "disabled".
 - **Forced password change:** a custom `user.mustChangePassword` flag (set for the bootstrap admin, since its `ADMIN_PASSWORD` is operator-known) — better-auth has no built-in flag for this.
 - **Limited-session states are enforced server-side at one point, not by page redirects.** `pending` is blocked at better-auth's `session.create.before` hook (the same surface its banned-user check uses), except on the set-password path. `mustChangePassword` users may hold a session, but the **shared session accessor used by RSC, tRPC, and `/api/chat`** returns "password-change-required" and rejects every non-auth action until cleared. Acceptance tests hit RSC load, tRPC, and `/api/chat` **directly**, not just browser navigation.
 - The FR tri-state is **derived**, not dual-written: `pending` ← `status`; `disabled` ← `banned`; `active` ← otherwise. All better-auth admin calls go behind **one domain service** so `banUser`/`createUser`/role-set aren't called raw from UI procedures.

@@ -103,7 +103,7 @@ End-to-end test of a brand-new deployment: build the app image, start it with it
 export BETTER_AUTH_SECRET="$(openssl rand -base64 32)"   # ≥32 chars
 export ADMIN_EMAIL="admin@example.com"
 export ADMIN_PASSWORD="Sup3rSecret!pw"                   # must pass the strength rule
-# Optional: export BETTER_AUTH_URL="http://localhost:3000"  (default)
+# Optional: export PUBLIC_BASE_URL="http://localhost:3000"  (default)
 
 # 2. Build + boot app + ephemeral Postgres on a fresh volume
 docker compose -f docker-compose.full.yml up --build -d
