@@ -74,7 +74,7 @@ export async function inviteUser(args: {
     await auth.api.requestPasswordReset({
       body: {
         email: args.email,
-        redirectTo: `${process.env.BETTER_AUTH_URL ?? ""}/set-password`,
+        redirectTo: `${process.env.PUBLIC_BASE_URL ?? ""}/set-password`,
       },
     });
   }

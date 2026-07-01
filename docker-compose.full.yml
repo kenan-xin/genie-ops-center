@@ -39,7 +39,7 @@ services:
       # Postgres URL pointing at the compose service (not localhost).
       DATABASE_URL: postgres://${POSTGRES_USER:-genie}:${POSTGRES_PASSWORD:-genie}@db:5432/${POSTGRES_DB:-genie}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required}
-      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:3000}
       # First-admin bootstrap. Seeded only on a fresh (empty-user) DB; clear after.
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}

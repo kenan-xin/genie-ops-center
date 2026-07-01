@@ -23,12 +23,13 @@ const configSchema = z.object({
   // Postgres — required for both the app pool and migrations.
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
 
-  // better-auth — secret MUST be ≥32 chars; baseURL is the public URL of this
-  // deployment (used for cookies/reset links).
+  // better-auth secret — MUST be ≥32 chars.
   BETTER_AUTH_SECRET: z
     .string()
     .min(32, "BETTER_AUTH_SECRET must be at least 32 characters (openssl rand -base64 32)"),
-  BETTER_AUTH_URL: z.url("BETTER_AUTH_URL must be a valid URL"),
+  // This deployment's public URL — better-auth cookies/reset links, and the
+  // server-side tRPC client's base (src/trpc/provider.tsx).
+  PUBLIC_BASE_URL: z.url("PUBLIC_BASE_URL must be a valid URL"),
 
   PORT: z.coerce.number().int().positive().default(3000),
 

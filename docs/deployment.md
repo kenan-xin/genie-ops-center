@@ -25,14 +25,14 @@ Because it connects to whatever `DATABASE_URL` points at, the same image is used
 
 ## Required environment
 
-| Var                              | Required                     | Notes                                                                     |
-| -------------------------------- | ---------------------------- | ------------------------------------------------------------------------- |
-| `DATABASE_URL`                   | **yes**                      | Your external Postgres, e.g. `postgres://user:pass@db.host:5432/dbname`   |
-| `BETTER_AUTH_SECRET`             | **yes**                      | ≥32 chars — `openssl rand -base64 32`                                     |
-| `BETTER_AUTH_URL`                | **yes**                      | Public base URL of this deployment (cookies, reset links)                 |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | first boot only              | Bootstrap admin; strength-checked; **clear after first boot**             |
-| `EXTERNAL_CHAT_API_BASE`         | when chat ships              | The Genie chat API the `/api/chat` proxy calls (public — no token needed) |
-| `ALLOWED_IFRAME_ORIGINS`         | when embedded solutions ship | Comma-separated origins for CSP `frame-src`                               |
+| Var                              | Required                     | Notes                                                                           |
+| -------------------------------- | ---------------------------- | ------------------------------------------------------------------------------- |
+| `DATABASE_URL`                   | **yes**                      | Your external Postgres, e.g. `postgres://user:pass@db.host:5432/dbname`         |
+| `BETTER_AUTH_SECRET`             | **yes**                      | ≥32 chars — `openssl rand -base64 32`                                           |
+| `PUBLIC_BASE_URL`                | **yes**                      | Public base URL of this deployment (auth cookies/reset links, server-side tRPC) |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | first boot only              | Bootstrap admin; strength-checked; **clear after first boot**                   |
+| `EXTERNAL_CHAT_API_BASE`         | when chat ships              | The Genie chat API the `/api/chat` proxy calls (public — no token needed)       |
+| `ALLOWED_IFRAME_ORIGINS`         | when embedded solutions ship | Comma-separated origins for CSP `frame-src`                                     |
 
 Secrets are supplied via env **only** — never baked into the image.
 
@@ -44,7 +44,7 @@ Secrets are supplied via env **only** — never baked into the image.
 # .env (your real prod values)
 DATABASE_URL=postgres://...your-external-postgres...
 BETTER_AUTH_SECRET=...
-BETTER_AUTH_URL=https://workspace.example.com
+PUBLIC_BASE_URL=https://workspace.example.com
 ADMIN_EMAIL=admin@example.com
 ADMIN_PASSWORD=...           # first boot only
 
