@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { groupsRouter } from "@/features/groups/server/router";
+import { solutionsRouter } from "@/features/solutions/server/router";
 import { themesRouter } from "@/features/themes/server/router";
 import { usersRouter } from "@/features/users/server/router";
 
@@ -17,6 +18,7 @@ export const appRouter = createTRPCRouter({
   })),
   groups: groupsRouter,
   themes: themesRouter,
+  solutions: solutionsRouter,
   users: usersRouter,
 });
 
