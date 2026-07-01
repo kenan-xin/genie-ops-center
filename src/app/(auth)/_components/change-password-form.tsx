@@ -37,7 +37,7 @@ type Values = z.infer<typeof schema>;
 export function ChangePasswordForm() {
   const router = useRouter();
   const { toast } = useToast();
-  const { data: session, refetch } = authClient.useSession();
+  const { refetch } = authClient.useSession();
   const {
     register,
     handleSubmit,
@@ -59,8 +59,13 @@ export function ChangePasswordForm() {
       return;
     }
     toast({ tone: "success", description: "Password updated." });
+    // Read a FRESH session for the redirect decision — the pre-refetch `session`
+    // closure is stale (and may not have loaded), which could send a forced-change
+    // admin to "/" instead of "/admin". getSession also reflects the now-cleared
+    // mustChangePassword flag.
+    const { data: fresh } = await authClient.getSession();
     await refetch();
-    router.replace(isAdminRole(session?.user.role) ? "/admin" : "/");
+    router.replace(isAdminRole(fresh?.user?.role) ? "/admin" : "/");
   });
 
   const newPassword = watch("newPassword");

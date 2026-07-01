@@ -47,7 +47,14 @@ export async function inviteUser(args: {
   await db.update(user).set({ status: "pending" }).where(eq(user.id, created.user.id));
 
   if (args.sendReset !== false) {
-    await auth.api.requestPasswordReset({ body: { email: args.email } });
+    // Point the invite link at /set-password (the activation landing) instead of
+    // better-auth's default reset callback — otherwise /set-password has no caller.
+    await auth.api.requestPasswordReset({
+      body: {
+        email: args.email,
+        redirectTo: `${process.env.BETTER_AUTH_URL ?? ""}/set-password`,
+      },
+    });
   }
   return { id: created.user.id };
 }
@@ -83,6 +90,10 @@ export async function adminSetPassword(
 ): Promise<void> {
   assertStrongPassword(newPassword);
   await auth.api.setUserPassword({ body: { userId, newPassword }, headers });
+  // better-auth's admin set-password writes via updateMany, which does NOT fire
+  // the row-shaped `account.update.after` hook — so clear the force-change flag
+  // here too, or an admin-reset user stays stuck in password-change-required.
+  await db.update(user).set({ mustChangePassword: false }).where(eq(user.id, userId));
 }
 
 /** Force a password change on next entry. (Direct DB write — not a better-auth concept.) */

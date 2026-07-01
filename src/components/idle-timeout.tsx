@@ -14,17 +14,25 @@ import {
 } from "@/components/ui/dialog";
 import { authClient } from "@/lib/auth-client";
 
-const IDLE_MS = 15 * 60 * 1000; // 15 min of inactivity before the warning (FR-AUTH-04)
+const SESSION_MS = 15 * 60 * 1000; // server sliding session lifetime (auth.ts expiresIn)
 const COUNTDOWN_S = 60; // grace period inside the modal
+// Warn BEFORE the server would expire, so the "Stay signed in" refetch still
+// lands inside the valid window and actually slides the session forward — if we
+// warned AT expiry, the refresh could arrive too late to refresh anything.
+const IDLE_MS = SESSION_MS - COUNTDOWN_S * 1000;
+// Throttle: an active user who only moves the mouse makes no authed request, so
+// the server session would silently expire. Slide it on activity, at most this
+// often, to keep an active session alive without hammering the endpoint.
+const KEEPALIVE_MS = SESSION_MS / 2;
 const ACTIVITY = ["mousemove", "mousedown", "keydown", "scroll", "touchstart"] as const;
 
 /**
- * Client idle watcher for authenticated surfaces. After 15 min without activity
- * it opens a modal counting down 60s. "Stay signed in" pings get-session — an
- * authed request, which slides the sliding 15-min server expiry forward
- * (auth.ts: updateAge 0) — and re-arms. Reaching zero or "Sign out" clears
- * transient state and returns to sign-in (FR-AUTH-05). Motion is the kit
- * dialog's, already reduced-motion-safe via the global reset.
+ * Client idle watcher for authenticated surfaces. Opens a warning modal 60s
+ * before the 15-min server session would lapse, counting down 60s. Activity
+ * re-arms the timer and (throttled) slides the server session; "Stay signed in"
+ * refetches get-session — an authed request that slides the sliding expiry
+ * (auth.ts: updateAge 0). Reaching zero or "Sign out" clears state and returns
+ * to sign-in (FR-AUTH-04/05). Motion is the kit dialog's, reduced-motion-safe.
  */
 export function IdleTimeout() {
   const router = useRouter();
@@ -34,6 +42,7 @@ export function IdleTimeout() {
   const [warning, setWarning] = useState(false);
   const [remaining, setRemaining] = useState(COUNTDOWN_S);
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastPing = useRef(0);
 
   const armIdle = useCallback(() => {
     if (idleTimer.current) clearTimeout(idleTimer.current);
@@ -57,13 +66,22 @@ export function IdleTimeout() {
   useEffect(() => {
     if (!hasSession || warning) return;
     armIdle();
-    const onActivity = () => armIdle();
+    const onActivity = () => {
+      armIdle();
+      // Throttled keepalive: slide the SERVER session on activity so an active
+      // user (moving the mouse but not navigating) isn't silently expired.
+      const now = Date.now();
+      if (now - lastPing.current > KEEPALIVE_MS) {
+        lastPing.current = now;
+        void refetch();
+      }
+    };
     for (const e of ACTIVITY) window.addEventListener(e, onActivity, { passive: true });
     return () => {
       for (const e of ACTIVITY) window.removeEventListener(e, onActivity);
       if (idleTimer.current) clearTimeout(idleTimer.current);
     };
-  }, [hasSession, warning, armIdle]);
+  }, [hasSession, warning, armIdle, refetch]);
 
   // Tick the countdown while the warning is open; sign out at zero.
   useEffect(() => {
