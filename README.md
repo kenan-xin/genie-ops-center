@@ -4,7 +4,7 @@
 
 See **[`docs/`](./docs/README.md)** for the full design: [what & why](./docs/epic-brief/index.md), [architecture](./docs/tech-plan/index.md), and the [implementation tickets](./docs/tickets/index.md).
 
-> **Status: foundation built.** ✅ Scaffold + Ledger component kit · ✅ Identity + schema + migrations (better-auth) · ✅ Docker image. Next: the auth/admin/workspace/chat UI (tickets 04+).
+> **Status: foundation built.** ✅ Scaffold + Ledger component kit · ✅ Identity + schema + migrations (better-auth) · ✅ Docker image · ✅ Auth flows & screens (sign-in, admin sign-in, forgot/reset/set-password, change-password, idle timeout). Next: the admin console, workspace, and chat (tickets 05+).
 
 ## Tech stack
 
@@ -85,7 +85,7 @@ No code changes between the two. The Drizzle client and drizzle-kit both read `D
 ```
 src/
   app/
-    (auth)/        # sign-in, admin sign-in, forgot/reset/set password  (ticket 04)
+    (auth)/        # sign-in, admin sign-in, forgot/reset/set/change-password ✅
     (workspace)/   # customer surface: Solutions hub, viewer, account   (phase 3)
     (admin)/       # Admin Portal: people, groups, solutions, themes    (phase 2)
     api/
@@ -94,6 +94,8 @@ src/
       chat/           # external SSE → ai-sdk chat proxy               (phase 4)
       health/         # /api/health
   components/ui/     # the Ledger component kit (shadcn-on-Base UI)
+  components/        # idle-timeout + theme/provider
+  lib/               # auth-client (better-auth/react) + client-safe password-strength
   server/
     auth.ts bootstrap.ts config.ts entrypoint.ts authz.ts
     trpc/            # router, procedures, guards (public/protected/admin)
@@ -102,7 +104,7 @@ src/
   trpc/              # client provider (TanStack Query + devtools)
 drizzle/             # migration SQL + journal (drizzle-kit is sole owner)
 docs/                # mirrored planning artifacts (see docs/README.md)
-Dockerfile · docker-compose.{dev,app,full}.yml · entrypoint bundle
+Dockerfile · docker-compose.{dev,app,full}.yml · lefthook.yml · entrypoint bundle
 ```
 
 ## Code quality & conventions
