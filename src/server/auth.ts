@@ -39,18 +39,17 @@ export const auth = betterAuth({
     revokeSessionsOnPasswordReset: true,
     resetPasswordTokenExpiresIn: ONE_MINUTE * 60, // invite link valid for 1h
     sendResetPassword: async ({ user: invitedUser, url }) => {
-      // No mailer in foundation. The reset URL is a bearer takeover token until
-      // it expires, so in PRODUCTION we must fail CLOSED: better-auth has already
-      // created the token by the time this delivery hook runs, so just `return`
-      // would silently swallow the link and report success to the caller while
-      // nothing is delivered. Throwing makes the request fail loudly until a real
-      // delivery adapter is wired. In dev/test the link is logged so the flow is
-      // usable locally without email.
+      // Delivery hook. Better Auth runs this via runInBackgroundOrAwait, which
+      // swallows rejections (logs only) — so throwing here CANNOT fail the
+      // request. Production fail-closed enforcement therefore lives at the
+      // callers (see requireMailerConfigured in user-service.ts), which guard
+      // BEFORE a token/user is created. Here we just never log the bearer URL in
+      // prod; dev/test log it so the flow is usable without a mailer.
       if (process.env.NODE_ENV === "production") {
-        console.error(
-          `[auth] password-reset requested for ${invitedUser.email} but no mailer is configured — request failed. Wire a delivery adapter before enabling reset/invite in production.`,
-        );
-        throw new Error("Password-reset delivery is not configured in production.");
+        // Wire a real delivery adapter here (MAILER_DSN/SMTP_URL) when enabling
+        // reset/invite in production. Until then the link is intentionally
+        // discarded — callers should have refused the request before reaching us.
+        return;
       }
       // eslint-disable-next-line no-console
       console.info(`[auth] password-reset link for ${invitedUser.email}: ${url}`);

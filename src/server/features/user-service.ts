@@ -23,6 +23,23 @@ import { assertStrongPassword } from "@/server/features/password";
 const ADMIN_ROLES: ("user" | "admin")[] = ["user", "admin"]; // "admin" added on top of "user"
 const USER_ROLES: ("user" | "admin")[] = ["user"];
 
+/**
+ * Mailer guard. In production, reset/invite links can only be delivered by a
+ * real delivery adapter — better-auth's `sendResetPassword` hook is fire-and-
+ * forget (its rejection is swallowed by `runInBackgroundOrAwait`, which only
+ * logs), so guarding there can't fail the request. Callers that *initiate* a
+ * reset/invite must call this BEFORE creating a user / token, so the request
+ * fails loudly (no pending user, no undeliverable bearer token). Dev/test skip
+ * it — the hook logs the link there.
+ */
+function requireMailerConfigured(action: "invite" | "reset"): void {
+  if (process.env.NODE_ENV === "production" && !process.env.MAILER_DSN && !process.env.SMTP_URL) {
+    throw new Error(
+      `${action} requires a delivery adapter in production — set MAILER_DSN/SMTP_URL (and wire sendResetPassword to a real provider). Refusing to create an undeliverable ${action} link.`,
+    );
+  }
+}
+
 /** Invite a person: credential account + generated throwaway password, pending. */
 export async function inviteUser(args: {
   email: string;
@@ -30,6 +47,11 @@ export async function inviteUser(args: {
   headers: Headers;
   sendReset?: boolean;
 }): Promise<{ id: string }> {
+  // Fail BEFORE creating anything: better-auth's delivery hook can't surface a
+  // failure (see requireMailerConfigured), so an undeliverable invite would
+  // otherwise leave a pending user with no activation path.
+  requireMailerConfigured("invite");
+
   // The throwaway password is never communicated; the user sets their own via the
   // reset link, which also flips pending→active (the onPasswordReset hook).
   const generatedPassword = crypto.randomUUID() + crypto.randomUUID();
