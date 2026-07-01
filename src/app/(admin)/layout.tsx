@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { IdleTimeout } from "@/components/idle-timeout";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 // ponytail: minimal admin chrome. The real admin-only guard (server layout
@@ -7,6 +8,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col" style={{ background: "var(--bg)" }}>
+      <IdleTimeout />
       <header
         className="flex items-center justify-between px-6 py-3"
         style={{ borderBottom: "1px solid var(--line)" }}

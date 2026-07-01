@@ -2,7 +2,13 @@ import "server-only";
 
 import type { BetterAuthPlugin } from "better-auth";
 import { APIError, createAuthMiddleware } from "better-auth/api";
-import { z } from "zod";
+
+import { passwordSchema, strength } from "@/lib/password-strength";
+
+// The strength rule itself lives in a client-safe module so the UI meter and
+// the server enforce the exact same rule. Re-exported here to keep the existing
+// `@/server/features/password` import surface (auth plugin, bootstrap, etc.).
+export { passwordSchema, strength };
 
 const PASSWORD_SETTING_PATHS = new Set([
   "/sign-up/email",
@@ -12,30 +18,6 @@ const PASSWORD_SETTING_PATHS = new Set([
   "/admin/create-user",
   "/admin/set-user-password",
 ]);
-
-/**
- * Shared password-strength schema (UI meter + server use the same one).
- * Strength ≥3 of: length≥10, lowercase, uppercase, digit, symbol. No new dep —
- * plain zod refinements. (tech-plan → "Password reset / change".)
- */
-export const passwordSchema = z
-  .string()
-  .min(8, "At least 8 characters")
-  .refine(
-    (pw) => strength(pw) >= 3,
-    "Use a stronger password (3 of: length, lower, upper, digit, symbol)",
-  );
-
-/** 0–5 strength buckets; ≥3 is acceptable. */
-export function strength(pw: string): number {
-  let score = 0;
-  if (pw.length >= 10) score++;
-  if (/[a-z]/.test(pw)) score++;
-  if (/[A-Z]/.test(pw)) score++;
-  if (/[0-9]/.test(pw)) score++;
-  if (/[^a-zA-Z0-9]/.test(pw)) score++;
-  return score;
-}
 
 /** Throws on a weak password — used by bootstrap and any admin-set path. */
 export function assertStrongPassword(pw: string): void {

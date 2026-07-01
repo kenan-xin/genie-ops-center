@@ -52,6 +52,10 @@ export const auth = betterAuth({
         .update(user)
         .set({ status: "active" })
         .where(and(eq(user.id, u.id), eq(user.status, "pending")));
+      // The reset path updates the credential WITHOUT firing the account.update
+      // hook (verified), so clear any force-change here too — a forced-change user
+      // who resets via the link mustn't stay stuck in password-change-required.
+      await db.update(user).set({ mustChangePassword: false }).where(eq(user.id, u.id));
     },
   },
   user: {
@@ -90,6 +94,23 @@ export const auth = betterAuth({
     admin({ adminRoles: ["admin"], defaultRole: "user" }),
   ],
   databaseHooks: {
+    account: {
+      update: {
+        // The credential password lives in the account table, so any legitimate
+        // password write (change / reset / set-password / admin-set) updates this
+        // row. That's the single point where a forced change is satisfied, so we
+        // clear `mustChangePassword` here — the force-change loop always
+        // terminates, whichever path set the new password. Idempotent.
+        after: async (account) => {
+          if (account.userId) {
+            await db
+              .update(user)
+              .set({ mustChangePassword: false })
+              .where(eq(user.id, account.userId));
+          }
+        },
+      },
+    },
     session: {
       create: {
         before: async (session) => {
