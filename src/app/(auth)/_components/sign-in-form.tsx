@@ -53,20 +53,19 @@ export function SignInForm({ mode, notice }: { mode: "workspace" | "admin"; noti
     }
 
     const user = data.user;
+    // Admin door rejects non-admins FIRST (FR-AUTH-02) — before any
+    // mustChangePassword handling — so a non-admin forced-change account can't
+    // slip into the limited-session change-password flow via /admin/login.
+    if (mode === "admin" && !isAdminRole(user.role)) {
+      await authClient.signOut();
+      setFormError("This account doesn't have administrator access.");
+      return;
+    }
     if (user.mustChangePassword) {
       router.replace("/change-password");
       return;
     }
-    if (mode === "admin") {
-      if (!isAdminRole(user.role)) {
-        await authClient.signOut();
-        setFormError("This account doesn't have administrator access.");
-        return;
-      }
-      router.replace("/admin");
-      return;
-    }
-    router.replace("/");
+    router.replace(mode === "admin" ? "/admin" : "/");
   });
 
   return (
