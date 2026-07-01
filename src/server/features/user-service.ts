@@ -23,6 +23,23 @@ import { assertStrongPassword } from "@/server/features/password";
 const ADMIN_ROLES: ("user" | "admin")[] = ["user", "admin"]; // "admin" added on top of "user"
 const USER_ROLES: ("user" | "admin")[] = ["user"];
 
+/**
+ * Mailer guard. In production, reset/invite links can only be delivered by a
+ * real delivery adapter — better-auth's `sendResetPassword` hook is fire-and-
+ * forget (its rejection is swallowed by `runInBackgroundOrAwait`, which only
+ * logs), so guarding there can't fail the request. Callers that *initiate* a
+ * reset/invite must call this BEFORE creating a user / token, so the request
+ * fails loudly (no pending user, no undeliverable bearer token). Dev/test skip
+ * it — the hook logs the link there.
+ */
+function requireMailerConfigured(action: "invite" | "reset"): void {
+  if (process.env.NODE_ENV === "production" && !process.env.MAILER_DSN && !process.env.SMTP_URL) {
+    throw new Error(
+      `${action} requires a delivery adapter in production — set MAILER_DSN/SMTP_URL (and wire sendResetPassword to a real provider). Refusing to create an undeliverable ${action} link.`,
+    );
+  }
+}
+
 /** Invite a person: credential account + generated throwaway password, pending. */
 export async function inviteUser(args: {
   email: string;
@@ -30,6 +47,11 @@ export async function inviteUser(args: {
   headers: Headers;
   sendReset?: boolean;
 }): Promise<{ id: string }> {
+  // Fail BEFORE creating anything: better-auth's delivery hook can't surface a
+  // failure (see requireMailerConfigured), so an undeliverable invite would
+  // otherwise leave a pending user with no activation path.
+  requireMailerConfigured("invite");
+
   // The throwaway password is never communicated; the user sets their own via the
   // reset link, which also flips pending→active (the onPasswordReset hook).
   const generatedPassword = crypto.randomUUID() + crypto.randomUUID();
@@ -47,7 +69,14 @@ export async function inviteUser(args: {
   await db.update(user).set({ status: "pending" }).where(eq(user.id, created.user.id));
 
   if (args.sendReset !== false) {
-    await auth.api.requestPasswordReset({ body: { email: args.email } });
+    // Point the invite link at /set-password (the activation landing) instead of
+    // better-auth's default reset callback — otherwise /set-password has no caller.
+    await auth.api.requestPasswordReset({
+      body: {
+        email: args.email,
+        redirectTo: `${process.env.BETTER_AUTH_URL ?? ""}/set-password`,
+      },
+    });
   }
   return { id: created.user.id };
 }
@@ -83,6 +112,10 @@ export async function adminSetPassword(
 ): Promise<void> {
   assertStrongPassword(newPassword);
   await auth.api.setUserPassword({ body: { userId, newPassword }, headers });
+  // better-auth's admin set-password writes via updateMany, which does NOT fire
+  // the row-shaped `account.update.after` hook — so clear the force-change flag
+  // here too, or an admin-reset user stays stuck in password-change-required.
+  await db.update(user).set({ mustChangePassword: false }).where(eq(user.id, userId));
 }
 
 /** Force a password change on next entry. (Direct DB write — not a better-auth concept.) */

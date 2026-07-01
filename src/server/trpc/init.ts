@@ -18,7 +18,9 @@ const t = initTRPC.context<Awaited<ReturnType<typeof createTRPCContext>>>().crea
 
 export const createTRPCRouter = t.router;
 export const createCallerFactory = t.createCallerFactory;
-export const baseProcedure = t.procedure;
+// NOTE: the raw `t.procedure` is intentionally NOT exported — feature routers
+// must use one of the three tiers below (public/protected/admin) so the
+// limited-session handling can't be bypassed by accident.
 
 /**
  * Three tiers (tech-plan → "boundary is server-enforced"). The limited-session

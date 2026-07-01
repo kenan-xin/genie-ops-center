@@ -39,8 +39,18 @@ export const auth = betterAuth({
     revokeSessionsOnPasswordReset: true,
     resetPasswordTokenExpiresIn: ONE_MINUTE * 60, // invite link valid for 1h
     sendResetPassword: async ({ user: invitedUser, url }) => {
-      // No email transport in foundation — surface the link via log. Ops/email
-      // delivery is a later slice. (ponytail: log, not no-op, so the link is visible.)
+      // Delivery hook. Better Auth runs this via runInBackgroundOrAwait, which
+      // swallows rejections (logs only) — so throwing here CANNOT fail the
+      // request. Production fail-closed enforcement therefore lives at the
+      // callers (see requireMailerConfigured in user-service.ts), which guard
+      // BEFORE a token/user is created. Here we just never log the bearer URL in
+      // prod; dev/test log it so the flow is usable without a mailer.
+      if (process.env.NODE_ENV === "production") {
+        // Wire a real delivery adapter here (MAILER_DSN/SMTP_URL) when enabling
+        // reset/invite in production. Until then the link is intentionally
+        // discarded — callers should have refused the request before reaching us.
+        return;
+      }
       // eslint-disable-next-line no-console
       console.info(`[auth] password-reset link for ${invitedUser.email}: ${url}`);
     },
@@ -52,6 +62,10 @@ export const auth = betterAuth({
         .update(user)
         .set({ status: "active" })
         .where(and(eq(user.id, u.id), eq(user.status, "pending")));
+      // The reset path updates the credential WITHOUT firing the account.update
+      // hook (verified), so clear any force-change here too — a forced-change user
+      // who resets via the link mustn't stay stuck in password-change-required.
+      await db.update(user).set({ mustChangePassword: false }).where(eq(user.id, u.id));
     },
   },
   user: {
@@ -90,6 +104,23 @@ export const auth = betterAuth({
     admin({ adminRoles: ["admin"], defaultRole: "user" }),
   ],
   databaseHooks: {
+    account: {
+      update: {
+        // The credential password lives in the account table, so any legitimate
+        // password write (change / reset / set-password / admin-set) updates this
+        // row. That's the single point where a forced change is satisfied, so we
+        // clear `mustChangePassword` here — the force-change loop always
+        // terminates, whichever path set the new password. Idempotent.
+        after: async (account) => {
+          if (account.userId) {
+            await db
+              .update(user)
+              .set({ mustChangePassword: false })
+              .where(eq(user.id, account.userId));
+          }
+        },
+      },
+    },
     session: {
       create: {
         before: async (session) => {
@@ -102,8 +133,11 @@ export const auth = betterAuth({
             .from(user)
             .where(eq(user.id, session.userId))
             .limit(1);
-          // Returning false aborts session creation — blocks a pending invite's sign-in.
-          return u?.status !== "pending";
+          // Returning false aborts session creation. Fail CLOSED on unknown/null
+          // status (treat anything that isn't explicitly "active" as not-yet-
+          // usable) so a bad value can never become a live session. Pending
+          // invites are blocked here; active users pass.
+          return u?.status === "active";
         },
       },
     },

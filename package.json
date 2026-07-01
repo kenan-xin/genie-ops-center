@@ -14,7 +14,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
-    "build:entrypoint": "esbuild src/server/entrypoint.ts --bundle --platform=node --format=esm --outfile=dist/entrypoint.mjs --external:pg --alias:@=./src --alias:server-only=./scripts/server-only-empty.ts",
+    "build:entrypoint": "esbuild src/server/entrypoint.ts --bundle --platform=node --format=esm --outfile=dist/entrypoint.mjs --external:pg --alias:@=./src --conditions=react-server",
     "db:dev": "docker compose -f docker-compose.dev.yml up -d",
     "db:dev:stop": "docker compose -f docker-compose.dev.yml stop",
     "db:dev:down": "docker compose -f docker-compose.dev.yml down",

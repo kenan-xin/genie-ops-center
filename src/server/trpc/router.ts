@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { baseProcedure, createTRPCRouter } from "./init";
+import { createTRPCRouter, publicProcedure } from "./init";
 
 /**
  * Root app router. Feature routers merge in here as later tickets land
@@ -8,7 +8,7 @@ import { baseProcedure, createTRPCRouter } from "./init";
  * proving the roundtrip from both the RSC caller and the client hook.
  */
 export const appRouter = createTRPCRouter({
-  hello: baseProcedure.input(z.object({ name: z.string() }).optional()).query(({ input }) => ({
+  hello: publicProcedure.input(z.object({ name: z.string() }).optional()).query(({ input }) => ({
     greeting: `Hello, ${input?.name ?? "operator"}.`,
   })),
 });

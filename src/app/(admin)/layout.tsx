@@ -1,12 +1,23 @@
+import { headers } from "next/headers";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
+import { IdleTimeout } from "@/components/idle-timeout";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { getServerAuth, isAdmin } from "@/server/authz";
 
-// ponytail: minimal admin chrome. The real admin-only guard (server layout
-// redirect + adminProcedure) lands with auth (ticket 03).
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+// Server-enforced admin boundary: /admin is admin-only. The tRPC adminProcedure
+// guards mutations; this guards the route itself so the pages never render for
+// a non-admin. (tech-plan → admin boundary in server layouts.)
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const auth = await getServerAuth(await headers());
+  if (auth.status === "unauthenticated") redirect("/admin/login");
+  if (auth.status === "password-change-required") redirect("/change-password");
+  if (!isAdmin(auth.user)) redirect("/"); // authenticated, but not an admin
+
   return (
     <div className="flex min-h-dvh flex-col" style={{ background: "var(--bg)" }}>
+      <IdleTimeout />
       <header
         className="flex items-center justify-between px-6 py-3"
         style={{ borderBottom: "1px solid var(--line)" }}

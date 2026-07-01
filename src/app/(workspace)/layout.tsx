@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { IdleTimeout } from "@/components/idle-timeout";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 import { WorkspaceNav } from "./workspace-nav";
@@ -14,6 +15,7 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-dvh" style={{ background: "var(--bg)" }}>
+      <IdleTimeout />
       {/* Hamburger — mobile only (<920px). */}
       <button
         type="button"
