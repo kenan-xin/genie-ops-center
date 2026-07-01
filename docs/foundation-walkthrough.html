@@ -233,7 +233,7 @@
 
       <h2>Gotchas</h2>
       <ul class="tight">
-        <li><strong><code>server-only</code> vs the better-auth CLI / esbuild</strong> — the entrypoint is bundled with <code>--alias:server-only=…/server-only-empty.ts</code> and run with <code>node --conditions react-server</code>. Don't remove those.</li>
+        <li><strong><code>server-only</code> in standalone scripts</strong> — the container entrypoint is run with <code>node --conditions react-server</code>, the official way to make <code>server-only</code> resolve to its no-op outside Next's build. (The <code>@better-auth/cli generate</code> step is a one-time authoring op that needs a minimal config without <code>server-only</code>.)</li>
         <li><strong><code>next build</code> needs env present</strong> — server modules are evaluated for page-data; the Dockerfile passes throwaway placeholders (standalone reads <code>process.env</code> at runtime — secrets aren't baked).</li>
         <li><strong>Migrations ⇒ drizzle-kit only</strong> — never run better-auth's own <code>migrate</code>; auth tables are CLI-generated into <code>auth-schema.ts</code>, then owned by the single drizzle history.</li>
         <li><strong>TransferList TS 71007</strong> — a benign Next RSC-serializability hint on a client-only <code>onChange</code>; <code>tsc</code>/<code>oxlint</code>/<code>build</code> are clean.</li>
