@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { groupsRouter } from "@/features/groups/server/router";
 import { themesRouter } from "@/features/themes/server/router";
 import { usersRouter } from "@/features/users/server/router";
 
@@ -14,6 +15,7 @@ export const appRouter = createTRPCRouter({
   hello: publicProcedure.input(z.object({ name: z.string() }).optional()).query(({ input }) => ({
     greeting: `Hello, ${input?.name ?? "operator"}.`,
   })),
+  groups: groupsRouter,
   themes: themesRouter,
   users: usersRouter,
 });
