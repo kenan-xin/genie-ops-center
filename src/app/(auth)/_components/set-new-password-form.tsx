@@ -13,8 +13,8 @@ import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 import { passwordSchema } from "@/lib/password-strength";
 
-import { FieldError, FormError } from "./auth-feedback";
-import { PasswordStrengthMeter } from "./password-strength-meter";
+import { FieldError, FormError } from "@/components/ui/form-feedback";
+import { PasswordStrengthMeter } from "@/components/ui/password-strength-meter";
 
 const schema = z
   .object({

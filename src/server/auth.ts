@@ -89,6 +89,17 @@ export const auth = betterAuth({
     // 0 ⇒ refresh the expiry on every authenticated request → a true sliding
     // idle window (15 min since last activity), not an absolute timeout.
     updateAge: 0,
+    // 0 ⇒ disable better-auth's freshness gate. `freshAge` measures now−createdAt
+    // (time since *login*) and is a step-up ("sudo mode") trigger for long-lived
+    // sessions paired with a re-auth flow — we have neither. Our sessions slide
+    // on activity so createdAt legitimately ages past the default 24h while the
+    // user stays active, which would (wrongly) break listSessions (the devices
+    // list — the only used, freshness-gated endpoint here). updateUser/rename is
+    // NOT gated. Sensitive actions here re-auth explicitly instead
+    // (change-password needs currentPassword; a future delete would pass a
+    // password, which bypasses freshness anyway). See
+    // docs/tech-plan/account-sessions.
+    freshAge: 0,
     cookieCache: {
       // Explicitly disabled. Each request resolves the session against the DB so
       // refresh/revocation/ban take effect immediately across all three surfaces

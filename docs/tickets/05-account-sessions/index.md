@@ -1,7 +1,7 @@
 ---
 kind: ticket
 title: "05 · Account & sessions"
-status: 0
+status: 2
 ---
 
 # 05 · Account & sessions
@@ -20,7 +20,7 @@ Customer self-service account management (FR-ACCT).
 
 ## Governs
 
-[tech-plan](../../tech-plan/index.md) (Devices & sessions), [data-model](../../tech-plan/data-model/index.md) (session table).
+[tech-plan](../../tech-plan/index.md) (Devices & sessions), [data-model](../../tech-plan/data-model/index.md) (session table). Technical approach: [account-sessions plan](../../tech-plan/account-sessions/index.md).
 
 ## Depends on
 

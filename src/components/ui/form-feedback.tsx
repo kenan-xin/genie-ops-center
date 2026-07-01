@@ -1,5 +1,6 @@
-// Shared inline feedback primitives for the auth forms. Hairline-boxed, tinted
-// per tone — neutral copy, customer-safe (NFR-CONTENT-01).
+// Shared inline form-feedback primitives. Hairline-boxed, tinted per tone —
+// neutral copy, customer-safe (NFR-CONTENT-01). Used by the auth forms and the
+// account settings forms, so they live in components/ui, not a route group.
 
 /** Field-level error under an input. */
 export function FieldError({ message }: { message?: string }) {

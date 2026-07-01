@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient, isAdminRole } from "@/lib/auth-client";
 
-import { FieldError, FormError, NoticeBanner } from "./auth-feedback";
+import { FieldError, FormError, NoticeBanner } from "@/components/ui/form-feedback";
 
 const schema = z.object({
   email: z.email("Enter a valid email"),

@@ -16,6 +16,8 @@ const TEXT: Record<StrengthTone, string> = {
 
 // Live UX meter — the gate itself is the shared zod schema (server + form),
 // this only visualizes it. Transition obeys the global reduced-motion reset.
+// Shared by the auth set/reset/change screens and the account change-password
+// section, so it lives in components/ui rather than any one route group.
 export function PasswordStrengthMeter({ value }: { value: string }) {
   const score = value ? strength(value) : 0;
   const { label, tone } = strengthMeta(score);

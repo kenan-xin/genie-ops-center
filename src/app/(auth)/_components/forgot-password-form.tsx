@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth-client";
 
-import { FieldError } from "./auth-feedback";
+import { FieldError } from "@/components/ui/form-feedback";
 
 const schema = z.object({ email: z.email("Enter a valid email") });
 type Values = z.infer<typeof schema>;
