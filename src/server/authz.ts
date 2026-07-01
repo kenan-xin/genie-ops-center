@@ -80,14 +80,16 @@ export async function getServerAuth(incoming?: Headers): Promise<ServerAuth> {
   };
 }
 
-/** FR tri-state derived from two independent fields, never dual-written. */
+/** FR tri-state derived from two independent fields, never dual-written.
+ * Fails CLOSED on unknown/null status — only an explicit "active" counts; a
+ * bad/garbage value is never implicitly active. */
 function deriveFrStatus(u: {
   status?: string | null;
   banned?: boolean | null;
 }): AuthUser["frStatus"] {
   if (u.banned) return "disabled";
-  if (u.status === "pending") return "pending";
-  return "active";
+  if (u.status === "active") return "active";
+  return "pending"; // pending OR unknown/null — never implicitly active
 }
 
 /** Admins hold the `admin` value in the multi-value role string. */

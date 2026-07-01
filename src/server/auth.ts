@@ -39,8 +39,16 @@ export const auth = betterAuth({
     revokeSessionsOnPasswordReset: true,
     resetPasswordTokenExpiresIn: ONE_MINUTE * 60, // invite link valid for 1h
     sendResetPassword: async ({ user: invitedUser, url }) => {
-      // No email transport in foundation — surface the link via log. Ops/email
-      // delivery is a later slice. (ponytail: log, not no-op, so the link is visible.)
+      // No mailer in foundation. The reset URL is a bearer takeover token until
+      // it expires, so in PRODUCTION we fail closed (no logging) until a real
+      // delivery adapter is wired — otherwise stdout/compose/cloud logs leak it.
+      // In dev/test the link is logged so the invite/reset flow is usable locally.
+      if (process.env.NODE_ENV === "production") {
+        console.error(
+          `[auth] password-reset requested for ${invitedUser.email} but no mailer is configured — link not delivered. Wire a delivery adapter before enabling reset/invite in production.`,
+        );
+        return;
+      }
       // eslint-disable-next-line no-console
       console.info(`[auth] password-reset link for ${invitedUser.email}: ${url}`);
     },
@@ -123,8 +131,11 @@ export const auth = betterAuth({
             .from(user)
             .where(eq(user.id, session.userId))
             .limit(1);
-          // Returning false aborts session creation — blocks a pending invite's sign-in.
-          return u?.status !== "pending";
+          // Returning false aborts session creation. Fail CLOSED on unknown/null
+          // status (treat anything that isn't explicitly "active" as not-yet-
+          // usable) so a bad value can never become a live session. Pending
+          // invites are blocked here; active users pass.
+          return u?.status === "active";
         },
       },
     },
