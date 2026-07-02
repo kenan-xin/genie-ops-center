@@ -61,6 +61,7 @@ export function EditPersonSlideOver({
     control,
     register,
     handleSubmit,
+    reset,
     setError,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<EditPersonValues>({
@@ -80,6 +81,11 @@ export function EditPersonSlideOver({
   const remove = useMutation(trpc.users.remove.mutationOptions());
 
   if (!person) return null;
+
+  function handleClose() {
+    reset({ id: person!.id, name: person!.name, email: person!.email, role: person!.role });
+    onOpenChange(false);
+  }
 
   const onSubmit = handleSubmit(async (values) => {
     try {
@@ -200,7 +206,13 @@ export function EditPersonSlideOver({
 
   return (
     <>
-      <SlideOver open={open} onOpenChange={onOpenChange}>
+      <SlideOver
+        open={open}
+        onOpenChange={(next) => {
+          if (next) onOpenChange(next);
+          else handleClose();
+        }}
+      >
         <SlideOverContent>
           <SlideOverHeader>
             <SlideOverTitle>Edit person</SlideOverTitle>
@@ -394,7 +406,7 @@ export function EditPersonSlideOver({
           </SlideOverBody>
 
           <SlideOverFooter>
-            <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+            <Button variant="ghost" onClick={handleClose} disabled={isSubmitting}>
               Cancel
             </Button>
             <Button type="submit" form="edit-person-form" disabled={isSubmitting || !isDirty}>

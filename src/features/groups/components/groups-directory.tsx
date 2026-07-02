@@ -61,7 +61,7 @@ export function GroupsDirectory({ initialGroupId }: { initialGroupId?: string } 
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
-        <h1 className="font-sans text-display font-extrabold tracking-[-0.02em]">Groups</h1>
+        <h1 className="font-sans text-title font-extrabold tracking-[-0.02em]">Groups</h1>
         <p className="text-small text-[var(--ink2)]">
           A group is a set of people. Open a group to manage who&rsquo;s in it — then grant
           solutions to the group over in Access.

@@ -35,7 +35,7 @@ export function AccessScreen() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
-        <h1 className="font-sans text-display font-extrabold tracking-[-0.02em]">Access</h1>
+        <h1 className="font-sans text-title font-extrabold tracking-[-0.02em]">Access</h1>
         <p className="text-small text-[var(--ink2)]">
           Grant solutions to a group, or explore who can reach what — both read the same membership
           ∩ grant union.

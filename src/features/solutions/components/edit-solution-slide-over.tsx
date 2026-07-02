@@ -122,7 +122,7 @@ function EditSolutionForm({
             welcomeMessage: "",
             feedbackEnabled: true,
           }
-        : { iframeUrl: "https://" },
+        : { iframeUrl: "" },
       { shouldDirty: true, shouldValidate: true },
     );
     if (next !== "chat") setValue("themeId", null, { shouldDirty: true });
