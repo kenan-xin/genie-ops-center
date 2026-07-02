@@ -85,6 +85,7 @@ export function GroupInspector({ groupId }: { groupId: string }) {
     id: s.id,
     label: s.name,
     description: s.archived ? "Archived" : s.status,
+    mono: s.monogram ?? undefined,
   }));
 
   async function commitMembers(userIds: string[]) {

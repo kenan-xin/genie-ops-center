@@ -1,7 +1,7 @@
 import "server-only";
 
 import { TRPCError } from "@trpc/server";
-import { and, eq, notInArray, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "@/server/db";
 import { group, groupMember, groupSolution, solution, user } from "@/server/db/schema";
@@ -160,7 +160,7 @@ export async function setMembers(groupId: string, desiredUserIds: string[]): Pro
   if (toRemove.length > 0) {
     await db
       .delete(groupMember)
-      .where(and(eq(groupMember.groupId, groupId), notInArray(groupMember.userId, toRemove)));
+      .where(and(eq(groupMember.groupId, groupId), inArray(groupMember.userId, toRemove)));
   }
 }
 
@@ -186,9 +186,7 @@ export async function setSolutions(groupId: string, desiredSolutionIds: string[]
   if (toRemove.length > 0) {
     await db
       .delete(groupSolution)
-      .where(
-        and(eq(groupSolution.groupId, groupId), notInArray(groupSolution.solutionId, toRemove)),
-      );
+      .where(and(eq(groupSolution.groupId, groupId), inArray(groupSolution.solutionId, toRemove)));
   }
 }
 
