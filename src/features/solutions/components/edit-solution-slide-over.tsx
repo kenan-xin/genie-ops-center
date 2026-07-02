@@ -235,6 +235,21 @@ function ChatConfigFields({
       </div>
 
       <div className="flex flex-col gap-1.5">
+        <Label htmlFor="chat-endpoint">Chat streaming API endpoint</Label>
+        <Input
+          id="chat-endpoint"
+          placeholder="https://dev-genie.001.gs/public-api/v2/workflow/chatbot/chats"
+          {...register("config.apiEndpoint")}
+        />
+        <p className="text-mono-xs text-[var(--ink3)]">
+          Where this solution streams responses from. Must be an approved origin.
+        </p>
+        <FieldError
+          message={(errors.config as { apiEndpoint?: { message?: string } })?.apiEndpoint?.message}
+        />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
         <Label htmlFor="chat-welcome">Welcome message</Label>
         <Textarea
           id="chat-welcome"
