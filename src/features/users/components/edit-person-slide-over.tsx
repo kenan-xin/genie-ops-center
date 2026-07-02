@@ -31,10 +31,12 @@ import {
   STATUS_LABEL,
   type EditPersonValues,
   type Person,
+  type PersonStatus,
 } from "../schemas/person";
 import { TempPasswordDialog } from "./temp-password-dialog";
 
-const STATUS_TONE = { active: "success", pending: "warn", disabled: "error" } as const;
+const STATUS_TONE = { active: "success", pending: "warn", disabled: "neutral" } as const;
+const DOTTED_STATUS = new Set<PersonStatus>(["active", "pending"]);
 
 export function EditPersonSlideOver({
   person,
@@ -204,7 +206,7 @@ export function EditPersonSlideOver({
           <SlideOverHeader>
             <div className="flex items-center gap-2">
               <SlideOverTitle>{person.name}</SlideOverTitle>
-              <StatusBadge tone={STATUS_TONE[person.status]} dot>
+              <StatusBadge tone={STATUS_TONE[person.status]} dot={DOTTED_STATUS.has(person.status)}>
                 {STATUS_LABEL[person.status]}
               </StatusBadge>
             </div>
