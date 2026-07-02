@@ -208,8 +208,8 @@
         <sc-if value="{{ sideFavHas }}">
         <div style="font:600 var(--m-sm) 'IBM Plex Mono';letter-spacing:.13em;color:var(--ink3,#8b929c);padding:16px 6px 8px">PINNED</div>
         <sc-for list="{{ sideFavList }}" as="f" hint-placeholder-count="2">
-          <div class="csnav" onClick="{{ f.open }}" style="{{ f.style }};display:block;text-align:left;overflow:hidden">
-            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block">{{ f.name }}</span>
+          <div draggable="true" onDragStart="{{ f.dragStart }}" onDragOver="{{ f.dragOver }}" onDrop="{{ f.drop }}" onDragEnd="{{ f.dragEnd }}" onClick="{{ f.open }}" style="{{ f.style }};display:flex;align-items:center;gap:6px;text-align:left;overflow:hidden">
+            <span style="color:var(--ink3,#8b929c);cursor:grab;flex-shrink:0;font-size:11px;letter-spacing:-1px">⠿⠿</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">{{ f.name }}</span>
           </div>
         </sc-for>
         </sc-if>
@@ -1242,7 +1242,7 @@ class Component extends DCLogic {
     regForm: { name:'', type:'chat', desc:'' }, regErr:false,
     demoConfig: {},
     toasts: [], confirm: null,
-    recentIds:['claims','intake','loan'], favIds:['intake'], chatFeedback:{}, embedTried:{},
+    recentIds:['claims','intake','loan'], favIds:['intake'], chatFeedback:{}, embedTried:{}, dragFavId:null, dragOverFavId:null,
     offline:false, appLoading:false,
     accountFlow: null, deletedDemoIds: [], demoArchived: {}, demoMenuId: null,
     authNotice:'', mfaErr:false, mfaAttempts:0, mfaLocked:false, resendIn:0, rememberDevice:false,
@@ -1476,6 +1476,21 @@ class Component extends DCLogic {
   goRecent = () => this.setState({ route:'recent', mobileNav:false });
   goFavorites = () => this.setState({ route:'favorites', mobileNav:false });
   toggleFav = (id)=> this.setState(s=>{ const has=s.favIds.includes(id); const favIds=has?s.favIds.filter(x=>x!==id):[...s.favIds, id]; return { favIds }; });
+  dragStartFav = (id)=> (e)=> { this._dragFavId=id; try{ if(e && e.dataTransfer){ e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain', id); } }catch(err){} this.setState({ dragFavId:id }); };
+  dragOverFav = (id)=> (e)=> { if(e && e.preventDefault) e.preventDefault(); if(this.state.dragOverFavId!==id) this.setState({ dragOverFavId:id }); };
+  dropFav = (id)=> (e)=> {
+    if(e && e.preventDefault) e.preventDefault();
+    const dragId=this._dragFavId!=null?this._dragFavId:this.state.dragFavId;
+    this._dragFavId=null;
+    this.setState(s=>{
+      if(!dragId || dragId===id) return { dragFavId:null, dragOverFavId:null };
+      const ids=[...s.favIds]; const from=ids.indexOf(dragId); const to=ids.indexOf(id);
+      if(from<0||to<0) return { dragFavId:null, dragOverFavId:null };
+      ids.splice(from,1); ids.splice(to,0,dragId);
+      return { favIds:ids, dragFavId:null, dragOverFavId:null };
+    });
+  };
+  dragEndFav = ()=> { this._dragFavId=null; this.setState({ dragFavId:null, dragOverFavId:null }); };
   rateMsg = (idx, val)=> { this.setState(s=>{ const cur=s.chatFeedback[idx]; const nv=cur===val?null:val; const fb={...s.chatFeedback}; if(nv) fb[idx]=nv; else delete fb[idx]; return { chatFeedback:fb }; }); if(val==='down'){ this.toast('Thanks — we\u2019ll use this to improve responses.'); } };
   retryEmbed = ()=> { const id=this.state.demoId; this.setState(s=>({ embedStatus:'loading', embedTried:{...s.embedTried,[id]:true} })); clearTimeout(this._et); this._et=setTimeout(()=>this.setState({ embedStatus:'loaded' }), 900); };
 
@@ -1842,7 +1857,9 @@ class Component extends DCLogic {
       atRecent, atFavorites, goRecent:this.goRecent, goFavorites:this.goFavorites,
       navRecent: navBase + (atRecent?navOn:navOff), navFavorites: navBase + (atFavorites?navOn:navOff),
       sideFavHas: _resolve(s.favIds).length>0,
-      sideFavList: _resolve(s.favIds).slice(0,6).map(x=>({ id:x.id, name:x.name, open:()=>this.openDemo(x.id), style: navBase + ((atViewer && s.demoId===x.id) ? navOn : navOff) })),
+      sideFavList: _resolve(s.favIds).slice(0,6).map(x=>({ id:x.id, name:x.name, open:()=>this.openDemo(x.id),
+        dragStart:this.dragStartFav(x.id), dragOver:this.dragOverFav(x.id), drop:this.dropFav(x.id), dragEnd:this.dragEndFav,
+        style: navBase + ((atViewer && s.demoId===x.id) ? navOn : navOff) + (s.dragOverFavId===x.id && s.dragFavId && s.dragFavId!==x.id ? 'box-shadow:inset 0 2px 0 var(--brand,#2360c4);' : '') + (s.dragFavId===x.id?'opacity:.4;':'') })),
       demos, hubEmpty: filteredList.length===0, hubMore: filteredList.length>s.hubLimit, sortBy:s.sortBy||'recent', onSort:this.setSort, onContentScroll:this.onContentScroll, loadMore:this.loadMore, resultCount: Math.min(s.hubLimit,filteredList.length)+' OF '+filteredList.length+' SHOWN',
       demo, demoIsChat:d.typeKey==='chat', demoIsNative:d.typeKey==='native', demoIsEmbedded:d.typeKey==='embedded',
       demoLive: this.openable(this.dstat(d)) && this.dstat(d)!=='Maintenance' && this.dstat(d)!=='Down',
