@@ -386,3 +386,72 @@
     display: none;
   }
 }
+
+/* ============================================================
+   Solutions hub catalogue (FR-HUB). Ported from the prototype's
+   `.cs-hubgrid` / `.cs-trow` / `.cs-thead` / `.csrow` / `.cs-hide`.
+   Mobile-first: rows stack as a single-column flex list and the
+   TYPE/UPDATED columns hide; ≥960px the table-grid (2.4 .8 .8 .6 40)
+   appears with a header row. The two-column hub layout (list + side
+   rail) turns on ≥1180px and widens the rail up to 4K.
+   ============================================================ */
+.csrow:hover {
+  background: var(--panel);
+}
+.cs-thead {
+  display: none;
+}
+.cs-trow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cs-hide {
+  display: none;
+}
+.cs-hubgrid {
+  display: block;
+}
+.cs-hubgrid > aside {
+  margin-top: 16px;
+}
+@media (min-width: 960px) {
+  .cs-thead {
+    display: grid;
+  }
+  .cs-trow {
+    display: grid;
+    grid-template-columns: 2.4fr 0.8fr 0.8fr 0.6fr 40px;
+  }
+  .cs-hide {
+    display: block;
+  }
+}
+@media (min-width: 1180px) {
+  .cs-hubgrid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 24px;
+  }
+  .cs-hubgrid > aside {
+    margin-top: 0;
+  }
+}
+@media (min-width: 1440px) {
+  .cs-hubgrid {
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 32px;
+  }
+}
+@media (min-width: 1920px) {
+  .cs-hubgrid {
+    grid-template-columns: minmax(0, 1fr) 400px;
+    gap: 40px;
+  }
+}
+@media (min-width: 2560px) {
+  .cs-hubgrid {
+    grid-template-columns: minmax(0, 1fr) 480px;
+    gap: 52px;
+  }
+}
