@@ -10,7 +10,16 @@ export type TransferItem = {
   id: string;
   label: string;
   description?: string;
+  /** Short (1-3 char) tile glyph, e.g. initials or a type abbreviation. Falls back to the label's initials. */
+  mono?: string;
 };
+
+function initials(label: string) {
+  const words = label.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "";
+  if (words.length === 1) return words[0]!.slice(0, 2).toUpperCase();
+  return (words[0]![0]! + words[1]![0]!).toUpperCase();
+}
 
 type SideProps = {
   heading: string;
@@ -20,6 +29,9 @@ type SideProps = {
   onQuery: (q: string) => void;
   onToggle: (id: string) => void;
   onToggleAll: (ids: string[]) => void;
+  variant: "available" | "target";
+  bulkLabel: string;
+  onBulkAction: () => void;
 };
 
 function matches(item: TransferItem, query: string) {
@@ -38,18 +50,29 @@ function TransferSide({
   onQuery,
   onToggle,
   onToggleAll,
+  variant,
+  bulkLabel,
+  onBulkAction,
 }: SideProps) {
   const filtered = items.filter((item) => matches(item, query));
   const allSelected = filtered.length > 0 && filtered.every((i) => selected.has(i.id));
+  const isTarget = variant === "target";
 
   return (
     <div className="flex min-w-0 flex-col rounded-none border border-[var(--line)] bg-[var(--surface)]">
-      <div className="flex items-center justify-between gap-2 border-b border-[var(--line2)] bg-[var(--panel)] px-3 py-2">
-        <span className="font-mono text-mono-xs font-semibold tracking-[0.1em] text-[var(--ink2)] uppercase">
-          {heading}
-        </span>
-        <span className="font-mono text-mono-xs text-[var(--ink3)]">
-          {selected.size} / {items.length}
+      <div
+        className={cn(
+          "flex items-center justify-between gap-2 border-b border-[var(--line2)] px-3 py-2",
+          isTarget ? "bg-[var(--brandtint)]" : "bg-[var(--panel)]",
+        )}
+      >
+        <span
+          className={cn(
+            "font-mono text-mono-xs font-semibold tracking-[0.1em] uppercase",
+            isTarget ? "text-[var(--brand)]" : "text-[var(--ink2)]",
+          )}
+        >
+          {heading} &middot; {items.length}
         </span>
       </div>
       <div className="flex items-center gap-2 border-b border-[var(--line2)] p-2">
@@ -73,6 +96,7 @@ function TransferSide({
         ) : (
           filtered.map((item) => {
             const active = selected.has(item.id);
+            const mono = item.mono ?? initials(item.label);
             return (
               <li key={item.id}>
                 <button
@@ -80,29 +104,69 @@ function TransferSide({
                   aria-pressed={active}
                   onClick={() => onToggle(item.id)}
                   className={cn(
-                    "flex w-full flex-col items-start gap-0.5 border-b border-[var(--line2)] px-3 py-2 text-left outline-none transition-colors last:border-0 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
-                    active
-                      ? "bg-[var(--brandtint)] text-[var(--brand)]"
-                      : "hover:bg-[var(--panel)]",
+                    "flex w-full items-center gap-2.5 border-b border-[var(--line2)] px-3 py-2 text-left outline-none transition-colors last:border-0 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+                    active ? "bg-[var(--brandtint)]" : "hover:bg-[var(--panel)]",
                   )}
                 >
-                  <span className="text-small font-medium">{item.label}</span>
-                  {item.description ? (
-                    <span className="text-mono-xs text-[var(--ink3)]">{item.description}</span>
-                  ) : null}
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "flex size-4 shrink-0 items-center justify-center border text-[10px] leading-none",
+                      active
+                        ? "border-[var(--brand)] bg-[var(--brand)] text-white"
+                        : "border-[var(--line)] bg-transparent",
+                    )}
+                  >
+                    {active ? "✓" : ""}
+                  </span>
+                  <span
+                    aria-hidden
+                    className="flex size-6 shrink-0 items-center justify-center bg-[var(--panel)] font-sans text-mono-xs font-extrabold text-foreground"
+                  >
+                    {mono}
+                  </span>
+                  <span className="flex min-w-0 flex-col gap-0.5">
+                    <span
+                      className={cn(
+                        "truncate text-small font-medium",
+                        active ? "text-[var(--brand)]" : "text-foreground",
+                      )}
+                    >
+                      {item.label}
+                    </span>
+                    {item.description ? (
+                      <span className="truncate text-mono-xs text-[var(--ink3)]">
+                        {item.description}
+                      </span>
+                    ) : null}
+                  </span>
                 </button>
               </li>
             );
           })
         )}
       </ul>
+      {selected.size > 0 ? (
+        <div className="border-t border-[var(--line)] p-2">
+          <Button
+            type="button"
+            variant={isTarget ? "destructive" : "primary"}
+            size="sm"
+            className="w-full"
+            onClick={onBulkAction}
+          >
+            {bulkLabel}
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }
 
 /**
  * Generic Available ⇄ target transfer list — multi-select, select-all and
- * per-side search. Controlled: `value` is the set of ids on the target side.
+ * per-side search, with per-bucket bulk actions ("Add N →" / "Revoke N").
+ * Controlled: `value` is the set of ids on the target side.
  * Reused by Groups↔Solutions and Groups↔Members (ticket 07).
  */
 export function TransferList({
@@ -171,12 +235,7 @@ export function TransferList({
   }
 
   return (
-    <div
-      className={cn(
-        "grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-center",
-        className,
-      )}
-    >
+    <div className={cn("grid grid-cols-1 gap-3 sm:grid-cols-2", className)}>
       <TransferSide
         heading={availableLabel}
         items={availableItems}
@@ -185,27 +244,10 @@ export function TransferList({
         onQuery={setAvailableQuery}
         onToggle={(id) => toggle(setAvailableSelected, id)}
         onToggleAll={(ids) => toggleAll(setAvailableSelected, ids)}
+        variant="available"
+        bulkLabel={`Add ${availableSelected.size} →`}
+        onBulkAction={moveToTarget}
       />
-      <div className="flex flex-row justify-center gap-2 sm:flex-col">
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={`Move to ${targetLabel}`}
-          disabled={availableSelected.size === 0}
-          onClick={moveToTarget}
-        >
-          →
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={`Move to ${availableLabel}`}
-          disabled={targetSelected.size === 0}
-          onClick={moveToAvailable}
-        >
-          ←
-        </Button>
-      </div>
       <TransferSide
         heading={targetLabel}
         items={targetItems}
@@ -214,6 +256,9 @@ export function TransferList({
         onQuery={setTargetQuery}
         onToggle={(id) => toggle(setTargetSelected, id)}
         onToggleAll={(ids) => toggleAll(setTargetSelected, ids)}
+        variant="target"
+        bulkLabel={`Revoke ${targetSelected.size}`}
+        onBulkAction={moveToAvailable}
       />
     </div>
   );
