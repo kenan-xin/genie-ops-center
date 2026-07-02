@@ -60,7 +60,14 @@ export default async function SolutionViewerPage({
         ) : surface.kind === "embedded" ? (
           <EmbeddedView iframeUrl={surface.iframeUrl} />
         ) : surface.kind === "chat-slot" ? (
-          <ChatSlot name={s.name} welcomeMessage={surface.welcomeMessage} />
+          <ChatSlot
+            feedbackEnabled={surface.feedbackEnabled}
+            monogram={s.monogram}
+            name={s.name}
+            solutionId={s.id}
+            starterPrompts={surface.starterPrompts}
+            welcomeMessage={surface.welcomeMessage}
+          />
         ) : (
           <NotOpenableNotice name={s.name} />
         )}

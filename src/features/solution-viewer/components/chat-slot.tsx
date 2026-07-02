@@ -1,17 +1,33 @@
 "use client";
 
+import { ChatConversation } from "@/features/chat/components/chat-conversation";
+
 /**
- * The chat shell slot (FR-VIEW). Ticket 12 provides ONLY the mount point — the
- * ai-sdk-ui `useChat` client + AI Elements surface lands in ticket 14, fed by
- * the `/api/chat` Route Handler (ticket 13). For a ready chat solution we
- * render the configured welcome message (or a neutral placeholder) centered in
- * the same column the chat will occupy, so the layout is stable when 14 mounts.
+ * The chat shell slot (FR-VIEW). Ticket 12 built the frame + header (kept
+ * as-is below, matching the prototype); ticket 14 replaces the placeholder
+ * body with the real ai-sdk-ui `useChat` + AI Elements surface, fed by the
+ * `/api/chat` Route Handler (ticket 13).
  *
- * `welcomeMessage`/`starterPrompts` are the client-safe chat config fields
- * (apiEndpoint/botUuid never reach here). The chat route re-derives identity
- * server-side from the solution id, so nothing sensitive is pre-rendered.
+ * `welcomeMessage`/`starterPrompts`/`feedbackEnabled` are the client-safe
+ * chat config fields (apiEndpoint/botUuid never reach here). The chat route
+ * re-derives identity server-side from the solution id, so nothing sensitive
+ * is pre-rendered.
  */
-export function ChatSlot({ name, welcomeMessage }: { name: string; welcomeMessage?: string }) {
+export function ChatSlot({
+  solutionId,
+  name,
+  monogram,
+  welcomeMessage,
+  starterPrompts,
+  feedbackEnabled,
+}: {
+  solutionId: string;
+  name: string;
+  monogram: string | null;
+  welcomeMessage?: string;
+  starterPrompts?: string[];
+  feedbackEnabled: boolean;
+}) {
   return (
     <div
       style={{
@@ -41,37 +57,49 @@ export function ChatSlot({ name, welcomeMessage }: { name: string; welcomeMessag
             borderBottom: "1px solid var(--line)",
             background: "var(--brand)",
             color: "#fff",
+            display: "flex",
+            alignItems: "center",
+            gap: 11,
           }}
         >
           <div
             style={{
+              width: 34,
+              height: 34,
+              flexShrink: 0,
+              background: "rgba(255,255,255,.18)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               fontFamily: "var(--font-display)",
-              fontWeight: 700,
+              fontWeight: 800,
               fontSize: "var(--t-title)",
             }}
           >
-            {name}
+            {monogram?.trim() || "A"}
           </div>
-          <div style={{ font: "500 var(--m-sm) var(--font-mono)", opacity: 0.85 }}>
-            ● ONLINE · SAMPLE DATA
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                fontFamily: "var(--font-display)",
+                fontWeight: 700,
+                fontSize: "var(--t-title)",
+              }}
+            >
+              {name}
+            </div>
+            <div style={{ font: "500 var(--m-sm) var(--font-mono)", opacity: 0.85 }}>
+              ● ONLINE · SAMPLE DATA
+            </div>
           </div>
         </div>
-        <div
-          style={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 24,
-            textAlign: "center",
-            color: "var(--ink3)",
-            fontSize: "var(--t-body)",
-          }}
-        >
-          {welcomeMessage?.trim()
-            ? welcomeMessage
-            : "Chat loads here — the conversation client mounts in a later ticket."}
-        </div>
+        <ChatConversation
+          feedbackEnabled={feedbackEnabled}
+          monogram={monogram}
+          solutionId={solutionId}
+          starterPrompts={starterPrompts}
+          welcomeMessage={welcomeMessage}
+        />
       </div>
     </div>
   );

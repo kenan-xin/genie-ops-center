@@ -466,3 +466,25 @@
     gap: 52px;
   }
 }
+
+/* ============================================================
+   Chat answer tone spans (ticket 14). The external Genie API embeds
+   `<span style="color:#hex">` in `answer`; rehype-sanitize strips arbitrary
+   `style` by design (never re-allowed — see response-hardening.ts), so known
+   color spans are rewritten to one of these closed Ledger tones instead.
+   ============================================================ */
+[data-tone="success"] {
+  color: var(--success);
+  font-weight: 600;
+}
+[data-tone="warn"] {
+  color: var(--warn);
+  font-weight: 600;
+}
+[data-tone="error"] {
+  color: var(--error);
+  font-weight: 600;
+}
+[data-tone="neutral"] {
+  color: inherit;
+}

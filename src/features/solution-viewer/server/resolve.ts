@@ -40,6 +40,7 @@ export type ViewerSurface =
       solution: ViewerSolutionMeta;
       welcomeMessage?: string;
       starterPrompts?: string[];
+      feedbackEnabled: boolean;
     }
   | { kind: "not-openable"; solution: ViewerSolutionMeta };
 
@@ -129,5 +130,8 @@ export async function resolveViewerSurface(user: AuthUser, slug: string): Promis
     solution: meta,
     welcomeMessage: cfg.welcomeMessage,
     starterPrompts: cfg.starterPrompts,
+    // Registration defaults this true (register-solution-dialog.tsx); only an
+    // explicit admin opt-out should hide feedback, so undefined -> on.
+    feedbackEnabled: cfg.feedbackEnabled ?? true,
   };
 }
