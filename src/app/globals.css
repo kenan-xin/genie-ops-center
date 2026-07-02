@@ -517,6 +517,23 @@
 }
 
 /* ============================================================
+   Account settings reflow (ticket 19, prototype `.cs-acctgrid`).
+   Mobile-first: the sub-nav stacks above the active panel; ≥920px
+   a 248px sub-nav column sits beside the panel.
+   ============================================================ */
+.acct-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 22px;
+}
+@media (min-width: 920px) {
+  .acct-grid {
+    grid-template-columns: 248px minmax(0, 1fr);
+  }
+}
+
+/* ============================================================
    Chat answer tone spans (ticket 14). The external Genie API embeds
    `<span style="color:#hex">` in `answer`; rehype-sanitize strips arbitrary
    `style` by design (never re-allowed — see response-hardening.ts), so known

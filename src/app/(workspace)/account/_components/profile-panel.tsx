@@ -5,13 +5,13 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FieldError } from "@/components/ui/form-feedback";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
-import { authClient, isAdminRole } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth-client";
+
+import { AccountPanel, AccountPanelHeading } from "./account-panel";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Enter a display name").max(80, "Keep it under 80 characters"),
@@ -19,9 +19,15 @@ const schema = z.object({
 type Values = z.infer<typeof schema>;
 
 /**
- * Profile (FR-ACCT-01). Initials avatar, read-only email + role, and an editable
- * display name (better-auth `user.name`) via authClient.updateUser. Email and
- * role aren't self-editable here — role is admin-managed, email is out of scope.
+ * Profile (FR-ACCT-01, prototype lines 342-352). Editable full name (better-auth
+ * `user.name`) via authClient.updateUser, plus a read-only email row — email
+ * isn't self-editable here, it's admin-managed. The identity avatar/name/role
+ * banner lives one level up in `page.tsx`, not in this panel.
+ *
+ * The prototype's `onInput` wiring implies live-binding with no explicit save
+ * step; production keeps an explicit "Save changes" submit so the mutation has
+ * a clear pending/error state (RHF + authClient.updateUser), per this app's
+ * form conventions.
  */
 export function ProfilePanel() {
   const { toast } = useToast();
@@ -51,59 +57,40 @@ export function ProfilePanel() {
   });
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Profile</CardTitle>
-        <CardDescription>Your display name and account details.</CardDescription>
-      </CardHeader>
+    <AccountPanel>
+      <AccountPanelHeading title="Profile" description="How you appear across the workspace." />
 
-      <CardContent className="flex flex-col gap-5 pt-0">
-        <div className="flex items-center gap-4">
-          <span
-            aria-hidden
-            className="flex size-14 shrink-0 items-center justify-center bg-[var(--brandtint)] font-sans text-cardhead font-extrabold text-[var(--brand)]"
-          >
-            {isPending ? "" : initials(user?.name)}
-          </span>
-          <div className="flex min-w-0 flex-col gap-1">
-            {isPending ? (
-              <>
-                <Skeleton className="h-4 w-48" />
-                <Skeleton className="h-3 w-24" />
-              </>
-            ) : (
-              <>
-                <span className="truncate text-body text-foreground">{user?.email}</span>
-                <span className="text-mono-sm uppercase tracking-[0.06em] text-[var(--ink3)]">
-                  {isAdminRole(user?.role) ? "Admin" : "Member"}
-                </span>
-              </>
-            )}
-          </div>
+      <form onSubmit={onSubmit} className="mt-[18px] flex flex-col gap-3.5" noValidate>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="name">Full name</Label>
+          <Input id="name" autoComplete="name" disabled={isPending} {...register("name")} />
+          <FieldError message={errors.name?.message} />
         </div>
 
-        <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="name">Display name</Label>
-            <Input id="name" autoComplete="name" disabled={isPending} {...register("name")} />
-            <FieldError message={errors.name?.message} />
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="email">Email</Label>
+          <div
+            id="email"
+            className="flex h-10 items-center justify-between gap-2.5 border border-[var(--line2)] bg-[var(--panel)] px-3"
+          >
+            <span className="truncate text-body text-[var(--ink2)]">
+              {isPending ? "" : user?.email}
+            </span>
+            <span className="shrink-0 font-mono text-mono-xs font-semibold uppercase tracking-[0.06em] text-[var(--ink3)]">
+              Managed by admin
+            </span>
           </div>
-          <div className="flex">
-            <Button type="submit" disabled={isPending || isSubmitting || !isDirty}>
-              {isSubmitting ? "Saving…" : "Save changes"}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
-  );
-}
+          <p className="text-small text-[var(--ink3)]">
+            Your sign-in email is set by your workspace administrator.
+          </p>
+        </div>
 
-/** First letters of up to two name parts, e.g. "Ada Lovelace" → "AL". */
-function initials(name: string | null | undefined): string {
-  const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  const first = parts[0]![0]!;
-  const last = parts.length > 1 ? parts[parts.length - 1]![0]! : "";
-  return (first + last).toUpperCase();
+        <div className="flex">
+          <Button type="submit" disabled={isPending || isSubmitting || !isDirty}>
+            {isSubmitting ? "Saving…" : "Save changes"}
+          </Button>
+        </div>
+      </form>
+    </AccountPanel>
+  );
 }

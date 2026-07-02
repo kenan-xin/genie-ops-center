@@ -3,14 +3,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { useConfirm } from "@/components/ui/confirm";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -18,14 +10,22 @@ import { useToast } from "@/components/ui/toast";
 import { authClient } from "@/lib/auth-client";
 import { relativeTime } from "@/lib/relative-time";
 
+import { AccountPanel, AccountPanelHeading } from "./account-panel";
+
 const SESSIONS_KEY = ["account", "sessions"] as const;
 
 /**
- * Devices & sessions (FR-ACCT-03). Self-service: lists the user's own active
- * sessions via better-auth's client SDK (scoped to their cookie), marks the
- * current device, and revokes others. Destructive actions confirm first
- * (FR-SYS-02). See docs/tech-plan/account-sessions — the admin force-sign-out
- * (ticket 06) is a *separate* privileged server call, not this path.
+ * Devices & sessions (FR-ACCT-03, prototype lines 370-384 — panel heading is
+ * "Active sessions", the sub-nav label stays "Devices & sessions"). Self-service:
+ * lists the user's own active sessions via better-auth's client SDK (scoped to
+ * their cookie), marks the current device, and revokes others. Destructive
+ * actions confirm first (FR-SYS-02). See docs/tech-plan/account-sessions — the
+ * admin force-sign-out (ticket 06) is a *separate* privileged server call, not
+ * this path.
+ *
+ * The prototype's "Trusted devices & timeout" card (lines 385-395 — remembered
+ * devices, session-timeout preview) has no backing data or mutation in this
+ * app yet, so it's intentionally left out rather than shipped as inert UI.
  */
 export function SessionsPanel() {
   const { toast } = useToast();
@@ -109,26 +109,41 @@ export function SessionsPanel() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Devices &amp; sessions</CardTitle>
-        <CardDescription>
-          Where you&rsquo;re signed in. Sign out any device you don&rsquo;t recognise.
-        </CardDescription>
-      </CardHeader>
+    <AccountPanel>
+      <AccountPanelHeading
+        title="Active sessions"
+        description="Devices currently signed in to your account."
+        action={
+          otherCount > 0 ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-[var(--error)] hover:bg-[var(--errortint)]"
+              disabled={busy}
+              onClick={() => void signOutOthers()}
+            >
+              {revokeOthers.isPending ? "Signing out…" : "Sign out others"}
+            </Button>
+          ) : null
+        }
+      />
 
-      <CardContent className="pt-0">
+      <div className="mt-[14px] border border-[var(--line2)]">
         {loading ? (
           <ul className="flex flex-col">
             {[0, 1].map((i) => (
-              <li key={i} className="flex flex-col gap-2 border-t border-[var(--line2)] py-4">
+              <li
+                key={i}
+                className="flex flex-col gap-2 border-b border-[var(--line2)] px-[14px] py-[11px] last:border-b-0"
+              >
                 <Skeleton className="h-4 w-40" />
                 <Skeleton className="h-3 w-56" />
               </li>
             ))}
           </ul>
         ) : sessions.isError ? (
-          <p className="border-t border-[var(--line2)] py-4 text-small text-[var(--error)]">
+          <p className="px-[14px] py-[11px] text-small text-[var(--error)]">
             {(sessions.error as Error).message}
           </p>
         ) : (
@@ -139,18 +154,14 @@ export function SessionsPanel() {
               return (
                 <li
                   key={s.token}
-                  className="flex items-center justify-between gap-4 border-t border-[var(--line2)] py-4"
+                  className="flex items-center justify-between gap-3 border-b border-[var(--line2)] px-[14px] py-[11px] last:border-b-0"
                 >
-                  <div className="flex min-w-0 flex-col gap-1">
+                  <div className="flex min-w-0 flex-col gap-0.5">
                     <div className="flex items-center gap-2">
-                      <span className="truncate text-small font-semibold text-foreground">
+                      <span className="truncate text-body font-semibold text-foreground">
                         {label}
                       </span>
-                      {isCurrent ? (
-                        <StatusBadge tone="brand" dot>
-                          This device
-                        </StatusBadge>
-                      ) : null}
+                      {isCurrent ? <StatusBadge tone="success">This device</StatusBadge> : null}
                     </div>
                     <span className="text-mono-sm text-[var(--ink3)]">
                       {s.ipAddress ? `${s.ipAddress} · ` : ""}
@@ -159,8 +170,10 @@ export function SessionsPanel() {
                   </div>
                   {isCurrent ? null : (
                     <Button
-                      variant="destructive"
+                      type="button"
+                      variant="link"
                       size="sm"
+                      className="shrink-0 text-[var(--error)]"
                       disabled={busy}
                       onClick={() => void signOutDevice(s.token, label)}
                     >
@@ -172,19 +185,8 @@ export function SessionsPanel() {
             })}
           </ul>
         )}
-      </CardContent>
-
-      <CardFooter>
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={loading || busy || otherCount === 0}
-          onClick={() => void signOutOthers()}
-        >
-          {revokeOthers.isPending ? "Signing out…" : "Sign out all other devices"}
-        </Button>
-      </CardFooter>
-    </Card>
+      </div>
+    </AccountPanel>
   );
 }
 
