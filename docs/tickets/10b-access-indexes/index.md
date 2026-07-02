@@ -1,7 +1,7 @@
 ---
 kind: ticket
 title: "10b · Access-path indexes"
-status: 0
+status: 2
 ---
 
 # 10b · Access-path indexes
