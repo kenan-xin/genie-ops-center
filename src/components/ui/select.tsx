@@ -55,7 +55,7 @@ function Select({
       <SelectPrimitive.Trigger
         data-slot="select-trigger"
         className={cn(
-          "flex h-10 w-full items-center justify-between gap-2 rounded-none border border-[var(--line)] bg-[var(--surface)] px-3 font-sans text-body text-foreground outline-none transition-colors focus-visible:border-[var(--brand)] data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
+          "flex h-10 w-full items-center justify-between gap-2 rounded-none border border-[var(--line)] bg-[var(--surface)] px-3 font-sans text-body text-foreground outline-none transition-colors focus-visible:border-[var(--brand)] focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-[var(--brand)] data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
           className,
         )}
       >

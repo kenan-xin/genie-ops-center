@@ -225,6 +225,7 @@ function ThemeEditorForm({ theme }: { theme: { id: string; name: string; config:
                   rows={12}
                   spellCheck={false}
                   placeholder=".bubble.user { ... }"
+                  className="font-mono text-mono-sm"
                   {...register("config.customCss")}
                 />
                 <p className="text-small text-[var(--ink2)]">

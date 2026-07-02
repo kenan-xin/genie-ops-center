@@ -30,7 +30,7 @@ function ToastViewport() {
     <Toast.Portal>
       <Toast.Viewport className="fixed right-4 bottom-4 z-50 flex w-[min(360px,calc(100vw-2rem))] flex-col gap-2 outline-none">
         {toasts.map((toast) => {
-          const tone = (toast.data as ToastData | undefined)?.tone ?? "info";
+          const tone = (toast.data as ToastData | undefined)?.tone ?? "success";
           return (
             <Toast.Root
               key={toast.id}
@@ -84,7 +84,7 @@ export function useToast() {
       manager.add<ToastData>({
         title: options.title,
         description: options.description,
-        data: { tone: options.tone ?? "info" },
+        data: { tone: options.tone ?? "success" },
       }),
     [manager],
   );

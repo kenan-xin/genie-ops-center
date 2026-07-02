@@ -82,7 +82,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
                 <button
                   type="button"
                   onClick={() => settle(false)}
-                  className="h-10 rounded-none border border-[var(--line)] bg-transparent px-4 font-sans text-small font-semibold text-foreground outline-none transition-colors hover:bg-[var(--panel)] focus-visible:ring-2 focus-visible:ring-ring"
+                  className="h-[38px] rounded-none border border-[var(--line)] bg-transparent px-4 font-sans text-small font-semibold text-foreground outline-none transition-colors hover:bg-[var(--panel)] focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   {options?.cancelLabel ?? "Cancel"}
                 </button>
@@ -90,7 +90,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
                   type="button"
                   onClick={() => settle(true)}
                   className={cn(
-                    "h-10 rounded-none px-[18px] font-sans text-small font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+                    "h-[38px] rounded-none px-[18px] font-sans text-small font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
                     danger
                       ? "bg-[var(--error)] text-white hover:opacity-90"
                       : "bg-primary text-primary-foreground hover:opacity-90",
