@@ -83,19 +83,21 @@ function parseHttpsUrl(raw: string, field: string): URL {
 /**
  * The authoritative gate (server-side): the URL must be valid https, not private,
  * AND its origin must be in `allowedOrigins`. Used at the tRPC write boundary and
- * re-checked before the proxy fetch (and on any redirect target). Throws on fail.
+ * re-checked before the live experience (chat fetch / iframe render). Throws on fail.
+ *
+ * `emptyListMessage` lets callers name the relevant env var in the "no origins"
+ * error (chat → GENIE_CHAT_API_ALLOWED_ORIGINS, iframe → ALLOWED_IFRAME_ORIGINS).
  */
 export function assertAllowedEndpoint(
   raw: string,
   allowedOrigins: string[],
   field = "endpoint",
+  emptyListMessage = `${field} rejected: no origins are allow-listed`,
 ): URL {
   const url = parseHttpsUrl(raw, field);
   const allowed = new Set(allowedOrigins.map((o) => o.trim().replace(/\/$/, "")).filter(Boolean));
   if (allowed.size === 0) {
-    throw new Error(
-      `${field} rejected: no chat API origins are allow-listed (set GENIE_CHAT_API_ALLOWED_ORIGINS)`,
-    );
+    throw new Error(emptyListMessage);
   }
   if (!allowed.has(url.origin)) {
     throw new Error(`${field} origin ${url.origin} is not in the approved allow-list`);

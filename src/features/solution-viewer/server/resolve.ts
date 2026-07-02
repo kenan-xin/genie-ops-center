@@ -3,6 +3,7 @@ import "server-only";
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 
+import { allowedIframeOrigins } from "@/server/config";
 import { db } from "@/server/db";
 import { solution } from "@/server/db/schema";
 import type { AuthUser } from "@/server/authz";
@@ -12,6 +13,7 @@ import {
   type EmbeddedConfig,
 } from "@/features/solutions/schemas/solution";
 import { assertCanRun, assertCanSee } from "@/server/features/solution-access";
+import { isAllowedEndpoint } from "@/lib/url-guard";
 
 /**
  * The `/s/[slug]` viewer resolver (FR-VIEW). Server-side resolution applies the
@@ -109,6 +111,13 @@ export async function resolveViewerSurface(user: AuthUser, slug: string): Promis
 
   if (parsed.type === "embedded") {
     const cfg = parsed.config as EmbeddedConfig;
+    // Defense-in-depth: re-check the origin against ALLOWED_IFRAME_ORIGINS before
+    // handing the URL to the client (the write-gate already enforces this, but a
+    // legacy row or an out-of-band edit must not reach the iframe/"open in new
+    // tab"). A rejected URL collapses to the not-openable notice.
+    if (!isAllowedEndpoint(cfg.iframeUrl, allowedIframeOrigins())) {
+      return { kind: "not-openable", solution: meta };
+    }
     return { kind: "embedded", solution: meta, iframeUrl: cfg.iframeUrl };
   }
 

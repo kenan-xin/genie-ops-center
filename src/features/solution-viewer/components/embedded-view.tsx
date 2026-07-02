@@ -45,10 +45,17 @@ export function EmbeddedView({ iframeUrl }: { iframeUrl: string }) {
 
   // Build the reload URL without clobbering any existing query string. Appending
   // a cache-busting param is the most reliable cross-origin reload signal.
+  // Defensive: a malformed legacy `iframeUrl` must fail into the error state,
+  // not throw during render (the resolver + schema now reject such rows, but
+  // this guards any that slipped in earlier).
   const src = (() => {
-    const u = new URL(iframeUrl);
-    u.searchParams.set("_reload", String(reloadNonce));
-    return u.toString();
+    try {
+      const u = new URL(iframeUrl);
+      u.searchParams.set("_reload", String(reloadNonce));
+      return u.toString();
+    } catch {
+      return null;
+    }
   })();
 
   return (
@@ -178,7 +185,7 @@ export function EmbeddedView({ iframeUrl }: { iframeUrl: string }) {
               </div>
             </div>
           ) : null}
-          {state === "error" ? (
+          {state === "error" || src === null ? (
             <div
               style={{
                 position: "absolute",
@@ -247,13 +254,16 @@ export function EmbeddedView({ iframeUrl }: { iframeUrl: string }) {
               </button>
             </div>
           ) : null}
-          {state !== "error" ? (
+          {state !== "error" && src !== null ? (
             <iframe
               key={reloadNonce}
               src={src}
               title="Embedded solution"
               onLoad={() => setState("loaded")}
-              sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+              // No allow-popups/allow-popups-to-escape-sandbox: an embed must not
+              // be able to window.open() into an unsandboxed top-level tab. No
+              // allow-same-origin either (no token/SSO handoff). Scripts+forms only.
+              sandbox="allow-scripts allow-forms"
               referrerPolicy="no-referrer"
               style={{
                 position: "absolute",

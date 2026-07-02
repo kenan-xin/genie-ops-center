@@ -50,7 +50,11 @@ export const embeddedConfigSchema = z.object({
     .trim()
     .min(1, "Enter the iframe URL")
     .max(2_000, "Keep it under 2000 characters")
-    .regex(/^https:\/\//i, "Must be an HTTPS URL"),
+    // Parse as a real https URL (not just a prefix) so junk like "https://"
+    // can't be stored and then throw in the viewer's `new URL()`. The ops
+    // origin allow-list (ALLOWED_IFRAME_ORIGINS) is enforced server-side in the
+    // solutions router; safeHttpsUrl is the client-safe baseline.
+    .refine(safeHttpsUrl, "Must be a valid https URL"),
 });
 export type EmbeddedConfig = z.infer<typeof embeddedConfigSchema>;
 

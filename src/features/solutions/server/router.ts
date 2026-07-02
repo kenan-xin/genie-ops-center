@@ -3,7 +3,7 @@ import "server-only";
 import { TRPCError } from "@trpc/server";
 import { and, eq, ilike, or, sql } from "drizzle-orm";
 
-import { chatAllowedOrigins } from "@/server/config";
+import { allowedIframeOrigins, chatAllowedOrigins } from "@/server/config";
 import { db } from "@/server/db";
 import { solution, theme } from "@/server/db/schema";
 import { assertAllowedEndpoint } from "@/lib/url-guard";
@@ -45,13 +45,53 @@ function assertChatEndpointAllowed(
 ): void {
   if (type !== "chat") return;
   try {
-    assertAllowedEndpoint((config as ChatConfig).apiEndpoint, chatAllowedOrigins(), "apiEndpoint");
+    assertAllowedEndpoint(
+      (config as ChatConfig).apiEndpoint,
+      chatAllowedOrigins(),
+      "apiEndpoint",
+      "apiEndpoint rejected: no chat API origins are allow-listed (set GENIE_CHAT_API_ALLOWED_ORIGINS)",
+    );
   } catch (e) {
     throw new TRPCError({
       code: "BAD_REQUEST",
       message: e instanceof Error ? e.message : "Chat endpoint not allowed",
     });
   }
+}
+
+/**
+ * iframe origin gate (FR-VIEW-04): an embedded solution's iframeUrl must be on
+ * the CSP `frame-src` allow-list (`ALLOWED_IFRAME_ORIGINS`) — same trust model
+ * as the chat endpoint. Without this, a stored unapproved origin bypasses CSP
+ * via the "Open in new tab" anchor. Re-checked in resolveViewerSurface too.
+ */
+function assertIframeUrlAllowed(
+  type: SolutionType,
+  config: ChatConfig | EmbeddedConfig | NativeConfig,
+): void {
+  if (type !== "embedded") return;
+  try {
+    assertAllowedEndpoint(
+      (config as EmbeddedConfig).iframeUrl,
+      allowedIframeOrigins(),
+      "iframeUrl",
+      "iframeUrl rejected: no iframe origins are allow-listed (set ALLOWED_IFRAME_ORIGINS)",
+    );
+  } catch (e) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: e instanceof Error ? e.message : "iframe URL not allowed",
+    });
+  }
+}
+
+/** Apply both origin gates for the given type (chat → endpoint, embedded → iframe). */
+function assertOriginsAllowed(
+  type: SolutionType,
+  config: ChatConfig | EmbeddedConfig | NativeConfig,
+): void {
+  assertChatEndpointAllowed(type, config);
+  assertIframeUrlAllowed(type, config);
 }
 
 function toSolution(row: DbSolution, themeName: string | null = null): Solution {
@@ -188,7 +228,7 @@ export const solutionsRouter = createTRPCRouter({
         message: "Configuration doesn't match the selected type.",
       });
     }
-    assertChatEndpointAllowed(input.type, validated.data.config);
+    assertOriginsAllowed(input.type, validated.data.config);
     const slug = await resolveUniqueSlug(slugify(input.name));
     const [row] = await db
       .insert(solution)
@@ -218,7 +258,7 @@ export const solutionsRouter = createTRPCRouter({
         message: "Configuration doesn't match the selected type.",
       });
     }
-    assertChatEndpointAllowed(input.type, validated.data.config);
+    assertOriginsAllowed(input.type, validated.data.config);
     // themeId⇔type invariant (tech-plan → data-model): only chat may bind a theme.
     if (input.themeId && input.type !== "chat") {
       throw new TRPCError({

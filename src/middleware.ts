@@ -27,5 +27,5 @@ export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.).*)"],
   // Node runtime so the `server-only`-guarded config import resolves (it reads
   // process.env, which is all this needs — no edge-specific APIs).
-  runtime: "nodejs" as const,
+  runtime: "nodejs",
 };
