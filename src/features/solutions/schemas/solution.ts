@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { safeHttpsUrl } from "@/lib/url-guard";
+
 /**
  * Shared zod schemas for the Solutions admin slice (FR-ADM-S) — the same
  * schemas the register/edit forms (react-hook-form + zodResolver) and the
@@ -11,6 +13,14 @@ import { z } from "zod";
  * only when `type='chat'` — lives at the tRPC boundary, not the editor form.
  */
 
+/**
+ * The default chat streaming endpoint (FR-ADM-S-03). Mirrors the prototype's
+ * seeded value; the field is required on chat config so an admin sees and can
+ * change it. Kept here so the register/edit forms and tests share one constant.
+ */
+export const DEFAULT_CHAT_API_ENDPOINT =
+  "https://dev-genie.001.gs/public-api/v2/workflow/chatbot/chats";
+
 export const solutionTypeSchema = z.enum(["chat", "embedded"]);
 export type SolutionType = z.infer<typeof solutionTypeSchema>;
 // `native` is an enum-only type (tech-plan → non-goals): hidden from
@@ -19,6 +29,15 @@ export type SolutionType = z.infer<typeof solutionTypeSchema>;
 /** Per-type config (discriminated union on `type`). */
 export const chatConfigSchema = z.object({
   botUuid: z.string().trim().min(1, "Enter the bot UUID").max(200, "Keep it under 200 characters"),
+  // FR-ADM-S-03: the streaming API endpoint this solution calls. Per-solution
+  // (was app-wide env); required HTTPS, validated through the SSRF guard so an
+  // admin-configured value can't point the proxy at a private/loopback target.
+  apiEndpoint: z
+    .string()
+    .trim()
+    .min(1, "Enter the chat streaming endpoint")
+    .max(2_000)
+    .refine(safeHttpsUrl, "Must be a valid https URL (private/loopback hosts not allowed)"),
   welcomeMessage: z.string().trim().max(2_000).optional(),
   starterPrompts: z.array(z.string().trim().min(1).max(200)).max(12).optional(),
   feedbackEnabled: z.boolean().optional(),

@@ -24,6 +24,7 @@ import { useThemesQuery } from "@/features/themes/api/themes";
 
 import { useUpdateSolution } from "../api/solutions";
 import {
+  DEFAULT_CHAT_API_ENDPOINT,
   editSolutionSchema,
   statusTone,
   STATUS_LABEL,
@@ -74,7 +75,12 @@ export function EditSolutionSlideOver({
     setValue(
       "config",
       next === "chat"
-        ? { botUuid: "", welcomeMessage: "", feedbackEnabled: true }
+        ? {
+            botUuid: "",
+            apiEndpoint: DEFAULT_CHAT_API_ENDPOINT,
+            welcomeMessage: "",
+            feedbackEnabled: true,
+          }
         : { iframeUrl: "https://" },
       { shouldDirty: true, shouldValidate: true },
     );
@@ -302,6 +308,8 @@ function toFormValues(s: Solution): EditSolutionValues {
       s.type === "chat"
         ? {
             botUuid: (s.config as { botUuid?: string }).botUuid ?? "",
+            apiEndpoint:
+              (s.config as { apiEndpoint?: string }).apiEndpoint ?? DEFAULT_CHAT_API_ENDPOINT,
             welcomeMessage: (s.config as { welcomeMessage?: string }).welcomeMessage ?? "",
             feedbackEnabled: (s.config as { feedbackEnabled?: boolean }).feedbackEnabled ?? false,
           }

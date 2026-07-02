@@ -18,7 +18,8 @@ sequenceDiagram
 
   U->>R: POST { solutionId, prompt }
   R->>R: getSession + assertCanRun(user, solution)
-  R->>DB: load solution.config.botUuid; lookup chat_session_handle
+  R->>DB: load solution.config.botUuid + apiEndpoint; lookup chat_session_handle
+  R->>R: assertSafeExternalUrl(apiEndpoint)   (SSRF re-check, admin-configured)
   R->>G: POST { uuid:botUuid, userPrompt:prompt, sessionUUID, language, ... }
   activate G
   loop processing events
@@ -45,7 +46,7 @@ Built with `createUIMessageStream({ execute({ writer }) })` + `createUIMessageSt
 
 **On `status: "completed"`:** emit `text-end` (+ `reasoning-end` if open) and `finish` (carry `outputTokens`). **Do not re-emit `answer` _or_ `reasoning`** — the completed event echoes both in full, and re-emitting would duplicate the message/thinking. Then **upsert the returned `uuid` into `chat_session_handle` only if its `generation` is unchanged** (see conversation model). A contract test feeds `processing.reasoning` + `completed.reasoning` and asserts the final UI message has exactly one reasoning block and one answer. The exact manual `finish`/usage writer shape is verified in the **same SDK type spike** as the reasoning parts; if manual usage chunks aren't supported, emit a `data-usage` part and let the route finish after `text-end`.
 
-**Invariants:** `assertCanRun` gates the route (Maintenance/Down/Draft never stream). Bot identity = `solution.config.botUuid`, read server-side; `EXTERNAL_CHAT_API_BASE` (+ any token) is server env and never reaches the client.
+**Invariants:** `assertCanRun` gates the route (Maintenance/Down/Draft never stream). Bot identity = `solution.config.botUuid`, read server-side. The streaming endpoint is **per-solution** (`solution.config.apiEndpoint`, FR-ADM-S-03) — there is **no app-wide `EXTERNAL_CHAT_API_BASE` env**. Because the endpoint is admin-configured, the proxy re-runs the SSRF guard (`assertSafeExternalUrl`, `src/lib/url-guard.ts`) before the fetch: `https`-only, private/loopback/link-local hosts (incl. `169.254.x` metadata) rejected — a stored value never reaches `fetch()` un-vetted. The endpoint never reaches the client.
 
 ## Conversation model — one thread + "New chat"
 

@@ -33,9 +33,9 @@ const configSchema = z.object({
 
   PORT: z.coerce.number().int().positive().default(3000),
 
-  // External Genie chat API — public (no auth token needed). Base may be empty
-  // until the chat ticket lands.
-  EXTERNAL_CHAT_API_BASE: z.url().or(z.literal("")).default(""),
+  // Note: the external Genie chat API base is NOT an env var — it's per-solution
+  // config (`solution.config.apiEndpoint`, FR-ADM-S-03). See src/lib/url-guard.ts
+  // for the SSRF validation on that admin-configured URL.
 
   // iframe CSP frame-src allow-list. Comma-separated origins; empty ⇒ none.
   ALLOWED_IFRAME_ORIGINS: z.string().default(""),

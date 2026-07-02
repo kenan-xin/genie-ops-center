@@ -31,8 +31,9 @@ Because it connects to whatever `DATABASE_URL` points at, the same image is used
 | `BETTER_AUTH_SECRET`             | **yes**                      | ≥32 chars — `openssl rand -base64 32`                                           |
 | `PUBLIC_BASE_URL`                | **yes**                      | Public base URL of this deployment (auth cookies/reset links, server-side tRPC) |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | first boot only              | Bootstrap admin; strength-checked; **clear after first boot**                   |
-| `EXTERNAL_CHAT_API_BASE`         | when chat ships              | The Genie chat API the `/api/chat` proxy calls (public — no token needed)       |
 | `ALLOWED_IFRAME_ORIGINS`         | when embedded solutions ship | Comma-separated origins for CSP `frame-src`                                     |
+
+> The Genie chat streaming endpoint is **not** an env var — each Chat solution configures its own (`config.apiEndpoint`, validated `https` + SSRF-guarded; default `https://dev-genie.001.gs/public-api/v2/workflow/chatbot/chats`).
 
 Secrets are supplied via env **only** — never baked into the image.
 

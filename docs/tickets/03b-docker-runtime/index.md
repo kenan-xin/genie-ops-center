@@ -12,7 +12,7 @@ The deployable artifact: a single configurable Docker image that a customer runs
 
 - **Dockerfile**: multi-stage (deps → build → minimal standalone runner) on **`node:24`** (current LTS, pinned via `engines`/`.nvmrc`), using Next.js `output: 'standalone'`; `.dockerignore`; non-root runtime user.
 - **Entrypoint**: on container start — acquire a Postgres **advisory lock**, run **`drizzle migrate`** (the only migration path), run the **guarded bootstrap** (seed admin if `user` table empty — logic from [03](../03-identity-schema-migrations/index.md)), release the lock, then start the server. Safe when multiple replicas start together.
-- **Runtime config module**: all env consolidated and **zod-validated at boot (fail fast)** — `DATABASE_URL`, better-auth secret + base URL, `EXTERNAL_CHAT_API_BASE` (+ token if required), `ALLOWED_IFRAME_ORIGINS`, `ADMIN_EMAIL`/`ADMIN_PASSWORD`.
+- **Runtime config module**: all env consolidated and **zod-validated at boot (fail fast)** — `DATABASE_URL`, better-auth secret + base URL, `ALLOWED_IFRAME_ORIGINS`, `ADMIN_EMAIL`/`ADMIN_PASSWORD`. (The chat streaming endpoint is **per-solution config**, not an env — see ticket 08.)
 - **Local dev**: `docker-compose.yml` (app + Postgres) for one-command local run; a lightweight `/api/health` healthcheck.
 - Document the **per-deployment env contract** (one image, one deployment per customer).
 

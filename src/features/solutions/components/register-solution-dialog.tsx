@@ -22,6 +22,7 @@ import { useToast } from "@/components/ui/toast";
 import { useRegisterSolution } from "../api/solutions";
 import {
   chatConfigSchema,
+  DEFAULT_CHAT_API_ENDPOINT,
   embeddedConfigSchema,
   registerSolutionSchema,
   slugify,
@@ -65,7 +66,12 @@ export function RegisterSolutionDialog({
       type: "chat",
       // minimal valid per-type config so registration always succeeds; the
       // editor is where the real values get filled in.
-      config: { botUuid: "", welcomeMessage: "", feedbackEnabled: true },
+      config: {
+        botUuid: "",
+        apiEndpoint: DEFAULT_CHAT_API_ENDPOINT,
+        welcomeMessage: "",
+        feedbackEnabled: true,
+      },
     },
   });
 
@@ -77,7 +83,12 @@ export function RegisterSolutionDialog({
     setValue(
       "config",
       next === "chat"
-        ? { botUuid: "", welcomeMessage: "", feedbackEnabled: true }
+        ? {
+            botUuid: "",
+            apiEndpoint: DEFAULT_CHAT_API_ENDPOINT,
+            welcomeMessage: "",
+            feedbackEnabled: true,
+          }
         : { iframeUrl: "https://" },
       { shouldDirty: true },
     );

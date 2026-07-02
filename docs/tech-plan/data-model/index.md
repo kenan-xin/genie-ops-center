@@ -162,7 +162,7 @@ One JSONB column, validated by a discriminated union at the tRPC boundary (no pe
 
 | type       | config shape                                                                                                                                                                                                             |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `chat`     | `{ botUuid: string; welcomeMessage?: string; starterPrompts?: string[]; feedbackEnabled?: boolean }` — `botUuid` is the external bot id; `themeId` binds the theme                                                       |
+| `chat`     | `{ botUuid: string; apiEndpoint: string (https, SSRF-guarded); welcomeMessage?: string; starterPrompts?: string[]; feedbackEnabled?: boolean }` — `botUuid` is the external bot id; `apiEndpoint` is the per-solution streaming URL (FR-ADM-S-03); `themeId` binds the theme |
 | `embedded` | `{ iframeUrl: string (https) }` — _(FR lists welcome/starters/feedback as "configurable" for embedded too, but those don't render inside an iframe; foundation models only `iframeUrl`. Re-add if a real need appears.)_ |
 | `native`   | `{}` — deferred; row hidden from registration + hub filters                                                                                                                                                              |
 
