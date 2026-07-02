@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { EmptyState } from "@/components/ui/empty-state";
+import { Select } from "@/components/ui/select";
 import { SegmentedControl } from "@/components/ui/segmented";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/ui/status-badge";
@@ -13,31 +14,20 @@ import { useOverviewByPerson, useOverviewBySolution } from "../api/groups";
 type View = "solution" | "person";
 
 /**
- * Access Overview explorer (FR-ADM-O-01). Reads the membership ∩ grant union
- * — the same source of truth as the access predicates — from two angles:
- * _By solution_ (groups that grant it → people it reaches) and _By person_
- * (their groups → resulting solutions, annotated by granting group). Each
- * group name links into the inspector.
+ * Access Overview explorer (FR-ADM-O-01) — pick one solution or one person
+ * and see a focused answer, instead of an exhaustive "show everything" list.
+ * Reads the same membership ∩ grant union the access predicates read (single
+ * source of truth), via `groups.overviewBySolution` / `overviewByPerson`.
  */
 export function AccessOverview() {
   const [view, setView] = useState<View>("solution");
 
   return (
-    <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="font-sans text-display font-extrabold tracking-[-0.02em]">
-          Access overview
-        </h1>
-        <p className="text-small text-[var(--ink2)]">
-          Who can reach what — derived live from group membership and grants. Archived solutions are
-          excluded.
-        </p>
-      </header>
-
+    <div className="flex flex-col gap-5">
       <SegmentedControl
         options={[
-          { value: "solution", label: "By solution" },
-          { value: "person", label: "By person" },
+          { value: "solution", label: "Who can open a solution?" },
+          { value: "person", label: "What can a person open?" },
         ]}
         value={view}
         onValueChange={(v) => setView(v)}
@@ -55,13 +45,37 @@ const STATUS_TONE = {
   draft: "neutral",
 } as const;
 
+function ExplorerColumn({
+  heading,
+  count,
+  suffix,
+  children,
+}: {
+  heading: string;
+  count: number;
+  suffix?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex min-w-0 flex-col border border-[var(--line)] bg-[var(--surface)]">
+      <div className="border-b border-[var(--line)] bg-[var(--panel)] px-4 py-3 font-mono text-mono-xs font-semibold tracking-[0.08em] text-[var(--ink2)] uppercase">
+        {heading} · {count}
+        {suffix ? <span className="ml-1 font-medium text-[var(--ink3)]">{suffix}</span> : null}
+      </div>
+      {children}
+    </div>
+  );
+}
+
 function BySolution() {
   const { data, isPending, isError, error } = useOverviewBySolution();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
   if (isPending) {
     return (
       <div className="flex flex-col gap-2">
         {[0, 1, 2].map((i) => (
-          <Skeleton key={i} className="h-20 w-full" />
+          <Skeleton key={i} className="h-16 w-full" />
         ))}
       </div>
     );
@@ -71,60 +85,106 @@ function BySolution() {
       <p className="text-small text-[var(--error)]">{(error as { message: string }).message}</p>
     );
   }
-  const granted = data.filter((r) => r.groups.length > 0);
-  if (granted.length === 0) {
+  if (data.length === 0) {
     return (
       <EmptyState
-        title="No grants yet"
-        description="Grant a group access to a solution and it'll show up here."
+        title="No solutions yet"
+        description="Register a solution under Solutions, then grant it to a group."
       />
     );
   }
+
+  const selected = data.find((r) => r.solution.id === selectedId) ?? data[0]!;
+
   return (
-    <div className="flex flex-col gap-3">
-      {granted.map((r) => (
-        <div
-          key={r.solution.id}
-          className="flex flex-col gap-2 border border-[var(--line)] bg-[var(--surface)] p-4"
-        >
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-foreground">{r.solution.name}</span>
-              {r.solution.archived ? (
-                <StatusBadge tone="neutral">Archived</StatusBadge>
-              ) : (
-                <StatusBadge tone={STATUS_TONE[r.solution.status]}>{r.solution.status}</StatusBadge>
-              )}
-            </div>
-            <span className="font-mono text-mono-xs text-[var(--ink3)]">
-              {r.people.length} {r.people.length === 1 ? "person" : "people"}
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {r.groups.map((g) => (
-              <Link key={g.id} href={`/admin/groups/${g.id}`}>
-                <StatusBadge tone="neutral" className="cursor-pointer hover:opacity-80">
-                  {g.name}
-                </StatusBadge>
-              </Link>
-            ))}
-          </div>
-          <p className="text-small text-[var(--ink2)]">
-            {r.people.map((p) => p.name).join(", ") || "No one reaches this solution."}
-          </p>
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="font-mono text-mono-sm font-semibold tracking-[0.1em] text-[var(--ink3)] uppercase">
+          Solution
+        </span>
+        <Select
+          items={data.map((r) => ({ value: r.solution.id, label: r.solution.name }))}
+          value={selected.solution.id}
+          onValueChange={setSelectedId}
+          className="max-w-[320px]"
+        />
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3 border border-[var(--line)] bg-[var(--panel)] p-4">
+        <p className="font-sans text-cardhead font-extrabold text-foreground">
+          Reaches{" "}
+          <span className="text-[var(--brandink)]">
+            {selected.people.length} {selected.people.length === 1 ? "person" : "people"}
+          </span>{" "}
+          via <span className="text-[var(--brandink)]">{selected.groups.length} groups</span>
+        </p>
+        {selected.solution.archived ? (
+          <StatusBadge tone="neutral">Archived</StatusBadge>
+        ) : (
+          <StatusBadge tone={STATUS_TONE[selected.solution.status]} dot>
+            {selected.solution.status}
+          </StatusBadge>
+        )}
+      </div>
+
+      {selected.groups.length === 0 ? (
+        <EmptyState
+          title="No group grants this solution yet"
+          description="Open a group and switch it on in Access."
+        />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <ExplorerColumn heading="Granted via" count={selected.groups.length}>
+            <ul>
+              {selected.groups.map((g) => (
+                <li
+                  key={g.id}
+                  className="flex items-center justify-between gap-3 border-b border-[var(--line2)] px-4 py-3 last:border-0"
+                >
+                  <span className="min-w-0 truncate">
+                    <span className="text-small font-semibold text-foreground">{g.name}</span>{" "}
+                    <span className="font-mono text-mono-xs text-[var(--ink3)]">
+                      · {g.memberCount} {g.memberCount === 1 ? "member" : "members"}
+                    </span>
+                  </span>
+                  <Link
+                    href={`/admin/groups/${g.id}`}
+                    className="shrink-0 text-mono-xs font-semibold text-[var(--brandink)] hover:underline"
+                  >
+                    Open group →
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </ExplorerColumn>
+          <ExplorerColumn heading="People reached" count={selected.people.length}>
+            {selected.people.length === 0 ? (
+              <p className="px-4 py-3 text-small text-[var(--ink3)]">No one reaches it yet.</p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5 p-4">
+                {selected.people.map((p) => (
+                  <StatusBadge key={p.id} tone="neutral">
+                    {p.name}
+                  </StatusBadge>
+                ))}
+              </div>
+            )}
+          </ExplorerColumn>
         </div>
-      ))}
+      )}
     </div>
   );
 }
 
 function ByPerson() {
   const { data, isPending, isError, error } = useOverviewByPerson();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
   if (isPending) {
     return (
       <div className="flex flex-col gap-2">
         {[0, 1, 2].map((i) => (
-          <Skeleton key={i} className="h-20 w-full" />
+          <Skeleton key={i} className="h-16 w-full" />
         ))}
       </div>
     );
@@ -137,56 +197,74 @@ function ByPerson() {
   if (data.length === 0) {
     return <EmptyState title="No people yet" description="Add people via the People directory." />;
   }
+
+  const selected = data.find((r) => r.person.id === selectedId) ?? data[0]!;
+
   return (
-    <div className="flex flex-col gap-3">
-      {data.map((r) => (
-        <div
-          key={r.person.id}
-          className="flex flex-col gap-2 border border-[var(--line)] bg-[var(--surface)] p-4"
-        >
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex flex-col">
-              <span className="font-semibold text-foreground">{r.person.name}</span>
-              <span className="text-mono-xs text-[var(--ink3)]">{r.person.email}</span>
-            </div>
-            <span className="font-mono text-mono-xs text-[var(--ink3)]">
-              {r.solutions.length} {r.solutions.length === 1 ? "solution" : "solutions"}
-            </span>
-          </div>
-          {r.groups.length === 0 ? (
-            <p className="text-small text-[var(--ink3)]">In no groups — no access.</p>
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="font-mono text-mono-sm font-semibold tracking-[0.1em] text-[var(--ink3)] uppercase">
+          Person
+        </span>
+        <Select
+          items={data.map((r) => ({
+            value: r.person.id,
+            label: r.person.name,
+          }))}
+          value={selected.person.id}
+          onValueChange={setSelectedId}
+          className="max-w-[320px]"
+        />
+        <span className="text-mono-xs text-[var(--ink3)]">{selected.person.email}</span>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <ExplorerColumn heading="Member of" count={selected.groups.length}>
+          {selected.groups.length === 0 ? (
+            <p className="px-4 py-3 text-small text-[var(--ink3)]">
+              Not in any group, so no access. Open a group to add them.
+            </p>
           ) : (
-            <div className="flex flex-col gap-2">
-              <div className="flex flex-wrap items-center gap-1">
-                <span className="text-mono-xs text-[var(--ink3)]">Groups:</span>
-                {r.groups.map((g) => (
-                  <Link key={g.id} href={`/admin/groups/${g.id}`}>
-                    <StatusBadge tone="neutral" className="cursor-pointer hover:opacity-80">
-                      {g.name}
-                    </StatusBadge>
+            <ul>
+              {selected.groups.map((g) => (
+                <li
+                  key={g.id}
+                  className="flex items-center justify-between gap-3 border-b border-[var(--line2)] px-4 py-3 last:border-0"
+                >
+                  <span className="text-small font-semibold text-foreground">{g.name}</span>
+                  <Link
+                    href={`/admin/groups/${g.id}`}
+                    className="shrink-0 text-mono-xs font-semibold text-[var(--brandink)] hover:underline"
+                  >
+                    Edit in group →
                   </Link>
-                ))}
-              </div>
-              {r.solutions.length > 0 ? (
-                <ul className="flex flex-col gap-1">
-                  {r.solutions.map((s) => (
-                    <li key={s.id} className="flex flex-wrap items-center gap-2 text-small">
-                      <span className="font-medium text-foreground">{s.name}</span>
-                      <span className="text-mono-xs text-[var(--ink3)]">
-                        via {s.grantedBy.map((g) => g.name).join(", ")}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-small text-[var(--ink3)]">
-                  Granted solutions reach no one here.
-                </p>
-              )}
-            </div>
+                </li>
+              ))}
+            </ul>
           )}
-        </div>
-      ))}
+        </ExplorerColumn>
+        <ExplorerColumn heading="Can open" count={selected.solutions.length} suffix="(derived)">
+          {selected.solutions.length === 0 ? (
+            <p className="px-4 py-3 text-small text-[var(--ink3)]">
+              Granted solutions reach no one here.
+            </p>
+          ) : (
+            <ul>
+              {selected.solutions.map((s) => (
+                <li
+                  key={s.id}
+                  className="flex items-center justify-between gap-3 border-b border-[var(--line2)] px-4 py-3 last:border-0"
+                >
+                  <span className="text-small text-foreground">{s.name}</span>
+                  <span className="shrink-0 font-mono text-mono-xs text-[var(--ink3)]">
+                    via {s.grantedBy.map((g) => g.name).join(", ")}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </ExplorerColumn>
+      </div>
     </div>
   );
 }

@@ -1,8 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -33,36 +32,62 @@ import { useToast } from "@/components/ui/toast";
 
 import { useCreateGroup, useGroupsQuery } from "../api/groups";
 import { createGroupSchema, type CreateGroupValues } from "../schemas/group";
+import { GroupInspector } from "./group-inspector";
 
 const SKELETON_ROWS = [0, 1, 2, 3, 4];
 
-/** Groups directory (FR-ADM-G-01/02): search, create, select → inspector. */
-export function GroupsDirectory() {
+/**
+ * Groups directory (FR-ADM-G-01/02): search, create, select → inspector
+ * slide-over. `initialGroupId` seeds the slide-over open when this component
+ * is rendered from the `/admin/groups/[id]` deep-link (People directory
+ * "jump to group" links) — the directory itself never route-navigates for a
+ * row click, only for that initial deep-link entry.
+ */
+export function GroupsDirectory({ initialGroupId }: { initialGroupId?: string } = {}) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
+  const [openId, setOpenId] = useState<string | null>(initialGroupId ?? null);
   const { data: groups, isPending, isError, error } = useGroupsQuery(search);
 
   const term = search.trim();
 
+  function closeInspector() {
+    setOpenId(null);
+    if (pathname !== "/admin/groups") router.replace("/admin/groups");
+  }
+
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex items-center justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="font-sans text-display font-extrabold tracking-[-0.02em]">Groups</h1>
-          <p className="text-small text-[var(--ink2)]">
-            The single access mechanism — a person reaches a solution through a group that grants
-            it.
-          </p>
-        </div>
-        <Button onClick={() => setCreateOpen(true)}>New group</Button>
+      <header className="flex flex-col gap-1">
+        <h1 className="font-sans text-display font-extrabold tracking-[-0.02em]">Groups</h1>
+        <p className="text-small text-[var(--ink2)]">
+          A group is a set of people. Open a group to manage who&rsquo;s in it — then grant
+          solutions to the group over in Access.
+        </p>
       </header>
 
-      <Input
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-        placeholder="Search groups…"
-        className="max-w-[320px]"
-      />
+      <div className="flex items-center gap-2 border border-[var(--brand)]/25 bg-[var(--brandtint)] px-3.5 py-2.5">
+        <span className="shrink-0 font-mono text-mono-xs font-semibold tracking-[0.08em] text-[var(--brandink)] uppercase">
+          How access works
+        </span>
+        <span className="text-small text-[var(--brandink)]">
+          People belong to groups here; groups are granted solutions in{" "}
+          <span className="font-semibold">Access</span>. A person can open a solution if any of
+          their groups grants it.
+        </span>
+      </div>
+
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <Input
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Search groups…"
+          className="max-w-[320px]"
+        />
+        <Button onClick={() => setCreateOpen(true)}>New group</Button>
+      </div>
 
       {isPending ? (
         <div className="flex flex-col gap-2">
@@ -88,27 +113,27 @@ export function GroupsDirectory() {
         />
       ) : (
         <TableScroll>
-          <Table className="min-w-[640px]">
+          <Table className="min-w-[480px]">
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
+                <TableHead>Group</TableHead>
                 <TableHead>Members</TableHead>
-                <TableHead>Solutions</TableHead>
+                <TableHead />
               </TableRow>
             </TableHeader>
             <TableBody>
               {groups.map((g) => (
-                <TableRow key={g.id}>
+                <TableRow key={g.id} className="cursor-pointer" onClick={() => setOpenId(g.id)}>
                   <TableCell>
-                    <Link href={`/admin/groups/${g.id}`} className="flex flex-col hover:underline">
+                    <span className="flex flex-col">
                       <span className="font-semibold text-foreground">{g.name}</span>
                       {g.description ? (
                         <span className="text-mono-xs text-[var(--ink3)]">{g.description}</span>
                       ) : null}
-                    </Link>
+                    </span>
                   </TableCell>
-                  <TableCell className="text-[var(--ink2)]">{g.memberCount}</TableCell>
-                  <TableCell className="text-[var(--ink2)]">{g.solutionCount}</TableCell>
+                  <TableCell className="font-mono text-[var(--ink2)]">{g.memberCount}</TableCell>
+                  <TableCell className="text-right text-[var(--line)]">›</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -116,7 +141,18 @@ export function GroupsDirectory() {
         </TableScroll>
       )}
 
-      <CreateGroupDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <CreateGroupDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onCreated={(id) => setOpenId(id)}
+      />
+      <GroupInspector
+        groupId={openId}
+        open={openId !== null}
+        onOpenChange={(next) => {
+          if (!next) closeInspector();
+        }}
+      />
     </div>
   );
 }
@@ -124,11 +160,12 @@ export function GroupsDirectory() {
 function CreateGroupDialog({
   open,
   onOpenChange,
+  onCreated,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onCreated: (id: string) => void;
 }) {
-  const router = useRouter();
   const { toast } = useToast();
   const createGroup = useCreateGroup();
   const {
@@ -148,7 +185,7 @@ function CreateGroupDialog({
       toast({ tone: "success", description: `Created "${created.name}".` });
       reset();
       onOpenChange(false);
-      router.push(`/admin/groups/${created.id}`);
+      onCreated(created.id);
     } catch (e) {
       setError("root", { message: (e as { message: string }).message });
     }
@@ -167,7 +204,8 @@ function CreateGroupDialog({
           <DialogHeader>
             <DialogTitle>New group</DialogTitle>
             <DialogDescription>
-              Add people and grant solutions from the group inspector after creating it.
+              Add people from the group inspector after creating it — grant it solutions from
+              Access.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-3 px-5 pb-5">

@@ -196,7 +196,7 @@ export async function setSolutions(groupId: string, desiredSolutionIds: string[]
 
 export type SolutionReach = {
   solution: SolutionOption;
-  groups: { id: string; name: string }[];
+  groups: { id: string; name: string; memberCount: number }[];
   people: { id: string; name: string; email: string }[];
 };
 
@@ -259,7 +259,9 @@ export async function overviewBySolution(): Promise<SolutionReach[]> {
         status: s.status,
         archived: s.archived,
       },
-      groups: grantGroups.sort((a, b) => a.name.localeCompare(b.name)),
+      groups: grantGroups
+        .map((g) => ({ ...g, memberCount: peopleByGroup.get(g.id)?.length ?? 0 }))
+        .sort((a, b) => a.name.localeCompare(b.name)),
       people: [...personSet.values()].sort((a, b) => a.name.localeCompare(b.name)),
     };
   });
