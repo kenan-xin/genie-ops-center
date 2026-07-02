@@ -1,13 +1,16 @@
-import { ThemeEditor } from "@/features/themes/components/theme-editor";
+import { ThemeBuilder } from "@/features/themes/components/theme-builder";
 import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 
-// Theme editor + live device preview (FR-ADM-T-02/03) — thin route.
-export default async function ThemeEditorPage({ params }: { params: Promise<{ id: string }> }) {
+// Theme Builder for a specific theme (FR-ADM-T-02/03) — thin route, same
+// screen as the index route with the saved-theme swatch strip selecting `id`.
+// The builder reads the selected theme's config off the `themes.list` result
+// (already includes each theme's full config), so only that needs prefetching.
+export default async function ThemeBuilderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  prefetch(trpc.themes.get.queryOptions({ id }));
+  prefetch(trpc.themes.list.queryOptions());
   return (
     <HydrateClient>
-      <ThemeEditor themeId={id} />
+      <ThemeBuilder selectedId={id} />
     </HydrateClient>
   );
 }

@@ -12,35 +12,45 @@ const DEVICE_WIDTH: Record<Device, number> = { desktop: 380, mobile: 300 };
 const PREVIEW_HEIGHT = 560;
 
 /**
- * Chat-only preview (FR-ADM-T-03). Rendered inside a sandboxed, script-less
- * iframe (`sandbox=""`) so the admin's Custom-CSS tab is genuinely scoped to
- * the chat surface — the browser's own document boundary keeps it from
- * leaking into the admin chrome, no CSS-scoping library needed.
+ * Chat-only preview (FR-ADM-T-03), proto 953-957 & 1008. Rendered inside a
+ * sandboxed, script-less iframe (`sandbox=""`) so the admin's Custom-CSS tab
+ * is genuinely scoped to the chat surface — the browser's own document
+ * boundary keeps it from leaking into the admin chrome, no CSS-scoping
+ * library needed. The device frame uses `max-width` (not a fixed `width`) so
+ * it shrinks to fit a narrow container instead of overflowing it — pair with
+ * `min-w-0` on the flex/grid cell that hosts this component.
  */
 export function ThemePreview({ config }: { config: ThemeConfig }) {
   const [device, setDevice] = useState<Device>("desktop");
   const srcDoc = useMemo(() => buildPreviewHtml(config), [config]);
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <SegmentedControl
-        options={[
-          { value: "desktop", label: "Desktop" },
-          { value: "mobile", label: "Mobile" },
-        ]}
-        value={device}
-        onValueChange={setDevice}
-      />
-      <div
-        className="overflow-hidden border border-[var(--line)] bg-[var(--panel)] shadow-[var(--shadow-dialog)] transition-[width] duration-200"
-        style={{ width: DEVICE_WIDTH[device], height: PREVIEW_HEIGHT }}
-      >
-        <iframe
-          title="Chat theme preview"
-          srcDoc={srcDoc}
-          sandbox=""
-          className="size-full border-0"
+    <div className="flex w-full flex-col gap-3">
+      <div className="flex items-center justify-between gap-3">
+        <span className="font-mono text-mono-sm font-semibold tracking-[0.1em] text-[var(--ink3)] uppercase">
+          Live preview
+        </span>
+        <SegmentedControl
+          options={[
+            { value: "desktop", label: "Desktop" },
+            { value: "mobile", label: "Mobile" },
+          ]}
+          value={device}
+          onValueChange={setDevice}
         />
+      </div>
+      <div className="flex justify-center border border-[var(--line)] bg-[var(--panel)] p-5">
+        <div
+          className="w-full overflow-hidden border border-[var(--line)] bg-[var(--surface)] shadow-[var(--shadow-dialog)] transition-[max-width] duration-200"
+          style={{ maxWidth: DEVICE_WIDTH[device], height: PREVIEW_HEIGHT }}
+        >
+          <iframe
+            title="Chat theme preview"
+            srcDoc={srcDoc}
+            sandbox=""
+            className="size-full border-0"
+          />
+        </div>
       </div>
     </div>
   );

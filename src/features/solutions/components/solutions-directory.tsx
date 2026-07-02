@@ -7,6 +7,7 @@ import { useConfirm } from "@/components/ui/confirm";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { SegmentedControl } from "@/components/ui/segmented";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/ui/status-badge";
 import {
@@ -19,7 +20,7 @@ import {
   TableScroll,
 } from "@/components/ui/table";
 import { useToast } from "@/components/ui/toast";
-import { relativeTime } from "@/lib/relative-time";
+import { cn } from "@/lib/utils";
 
 import {
   useArchiveSolution,
@@ -47,8 +48,8 @@ const SORT_OPTIONS: { value: SolutionSort; label: string }[] = [
   { value: "status", label: "Sort by status" },
 ];
 
-const TYPE_OPTIONS: { value: string; label: string }[] = [
-  { value: "all", label: "All types" },
+const TYPE_FILTER_OPTIONS: { value: SolutionType | "all"; label: string }[] = [
+  { value: "all", label: "All" },
   { value: "chat", label: "Chat" },
   { value: "embedded", label: "Embedded" },
 ];
@@ -66,7 +67,7 @@ function errMsg(e: unknown): string {
   return e instanceof Error ? e.message : "Something went wrong.";
 }
 
-/** Solutions table (FR-ADM-S-01) with inline status selector + row actions (FR-ADM-S-04). */
+/** Solutions directory (FR-ADM-S-01), proto 684-700: compact 4-col table + icon-button actions. */
 export function SolutionsDirectory() {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SolutionSort>("updated");
@@ -95,32 +96,31 @@ export function SolutionsDirectory() {
     <div className="flex flex-col gap-6">
       <header className="flex items-center justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <h1 className="font-sans text-display font-extrabold tracking-[-0.02em]">Solutions</h1>
+          <h1 className="font-sans text-title font-extrabold tracking-[-0.02em]">Solutions</h1>
           <p className="text-small text-[var(--ink2)]">
             Register and configure the chat and embedded solutions available to your groups.
           </p>
         </div>
-        <Button onClick={() => setRegisterOpen(true)}>Register solution</Button>
+        <Button onClick={() => setRegisterOpen(true)}>+ Add</Button>
       </header>
 
       <div className="flex flex-wrap items-center gap-3">
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name…"
-          className="max-w-[320px]"
+          placeholder="Search solutions…"
+          className="max-w-[280px]"
         />
-        <Select
-          items={TYPE_OPTIONS}
+        <SegmentedControl
+          options={TYPE_FILTER_OPTIONS}
           value={typeFilter}
-          onValueChange={(v) => setTypeFilter(v as SolutionType | "all")}
-          className="w-[160px]"
+          onValueChange={(v) => setTypeFilter(v)}
         />
         <Select
           items={SORT_OPTIONS}
           value={sort}
           onValueChange={(v) => setSort(v as SolutionSort)}
-          className="w-[220px]"
+          className="ml-auto w-[220px]"
         />
       </div>
 
@@ -136,13 +136,15 @@ export function SolutionsDirectory() {
         </p>
       ) : solutions.length === 0 ? (
         <EmptyState
-          title={term || typeFilter !== "all" ? "No matches" : "No solutions yet"}
+          title={
+            term || typeFilter !== "all" ? "No solutions match your filters" : "No solutions yet"
+          }
           description={
             term || typeFilter !== "all"
-              ? "Try a different search or filter."
+              ? "Try a different search term or type."
               : "Register your first chat or embedded solution to make it available to groups."
           }
-          action={<Button onClick={() => setRegisterOpen(true)}>Register solution</Button>}
+          action={<Button onClick={() => setRegisterOpen(true)}>+ Add</Button>}
         />
       ) : (
         <SolutionsTable solutions={solutions} onEdit={openEdit} />
@@ -173,15 +175,13 @@ function SolutionsTable({
 }) {
   return (
     <TableScroll>
-      <Table className="min-w-[860px]">
+      <Table className="min-w-[720px]">
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Theme</TableHead>
-            <TableHead>Updated</TableHead>
-            <TableHead />
+            <TableHead className="w-[40%]">Solution</TableHead>
+            <TableHead className="w-[15%]">Type</TableHead>
+            <TableHead className="w-[20%]">Status</TableHead>
+            <TableHead className="w-[25%] text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -292,8 +292,17 @@ function SolutionRow({ solution, onEdit }: { solution: Solution; onEdit: () => v
           >
             {solution.monogram ?? "·"}
           </span>
-          <span className="flex flex-col">
-            <span className="font-semibold text-foreground hover:underline">{solution.name}</span>
+          <span className="flex min-w-0 flex-col">
+            <span className="flex items-center gap-1.5">
+              <span className="truncate font-semibold text-foreground hover:underline">
+                {solution.name}
+              </span>
+              {solution.archived ? (
+                <StatusBadge tone="neutral" className="shrink-0">
+                  Archived
+                </StatusBadge>
+              ) : null}
+            </span>
             {solution.description ? (
               <span className="text-mono-xs text-[var(--ink3)] line-clamp-1 max-w-[360px]">
                 {solution.description}
@@ -303,66 +312,146 @@ function SolutionRow({ solution, onEdit }: { solution: Solution; onEdit: () => v
         </button>
       </TableCell>
       <TableCell>
-        <StatusBadge tone="neutral">{TYPE_LABEL[solution.type]}</StatusBadge>
+        <span className="font-mono text-mono-sm text-[var(--ink2)]">
+          {TYPE_LABEL[solution.type]}
+        </span>
       </TableCell>
       <TableCell>
-        {/* Inline status selector (FR-ADM-S-01). */}
-        <div className="flex items-center gap-2">
-          <StatusBadge tone={statusTone(solution.status)} dot>
-            {STATUS_LABEL[solution.status]}
-          </StatusBadge>
-          <Select
-            items={STATUS_ITEMS}
-            value={solution.status}
-            onValueChange={(v) => void handleStatusChange(v as SolutionStatus)}
-            disabled={busy}
-            className="w-[150px]"
-            aria-label={`Status for ${solution.name}`}
-          />
-        </div>
-      </TableCell>
-      <TableCell className="text-[var(--ink2)]">
-        {solution.type === "chat" ? (
-          (solution.themeName ?? <span className="text-mono-xs text-[var(--ink3)]">No theme</span>)
+        {solution.archived ? (
+          <span className="font-mono text-mono-sm text-[var(--ink3)]">Hidden from hub</span>
         ) : (
-          <span className="text-mono-xs text-[var(--ink3)]">—</span>
+          <div className="flex items-center gap-2">
+            <StatusBadge tone={statusTone(solution.status)} dot>
+              {STATUS_LABEL[solution.status]}
+            </StatusBadge>
+            <Select
+              items={STATUS_ITEMS}
+              value={solution.status}
+              onValueChange={(v) => void handleStatusChange(v as SolutionStatus)}
+              disabled={busy}
+              className="w-[150px]"
+              aria-label={`Status for ${solution.name}`}
+            />
+          </div>
         )}
-      </TableCell>
-      <TableCell className="text-mono-xs text-[var(--ink3)]">
-        {relativeTime(solution.updatedAt)}
       </TableCell>
       <TableCell>
         <div className="flex flex-wrap items-center justify-end gap-1.5">
-          <Button variant="ghost" size="sm" onClick={onEdit} disabled={busy}>
-            Configure
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => void handleDuplicate()} disabled={busy}>
-            Duplicate
-          </Button>
+          <IconButton label="Configure" tone="brand" onClick={onEdit} disabled={busy}>
+            <GearIcon />
+          </IconButton>
+          <IconButton label="Duplicate" onClick={() => void handleDuplicate()} disabled={busy}>
+            <DuplicateIcon />
+          </IconButton>
           {solution.archived ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => void handleUnarchive()}
-              disabled={busy}
-            >
-              Restore
-            </Button>
+            <IconButton label="Restore" onClick={() => void handleUnarchive()} disabled={busy}>
+              <RestoreIcon />
+            </IconButton>
           ) : (
-            <Button variant="ghost" size="sm" onClick={() => void handleArchive()} disabled={busy}>
-              Archive
-            </Button>
+            <IconButton label="Archive" onClick={() => void handleArchive()} disabled={busy}>
+              <ArchiveIcon />
+            </IconButton>
           )}
-          <Button
-            variant="destructive"
-            size="sm"
+          <IconButton
+            label="Delete"
+            tone="error"
             onClick={() => void handleDelete()}
             disabled={busy}
           >
-            Delete
-          </Button>
+            <TrashIcon />
+          </IconButton>
         </div>
       </TableCell>
     </TableRow>
+  );
+}
+
+function IconButton({
+  label,
+  onClick,
+  disabled,
+  tone = "default",
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  tone?: "default" | "brand" | "error";
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      title={label}
+      aria-label={label}
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        "flex size-[30px] shrink-0 items-center justify-center border border-[var(--line)] bg-transparent outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+        tone === "brand" && "text-[var(--brandink)] hover:bg-[var(--brandtint)]",
+        tone === "error" && "text-[var(--error)] hover:bg-[var(--errortint)]",
+        tone === "default" && "text-[var(--ink2)] hover:bg-[var(--panel)]",
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+const ICON_PROPS = {
+  width: 15,
+  height: 15,
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.8,
+} as const;
+
+function GearIcon() {
+  return (
+    <svg {...ICON_PROPS} aria-hidden>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  );
+}
+
+function DuplicateIcon() {
+  return (
+    <svg {...ICON_PROPS} aria-hidden>
+      <rect x="9" y="9" width="12" height="12" rx="0" />
+      <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
+    </svg>
+  );
+}
+
+function ArchiveIcon() {
+  return (
+    <svg {...ICON_PROPS} aria-hidden>
+      <rect x="3" y="4" width="18" height="4" />
+      <path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8" />
+      <path d="M10 13h4" />
+    </svg>
+  );
+}
+
+function RestoreIcon() {
+  return (
+    <svg {...ICON_PROPS} aria-hidden>
+      <path d="M3 12a9 9 0 1 0 3-6.7" />
+      <path d="M3 4v5h5" />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg {...ICON_PROPS} aria-hidden>
+      <path d="M3 6h18" />
+      <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+      <path d="M19 6l-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6" />
+      <path d="M10 11v6" />
+      <path d="M14 11v6" />
+    </svg>
   );
 }
