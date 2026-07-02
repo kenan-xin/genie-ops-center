@@ -118,6 +118,7 @@ export function GroupsDirectory({ initialGroupId }: { initialGroupId?: string } 
               <TableRow>
                 <TableHead>Group</TableHead>
                 <TableHead>Members</TableHead>
+                <TableHead>Solutions</TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
@@ -133,6 +134,7 @@ export function GroupsDirectory({ initialGroupId }: { initialGroupId?: string } 
                     </span>
                   </TableCell>
                   <TableCell className="font-mono text-[var(--ink2)]">{g.memberCount}</TableCell>
+                  <TableCell className="font-mono text-[var(--ink2)]">{g.solutionCount}</TableCell>
                   <TableCell className="text-right text-[var(--line)]">›</TableCell>
                 </TableRow>
               ))}
