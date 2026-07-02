@@ -1,66 +1,25 @@
-import { caller } from "@/server/trpc/caller";
-import { HydrateClient, prefetch, trpc } from "@/trpc/server";
-
-import { HelloClient } from "./hello-client";
-
-export default async function HubPage() {
-  // RSC roundtrip: direct server caller, no HTTP hop.
-  const server = await caller.hello({ name: "operator" });
-  // Prefetches the exact query HelloClient runs client-side, so it hydrates
-  // instead of showing a loading flash on mount.
-  prefetch(trpc.hello.queryOptions({ name: "browser" }));
-
+/**
+ * Solutions hub. The catalogue (granted solutions, filters, open) is ticket 11;
+ * this is a clean placeholder that inherits the workspace chrome.
+ */
+export default function HubPage() {
   return (
-    <HydrateClient>
-      <section className="flex flex-col gap-4">
-        <span
-          style={{
-            font: "600 var(--m-sm) var(--font-mono)",
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            color: "var(--ink3)",
-          }}
-        >
-          Overview
-        </span>
-        <h1
-          style={{
-            margin: 0,
-            fontFamily: "var(--font-display)",
-            fontSize: "var(--t-display)",
-            fontWeight: 800,
-            letterSpacing: "-0.02em",
-          }}
-        >
-          Hub
-        </h1>
-        <p style={{ maxWidth: "60ch", color: "var(--ink2)" }}>
-          Scaffolding shell. Solutions, access and admin land in later tickets.
-        </p>
-
-        <div
-          className="flex flex-col gap-2 p-4"
-          style={{
-            border: "1px solid var(--line)",
-            background: "var(--surface)",
-          }}
-        >
-          <div style={{ fontSize: "var(--t-sm)", color: "var(--ink2)" }}>
-            <span
-              style={{
-                font: "600 var(--m-xs) var(--font-mono)",
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                color: "var(--ink3)",
-              }}
-            >
-              Server caller
-            </span>{" "}
-            {server.greeting}
-          </div>
-          <HelloClient />
-        </div>
-      </section>
-    </HydrateClient>
+    <section className="cs-hubpad" style={{ padding: 24, maxWidth: "var(--content-wide)" }}>
+      <h1
+        style={{
+          margin: 0,
+          fontFamily: "var(--font-display)",
+          fontSize: "var(--t-h2)",
+          fontWeight: 800,
+          letterSpacing: "-0.01em",
+          color: "var(--ink)",
+        }}
+      >
+        Solutions
+      </h1>
+      <p style={{ marginTop: 8, maxWidth: "60ch", color: "var(--ink2)" }}>
+        Open any solution you&rsquo;ve been granted to use it live. Your solutions will appear here.
+      </p>
+    </section>
   );
 }

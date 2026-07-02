@@ -350,3 +350,39 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ============================================================
+   Workspace shell reflow (FR-VIEW-06). Mobile-first: the sidebar
+   is an off-canvas drawer (250px / max 84vw) over a backdrop;
+   ≥920px it becomes a persistent column at the --sidebar-w token.
+   The hamburger lives inside the 54px header and shows <920px only.
+   ============================================================ */
+.ws-side {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: 250px;
+  max-width: 84vw;
+  z-index: 80;
+  transform: translateX(-100%);
+  transition: transform var(--dur-base) var(--ease);
+}
+.ws-side[data-open] {
+  transform: translateX(0);
+}
+.ws-burger {
+  display: inline-flex;
+}
+@media (min-width: 920px) {
+  .ws-side {
+    position: static;
+    transform: none;
+    width: var(--sidebar-w);
+    max-width: none;
+    z-index: auto;
+    flex-shrink: 0;
+    transition: none;
+  }
+  .ws-burger {
+    display: none;
+  }
+}

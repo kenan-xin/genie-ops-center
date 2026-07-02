@@ -1,7 +1,7 @@
 ---
 kind: ticket
 title: "10 · Workspace shell & chrome"
-status: 0
+status: 1
 ---
 
 # 10 · Workspace shell & chrome
