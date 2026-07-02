@@ -69,7 +69,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
           <AlertDialog.Viewport className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <AlertDialog.Popup className="relative w-full max-w-[420px] rounded-none border border-[var(--line)] bg-[var(--surface)] text-foreground shadow-[var(--shadow-dialog)] transition-all duration-200 data-[ending-style]:translate-y-1 data-[ending-style]:opacity-0 data-[starting-style]:translate-y-1 data-[starting-style]:opacity-0">
               <div className="flex flex-col gap-2 p-5 pb-4">
-                <AlertDialog.Title className="font-sans text-cardhead font-extrabold tracking-[-0.01em]">
+                <AlertDialog.Title className="font-sans text-cardhead font-extrabold tracking-[-0.02em]">
                   {options?.title}
                 </AlertDialog.Title>
                 {options?.description ? (

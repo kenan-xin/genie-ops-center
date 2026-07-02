@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 // Ledger status badge: mono uppercase, semantic colour on its tint, square.
 // Live/critical states lead with a ● dot (READY, MAINTENANCE, DOWN, PENDING).
 const badgeVariants = cva(
-  "inline-flex items-center gap-1 rounded-none px-2 py-1 font-mono text-mono-sm font-semibold uppercase tracking-[0.06em]",
+  "inline-flex items-center rounded-none px-[7px] py-[3px] font-mono text-mono-xs font-semibold uppercase tracking-[0.06em]",
   {
     variants: {
       tone: {

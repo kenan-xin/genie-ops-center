@@ -44,7 +44,7 @@ function SlideOverTitle({ className, ...props }: DialogPrimitive.Title.Props) {
   return (
     <DialogPrimitive.Title
       data-slot="slide-over-title"
-      className={cn("font-sans text-cardhead font-extrabold tracking-[-0.01em]", className)}
+      className={cn("font-sans text-cardhead font-extrabold tracking-[-0.02em]", className)}
       {...props}
     />
   );
