@@ -11,8 +11,8 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: "bg-primary font-bold text-primary-foreground hover:opacity-90",
-        dark: "bg-[var(--ink)] font-bold text-[var(--on-ink)] hover:opacity-90",
+        primary: "bg-primary font-bold text-primary-foreground hover:brightness-[0.94]",
+        dark: "bg-[var(--ink)] font-bold text-[var(--on-ink)] hover:brightness-[0.94]",
         ghost:
           "border border-[var(--line)] bg-transparent font-semibold text-foreground hover:bg-[var(--panel)]",
         destructive:
@@ -22,6 +22,7 @@ const buttonVariants = cva(
       size: {
         default: "h-10 px-[18px]",
         sm: "h-8 px-3",
+        auth: "h-11 px-[18px] text-title",
         icon: "size-10",
       },
     },
