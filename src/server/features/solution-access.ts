@@ -66,7 +66,16 @@ export async function isGrantedSolution(userId: string, solutionId: string): Pro
   return Boolean(row);
 }
 
-/** Granted + not archived + not draft — the "customer can open" predicate. */
+/**
+ * Granted + not archived + not draft — the "customer can open" predicate.
+ *
+ * `native` is intentionally NOT excluded here (Phase-3 review): native is still
+ * *see-able* — the viewer renders a "not openable" notice for it — so excluding
+ * it from `canSee` would turn that into a 404. Native's exclusion is a *catalogue*
+ * concern and lives in the hub list query (`solutions-hub/server/queries.ts`),
+ * not this access gate. (And native is never granted, so it can't reach recents/
+ * favorites anyway.)
+ */
 export async function canSee(
   user: AuthUser,
   s: { status: SolutionView["status"]; archived: boolean; id: string },

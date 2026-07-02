@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 import { useTRPC } from "@/trpc/provider";
 
@@ -35,9 +36,16 @@ export function useFavorites() {
 export function useToggleFavorite() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const router = useRouter();
   return useMutation(
     trpc.solutionsHub.toggleFavorite.mutationOptions({
-      onSuccess: () => invalidateListViews(trpc, queryClient),
+      onSuccess: () => {
+        invalidateListViews(trpc, queryClient);
+        // The PINNED rail is rendered by the server (workspace) layout from a
+        // server-caller fetch, so client query invalidation alone leaves it
+        // stale until navigation. Re-run the server components (Phase-3 review).
+        router.refresh();
+      },
     }),
   );
 }

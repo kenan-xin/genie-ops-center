@@ -46,6 +46,20 @@ const DEMOS: DemoSpec[] = [
     status: "maintenance",
     iframeUrl: LOAN_REVIEW_IFRAME,
   },
+  {
+    name: "Claims Triage",
+    monogram: "CT",
+    description: "Embedded claims triage board (down — exercises the outage notice).",
+    status: "down",
+    iframeUrl: LOAN_REVIEW_IFRAME,
+  },
+  {
+    name: "Policy Drafter",
+    monogram: "PD",
+    description: "Embedded policy drafting tool (draft — never openable, hidden from the hub).",
+    status: "draft",
+    iframeUrl: LOAN_REVIEW_IFRAME,
+  },
 ];
 
 const GROUP_NAME = "Demo Access";

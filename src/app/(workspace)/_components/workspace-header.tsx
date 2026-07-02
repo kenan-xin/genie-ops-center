@@ -47,7 +47,9 @@ export function WorkspaceHeader() {
           onClick={() => setDrawerOpen(true)}
           className="ws-burger"
           style={{
-            display: "inline-flex",
+            // display is owned by `.ws-burger` in globals.css (inline-flex <920px,
+            // none ≥920px) — do NOT set it inline here, or it beats the media query
+            // and the hamburger shows on desktop too (Phase-3 review P1).
             width: 32,
             height: 32,
             border: "1px solid var(--line)",
