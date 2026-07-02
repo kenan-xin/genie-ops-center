@@ -10,11 +10,21 @@ import { z } from "zod";
 export const personRoleSchema = z.enum(["user", "admin"]);
 export type PersonRole = z.infer<typeof personRoleSchema>;
 
-/** UI label for the FR's "role" column — "admin"/"user" are the stored values. */
+/**
+ * UI label for the FR's "role" column — "admin"/"user" are the stored values.
+ * "Workspace Owner" is the prototype/epic-brief's term for an elevated member
+ * (proto lines 334, 1284, 1917) — the same underlying `admin` role.
+ */
 export const ROLE_LABEL: Record<PersonRole, string> = {
-  admin: "Admin",
+  admin: "Workspace Owner",
   user: "Member",
 };
+
+/** Options for the add/edit person role segmented control (proto 1048). */
+export const ROLE_OPTIONS: { value: PersonRole; label: string }[] = [
+  { value: "user", label: ROLE_LABEL.user },
+  { value: "admin", label: ROLE_LABEL.admin },
+];
 
 export const personStatusSchema = z.enum(["active", "pending", "disabled"]);
 export type PersonStatus = z.infer<typeof personStatusSchema>;

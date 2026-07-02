@@ -11,19 +11,23 @@ function SegmentedControl<T extends string>({
   options,
   value,
   onValueChange,
+  disabled,
   className,
   ...props
 }: Omit<React.ComponentProps<"div">, "onChange"> & {
   options: SegmentedOption<T>[];
   value: T;
   onValueChange: (value: T) => void;
+  disabled?: boolean;
 }) {
   return (
     <div
       data-slot="segmented"
       role="tablist"
+      aria-disabled={disabled}
       className={cn(
         "inline-flex rounded-none border border-[var(--line)] font-sans text-small font-semibold",
+        disabled && "opacity-50",
         className,
       )}
       {...props}
@@ -36,9 +40,10 @@ function SegmentedControl<T extends string>({
             type="button"
             role="tab"
             aria-selected={active}
+            disabled={disabled}
             onClick={() => onValueChange(option.value)}
             className={cn(
-              "px-3 py-2 transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+              "px-3 py-2 transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset disabled:pointer-events-none disabled:cursor-not-allowed",
               index > 0 && "border-l border-[var(--line)]",
               active
                 ? "bg-[var(--ink)] text-[var(--on-ink)]"
