@@ -63,12 +63,17 @@ export function InvitePersonDialog({
     onOpenChange(false);
   });
 
+  function handleClose() {
+    reset();
+    onOpenChange(false);
+  }
+
   return (
     <SlideOver
       open={open}
       onOpenChange={(next) => {
-        if (!next) reset();
-        onOpenChange(next);
+        if (next) onOpenChange(next);
+        else handleClose();
       }}
     >
       <SlideOverContent>
@@ -131,7 +136,7 @@ export function InvitePersonDialog({
         </SlideOverBody>
 
         <SlideOverFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+          <Button variant="ghost" onClick={handleClose} disabled={isSubmitting}>
             Cancel
           </Button>
           <Button type="submit" form="invite-person-form" disabled={isSubmitting}>

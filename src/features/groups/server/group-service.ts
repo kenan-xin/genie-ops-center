@@ -217,6 +217,7 @@ export async function overviewBySolution(): Promise<SolutionReach[]> {
         archived: solution.archived,
       })
       .from(solution)
+      .where(eq(solution.archived, false))
       .orderBy(solution.name),
     db
       .select({ solutionId: groupSolution.solutionId, groupId: group.id, groupName: group.name })

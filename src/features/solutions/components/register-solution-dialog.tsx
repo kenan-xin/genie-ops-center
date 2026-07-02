@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
@@ -45,8 +44,6 @@ export function RegisterSolutionDialog({
   const { toast } = useToast();
   const registerSolution = useRegisterSolution();
 
-  const [type, setType] = useState<SolutionType>("chat");
-
   const {
     register,
     handleSubmit,
@@ -64,10 +61,8 @@ export function RegisterSolutionDialog({
     },
   });
 
-  // Keep the union field and the segmented control in sync.
-  watch("type");
+  const type = watch("type");
   function selectType(next: SolutionType) {
-    setType(next);
     setValue("type", next, { shouldDirty: true });
   }
 
@@ -85,12 +80,17 @@ export function RegisterSolutionDialog({
     }
   });
 
+  function handleClose() {
+    reset();
+    onOpenChange(false);
+  }
+
   return (
     <Dialog
       open={open}
       onOpenChange={(next) => {
-        if (!next) reset();
-        onOpenChange(next);
+        if (next) onOpenChange(next);
+        else handleClose();
       }}
     >
       <DialogContent>
@@ -141,7 +141,7 @@ export function RegisterSolutionDialog({
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="ghost" onClick={handleClose}>
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
