@@ -66,6 +66,11 @@ export const solution = pgTable("solution", {
     .default("draft"),
   description: text("description"),
   monogram: text("monogram"), // e.g. "PT"
+  // Per-solution brand color (Wave A theming). null = neutral (--panel/--ink);
+  // a hex string tints the hub mono tile, side-rail tile, and chat header/
+  // avatar/bubbles/send button. accentColorInvert is the on-accent foreground.
+  accentColor: text("accent_color"),
+  accentColorInvert: text("accent_color_invert"),
   archived: boolean("archived").notNull().default(false),
   themeId: uuid("theme_id").references(() => theme.id), // chat-only, nullable
   config: jsonb("config").notNull().default({}), // type-specific, zod-validated at the tRPC boundary
