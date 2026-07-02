@@ -28,6 +28,8 @@ export const SOLUTION_VIEW_COLUMNS = {
   status: solution.status,
   description: solution.description,
   monogram: solution.monogram,
+  accentColor: solution.accentColor,
+  accentColorInvert: solution.accentColorInvert,
   archived: solution.archived,
   themeId: solution.themeId,
 } as const;
@@ -40,6 +42,8 @@ export type SolutionView = {
   status: "ready" | "draft" | "maintenance" | "down";
   description: string | null;
   monogram: string | null;
+  accentColor: string | null;
+  accentColorInvert: string | null;
   archived: boolean;
   themeId: string | null;
 };

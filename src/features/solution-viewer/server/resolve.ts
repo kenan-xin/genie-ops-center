@@ -50,6 +50,8 @@ export type ViewerSolutionMeta = {
   slug: string;
   type: "chat" | "native" | "embedded";
   monogram: string | null;
+  accentColor: string | null;
+  accentColorInvert: string | null;
   description: string | null;
 };
 
@@ -68,6 +70,8 @@ export async function resolveViewerSurface(user: AuthUser, slug: string): Promis
       status: solution.status,
       description: solution.description,
       monogram: solution.monogram,
+      accentColor: solution.accentColor,
+      accentColorInvert: solution.accentColorInvert,
       archived: solution.archived,
       config: solution.config,
     })
@@ -89,6 +93,8 @@ export async function resolveViewerSurface(user: AuthUser, slug: string): Promis
     slug: row.slug,
     type: row.type as ViewerSolutionMeta["type"],
     monogram: row.monogram,
+    accentColor: row.accentColor,
+    accentColorInvert: row.accentColorInvert,
     description: row.description,
   };
 

@@ -108,6 +108,8 @@ function toSolution(row: DbSolution, themeName: string | null = null): Solution 
     status: row.status,
     description: row.description,
     monogram: row.monogram,
+    accentColor: row.accentColor,
+    accentColorInvert: row.accentColorInvert,
     archived: row.archived,
     themeId: row.themeId,
     themeName,

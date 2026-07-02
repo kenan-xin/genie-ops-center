@@ -68,6 +68,8 @@ export type SolutionOption = {
   id: string;
   name: string;
   monogram: string | null;
+  accentColor: string | null;
+  accentColorInvert: string | null;
   status: "ready" | "draft" | "maintenance" | "down";
   archived: boolean;
 };

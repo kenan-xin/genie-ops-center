@@ -25,6 +25,8 @@ export type HubSolution = {
   status: "ready" | "draft" | "maintenance" | "down";
   description: string | null;
   monogram: string | null;
+  accentColor: string | null;
+  accentColorInvert: string | null;
   /** Whether the signed-in user has starred this solution. */
   isFavorite: boolean;
   /** RFC3339 of the last open, for the "recent" sort + the UPDATED column. null = never. */
@@ -40,6 +42,8 @@ const VIEW = {
   status: solution.status,
   description: solution.description,
   monogram: solution.monogram,
+  accentColor: solution.accentColor,
+  accentColorInvert: solution.accentColorInvert,
   archived: solution.archived,
   updatedAt: solution.updatedAt,
 } as const;
@@ -101,7 +105,16 @@ function applyFilter(
 /** The columns `toHubSolution` reads — the hub never touches config/runtime fields. */
 type HubRow = Pick<
   typeof solution.$inferSelect,
-  "id" | "name" | "slug" | "type" | "status" | "description" | "monogram" | "updatedAt"
+  | "id"
+  | "name"
+  | "slug"
+  | "type"
+  | "status"
+  | "description"
+  | "monogram"
+  | "accentColor"
+  | "accentColorInvert"
+  | "updatedAt"
 >;
 
 function toHubSolution(row: HubRow, isFavorite: boolean, lastOpenedAt: Date | null): HubSolution {
@@ -113,6 +126,8 @@ function toHubSolution(row: HubRow, isFavorite: boolean, lastOpenedAt: Date | nu
     status: row.status,
     description: row.description,
     monogram: row.monogram,
+    accentColor: row.accentColor,
+    accentColorInvert: row.accentColorInvert,
     isFavorite,
     lastOpenedAt: lastOpenedAt ? lastOpenedAt.toISOString() : null,
     updatedAt: row.updatedAt.toISOString(),

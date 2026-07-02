@@ -174,6 +174,8 @@ export type Solution = {
   status: SolutionStatus;
   description: string | null;
   monogram: string | null;
+  accentColor: string | null;
+  accentColorInvert: string | null;
   archived: boolean;
   themeId: string | null;
   themeName: string | null;
