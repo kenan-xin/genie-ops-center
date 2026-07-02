@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, desc, eq, exists, ilike, or, sql } from "drizzle-orm";
+import { and, desc, eq, exists, ilike, inArray, or, sql } from "drizzle-orm";
 
 import { db } from "@/server/db";
 import { favorite, groupMember, groupSolution, recent, solution } from "@/server/db/schema";
@@ -134,11 +134,11 @@ async function userDecoration(
     db
       .select({ solutionId: favorite.solutionId })
       .from(favorite)
-      .where(and(eq(favorite.userId, user.id), sql`${favorite.solutionId} = any(${solutionIds})`)),
+      .where(and(eq(favorite.userId, user.id), inArray(favorite.solutionId, solutionIds))),
     db
       .select({ solutionId: recent.solutionId, openedAt: recent.openedAt })
       .from(recent)
-      .where(and(eq(recent.userId, user.id), sql`${recent.solutionId} = any(${solutionIds})`)),
+      .where(and(eq(recent.userId, user.id), inArray(recent.solutionId, solutionIds))),
   ]);
   return {
     favorites: new Set(favRows.map((r) => r.solutionId)),
