@@ -11,6 +11,7 @@ import { adminProcedure, createTRPCRouter } from "@/server/trpc/init";
 
 import {
   configByTypeSchema,
+  DEFAULT_CHAT_API_ENDPOINT,
   editSolutionSchema,
   listSolutionsSchema,
   registerSolutionSchema,
@@ -44,6 +45,8 @@ function assertChatEndpointAllowed(
   config: ChatConfig | EmbeddedConfig | NativeConfig,
 ): void {
   if (type !== "chat") return;
+  // Not configured yet (fresh draft from register) — nothing to allow-list.
+  if (!(config as ChatConfig).apiEndpoint) return;
   try {
     assertAllowedEndpoint(
       (config as ChatConfig).apiEndpoint,
@@ -70,6 +73,8 @@ function assertIframeUrlAllowed(
   config: ChatConfig | EmbeddedConfig | NativeConfig,
 ): void {
   if (type !== "embedded") return;
+  // Not configured yet (fresh draft from register) — nothing to allow-list.
+  if (!(config as EmbeddedConfig).iframeUrl) return;
   try {
     assertAllowedEndpoint(
       (config as EmbeddedConfig).iframeUrl,
@@ -217,10 +222,16 @@ export const solutionsRouter = createTRPCRouter({
   }),
 
   register: adminProcedure.input(registerSolutionSchema).mutation(async ({ input }) => {
-    // Invariant: config shape must match the declared type.
+    // Registration collects name/type/description only (FR-ADM-S-02) — seed a
+    // blank/defaulted config for the picked type; the admin fills it in later
+    // from Configure. `configByTypeSchema` still re-validates the shape below.
+    const draftConfig: ChatConfig | EmbeddedConfig =
+      input.type === "chat"
+        ? { botUuid: "", apiEndpoint: DEFAULT_CHAT_API_ENDPOINT, feedbackEnabled: true }
+        : { iframeUrl: "" };
     const validated = configByTypeSchema.safeParse({
       type: input.type,
-      config: input.config,
+      config: draftConfig,
     });
     if (!validated.success) {
       throw new TRPCError({

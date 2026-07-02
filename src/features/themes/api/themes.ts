@@ -11,11 +11,6 @@ export function useThemesQuery() {
   return useQuery(trpc.themes.list.queryOptions());
 }
 
-export function useThemeQuery(id: string) {
-  const trpc = useTRPC();
-  return useQuery(trpc.themes.get.queryOptions({ id }));
-}
-
 export function useCreateTheme() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();

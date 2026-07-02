@@ -4,14 +4,11 @@ import { Tabs as TabsPrimitive } from "@base-ui/react/tabs";
 
 import { cn } from "@/lib/utils";
 
-// Ledger tabs: text labels, active gets a 2px brand underline.
+// Ledger tabs: filled segmented strip attached to the panel below it (bordered
+// row, active segment = --ink fill / white — same recipe as SegmentedControl).
 function Tabs({ className, ...props }: TabsPrimitive.Root.Props) {
   return (
-    <TabsPrimitive.Root
-      data-slot="tabs"
-      className={cn("flex flex-col gap-4", className)}
-      {...props}
-    />
+    <TabsPrimitive.Root data-slot="tabs" className={cn("flex flex-col", className)} {...props} />
   );
 }
 
@@ -20,7 +17,7 @@ function TabsList({ className, ...props }: TabsPrimitive.List.Props) {
     <TabsPrimitive.List
       data-slot="tabs-list"
       className={cn(
-        "flex gap-4 border-b border-[var(--line2)] font-sans text-small font-semibold",
+        "inline-flex divide-x divide-[var(--line)] border border-[var(--line)] font-sans text-small font-semibold",
         className,
       )}
       {...props}
@@ -33,7 +30,7 @@ function TabsTab({ className, ...props }: TabsPrimitive.Tab.Props) {
     <TabsPrimitive.Tab
       data-slot="tabs-tab"
       className={cn(
-        "-mb-px cursor-pointer border-b-2 border-transparent px-1 py-2 text-[var(--ink2)] outline-none transition-colors duration-150 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring data-[selected]:border-[var(--brand)] data-[selected]:text-foreground",
+        "cursor-pointer px-4 py-2 text-[var(--ink2)] outline-none transition-colors duration-150 hover:bg-[var(--panel)] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-[selected]:bg-[var(--ink)] data-[selected]:text-[var(--on-ink)]",
         className,
       )}
       {...props}

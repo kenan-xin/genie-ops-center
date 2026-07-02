@@ -34,8 +34,11 @@ export function useUpdateGroup() {
   const queryClient = useQueryClient();
   return useMutation(
     trpc.groups.update.mutationOptions({
-      onSuccess: () => {
+      onSuccess: (_data, variables) => {
         void queryClient.invalidateQueries({ queryKey: LIST_KEY });
+        void queryClient.invalidateQueries({
+          queryKey: trpc.groups.get.queryKey({ id: variables.id }),
+        });
       },
     }),
   );

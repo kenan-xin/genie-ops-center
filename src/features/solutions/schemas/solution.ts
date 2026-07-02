@@ -26,18 +26,27 @@ export type SolutionType = z.infer<typeof solutionTypeSchema>;
 // `native` is an enum-only type (tech-plan → non-goals): hidden from
 // registration and the catalogue, never granted/openable. Excluded here.
 
-/** Per-type config (discriminated union on `type`). */
+/**
+ * Per-type config (discriminated union on `type`). Registration (FR-ADM-S-02)
+ * no longer collects these — the router seeds a blank/defaulted config for a
+ * new draft, and the admin fills it in later from Configure. So the
+ * backend-identifying fields (`botUuid`, `iframeUrl`) tolerate "" as the
+ * not-yet-configured state at every layer (register default, DB read-back,
+ * and the editor form) rather than being required only-at-the-form level.
+ */
 export const chatConfigSchema = z.object({
-  botUuid: z.string().trim().min(1, "Enter the bot UUID").max(200, "Keep it under 200 characters"),
+  botUuid: z.string().trim().max(200, "Keep it under 200 characters"),
   // FR-ADM-S-03: the streaming API endpoint this solution calls. Per-solution
-  // (was app-wide env); required HTTPS, validated through the SSRF guard so an
-  // admin-configured value can't point the proxy at a private/loopback target.
+  // (was app-wide env); HTTPS + SSRF-guarded once set, so an admin-configured
+  // value can't point the proxy at a private/loopback target.
   apiEndpoint: z
     .string()
     .trim()
-    .min(1, "Enter the chat streaming endpoint")
     .max(2_000)
-    .refine(safeHttpsUrl, "Must be a valid https URL (private/loopback hosts not allowed)"),
+    .refine(
+      (v) => v === "" || safeHttpsUrl(v),
+      "Must be a valid https URL (private/loopback hosts not allowed)",
+    ),
   welcomeMessage: z.string().trim().max(2_000).optional(),
   starterPrompts: z.array(z.string().trim().min(1).max(200)).max(12).optional(),
   feedbackEnabled: z.boolean().optional(),
@@ -48,13 +57,13 @@ export const embeddedConfigSchema = z.object({
   iframeUrl: z
     .string()
     .trim()
-    .min(1, "Enter the iframe URL")
     .max(2_000, "Keep it under 2000 characters")
     // Parse as a real https URL (not just a prefix) so junk like "https://"
-    // can't be stored and then throw in the viewer's `new URL()`. The ops
-    // origin allow-list (ALLOWED_IFRAME_ORIGINS) is enforced server-side in the
-    // solutions router; safeHttpsUrl is the client-safe baseline.
-    .refine(safeHttpsUrl, "Must be a valid https URL"),
+    // can't be stored and then throw in the viewer's `new URL()`. Blank is the
+    // not-yet-configured state. The ops origin allow-list
+    // (ALLOWED_IFRAME_ORIGINS) is enforced server-side in the solutions
+    // router; safeHttpsUrl is the client-safe baseline.
+    .refine((v) => v === "" || safeHttpsUrl(v), "Must be a valid https URL"),
 });
 export type EmbeddedConfig = z.infer<typeof embeddedConfigSchema>;
 
@@ -113,12 +122,16 @@ export type ListSolutionsInput = z.infer<typeof listSolutionsSchema>;
 const nameSchema = z.string().trim().min(1, "Enter a name").max(80, "Keep it under 80 characters");
 const descriptionSchema = z.string().trim().max(500).optional();
 
-/** Register a solution (FR-ADM-S-02): name → slug derived, type picked, Draft. */
+/**
+ * Register a solution (FR-ADM-S-02): name → slug derived, type picked, Draft.
+ * Scoped down to name/type/description only — type-specific config (bot UUID,
+ * chat endpoint, iframe URL, …) is set afterwards from Configure. The router
+ * seeds a blank/defaulted config for the picked type.
+ */
 export const registerSolutionSchema = z.object({
   name: nameSchema,
   description: descriptionSchema,
   type: solutionTypeSchema,
-  config: chatConfigSchema.or(embeddedConfigSchema),
 });
 export type RegisterSolutionValues = z.infer<typeof registerSolutionSchema>;
 

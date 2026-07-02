@@ -1,23 +1,18 @@
-import Link from "next/link";
-
-import { GroupInspector } from "@/features/groups/components/group-inspector";
+import { GroupsDirectory } from "@/features/groups/components/groups-directory";
 import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 
-// Group inspector (FR-ADM-G-03/04/05) — the "Jump to group" target linked
-// from the People directory (ticket 06). Thin RSC shell; prefetches the
-// inspector payload + both selectable catalogs.
-export default async function GroupInspectorPage({ params }: { params: Promise<{ id: string }> }) {
+// Deep-link entry for a single group (e.g. the People directory's "jump to
+// group" links, ticket 06). The inspector is a slide-over, not a route — this
+// renders the same directory and seeds it open for `id` on mount, so a direct
+// link still lands the admin on the right group.
+export default async function GroupDeepLinkPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  prefetch(trpc.groups.list.queryOptions());
   prefetch(trpc.groups.get.queryOptions({ id }));
 
   return (
     <HydrateClient>
-      <div className="mb-4">
-        <Link href="/admin/groups" className="text-small text-[var(--ink2)] hover:underline">
-          ← Back to groups
-        </Link>
-      </div>
-      <GroupInspector groupId={id} />
+      <GroupsDirectory initialGroupId={id} />
     </HydrateClient>
   );
 }

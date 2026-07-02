@@ -11,6 +11,7 @@ import { useConfirm } from "@/components/ui/confirm";
 import { FieldError, FormError } from "@/components/ui/form-feedback";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SegmentedControl } from "@/components/ui/segmented";
 import {
   SlideOver,
   SlideOverBody,
@@ -19,25 +20,23 @@ import {
   SlideOverHeader,
   SlideOverTitle,
 } from "@/components/ui/slide-over";
-import { StatusBadge } from "@/components/ui/status-badge";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/toast";
 import { authClient } from "@/lib/auth-client";
-import { relativeTime } from "@/lib/relative-time";
 import { useTRPC } from "@/trpc/provider";
 
 import {
   editPersonSchema,
-  STATUS_LABEL,
+  ROLE_OPTIONS,
   type EditPersonValues,
   type Person,
-  type PersonStatus,
 } from "../schemas/person";
 import { TempPasswordDialog } from "./temp-password-dialog";
 
-const STATUS_TONE = { active: "success", pending: "warn", disabled: "neutral" } as const;
-const DOTTED_STATUS = new Set<PersonStatus>(["active", "pending"]);
-
+/** Edit person (FR-ADM-P-03/04/05/06). Proto 1029-1090 — "Add person" and
+ * "Edit person" share one modal there; here they're split into
+ * `InvitePersonDialog` (add) and this component (edit), each carrying only
+ * the fields/actions relevant to its mode. */
 export function EditPersonSlideOver({
   person,
   open,
@@ -62,6 +61,7 @@ export function EditPersonSlideOver({
     control,
     register,
     handleSubmit,
+    reset,
     setError,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<EditPersonValues>({
@@ -81,6 +81,11 @@ export function EditPersonSlideOver({
   const remove = useMutation(trpc.users.remove.mutationOptions());
 
   if (!person) return null;
+
+  function handleClose() {
+    reset({ id: person!.id, name: person!.name, email: person!.email, role: person!.role });
+    onOpenChange(false);
+  }
 
   const onSubmit = handleSubmit(async (values) => {
     try {
@@ -201,23 +206,28 @@ export function EditPersonSlideOver({
 
   return (
     <>
-      <SlideOver open={open} onOpenChange={onOpenChange}>
+      <SlideOver
+        open={open}
+        onOpenChange={(next) => {
+          if (next) onOpenChange(next);
+          else handleClose();
+        }}
+      >
         <SlideOverContent>
           <SlideOverHeader>
-            <div className="flex items-center gap-2">
-              <SlideOverTitle>{person.name}</SlideOverTitle>
-              <StatusBadge tone={STATUS_TONE[person.status]} dot={DOTTED_STATUS.has(person.status)}>
-                {STATUS_LABEL[person.status]}
-              </StatusBadge>
-            </div>
-            <span className="text-small text-[var(--ink2)]">{person.email}</span>
+            <SlideOverTitle>Edit person</SlideOverTitle>
           </SlideOverHeader>
 
-          <SlideOverBody className="flex flex-col gap-8">
-            <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
+          <SlideOverBody className="flex flex-col gap-6">
+            <form
+              id="edit-person-form"
+              onSubmit={onSubmit}
+              className="flex flex-col gap-4"
+              noValidate
+            >
               <FormError message={errors.root?.message} />
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="edit-name">Name</Label>
+                <Label htmlFor="edit-name">Full name</Label>
                 <Input id="edit-name" autoComplete="name" {...register("name")} />
                 <FieldError message={errors.name?.message} />
               </div>
@@ -226,62 +236,37 @@ export function EditPersonSlideOver({
                 <Input id="edit-email" type="email" autoComplete="email" {...register("email")} />
                 <FieldError message={errors.email?.message} />
               </div>
-              <div className="flex items-center justify-between gap-4">
-                <Label htmlFor="edit-admin">Admin access</Label>
+              <div className="flex flex-col gap-1.5">
+                <Label>Role</Label>
                 <Controller
                   control={control}
                   name="role"
                   render={({ field }) => (
-                    <Switch
-                      id="edit-admin"
-                      name={field.name}
-                      checked={field.value === "admin"}
-                      onCheckedChange={(checked) => field.onChange(checked ? "admin" : "user")}
-                      onBlur={field.onBlur}
+                    <SegmentedControl
+                      options={ROLE_OPTIONS}
+                      value={field.value}
+                      onValueChange={field.onChange}
                       disabled={isSelf}
                     />
                   )}
                 />
-              </div>
-              <div className="flex">
-                <Button type="submit" size="sm" disabled={isSubmitting || !isDirty}>
-                  {isSubmitting ? "Saving…" : "Save changes"}
-                </Button>
+                {isSelf ? (
+                  <p className="text-mono-xs text-[var(--ink3)]">
+                    You can&rsquo;t change your own role.
+                  </p>
+                ) : null}
               </div>
             </form>
 
-            <section className="flex flex-col gap-2">
-              <Label>Groups</Label>
-              {person.groups.length === 0 ? (
-                <p className="text-small text-[var(--ink3)]">Not a member of any group yet.</p>
-              ) : (
-                <div className="flex flex-wrap gap-1.5">
-                  {person.groups.map((g) => (
-                    <Link key={g.id} href={`/admin/groups/${g.id}`}>
-                      <StatusBadge tone="neutral" className="cursor-pointer hover:opacity-80">
-                        {g.name}
-                      </StatusBadge>
-                    </Link>
-                  ))}
-                </div>
-              )}
-              <p className="text-mono-xs text-[var(--ink3)]">
-                Last active: {person.lastActiveAt ? relativeTime(person.lastActiveAt) : "Never"}
-              </p>
-            </section>
-
-            <section className="flex flex-col gap-2 border-t border-[var(--line2)] pt-5">
-              <Label>Lifecycle</Label>
-              {person.status === "pending" ? (
+            {person.status === "pending" ? (
+              <div className="flex flex-col gap-2 border border-[var(--warn)] bg-[var(--warntint)] p-3">
+                <span className="font-mono text-mono-xs font-semibold tracking-[0.08em] text-[var(--warn)] uppercase">
+                  ● Invite pending
+                </span>
+                <p className="text-small text-[var(--ink2)]">
+                  An invitation was emailed. They become active once they accept and set a password.
+                </p>
                 <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={busy}
-                    onClick={() => void handleActivate()}
-                  >
-                    Activate now
-                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -296,81 +281,117 @@ export function EditPersonSlideOver({
                   >
                     Resend invite
                   </Button>
-                </div>
-              ) : person.status === "disabled" ? (
-                <div className="flex">
                   <Button
-                    variant="ghost"
+                    variant="dark"
                     size="sm"
                     disabled={busy}
-                    onClick={() =>
-                      void withToast(
-                        () => enable.mutateAsync({ id: person.id }),
-                        "Person enabled.",
-                        "Couldn't enable this person.",
-                      )
-                    }
+                    onClick={() => void handleActivate()}
                   >
-                    Enable
+                    Mark as active
                   </Button>
                 </div>
-              ) : (
-                <div className="flex">
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    disabled={busy || isSelf}
-                    title={isSelf ? "You can't disable your own account." : undefined}
-                    onClick={() => void handleDisable()}
-                  >
-                    Disable
-                  </Button>
-                </div>
-              )}
-            </section>
-
-            {person.status !== "pending" ? (
-              <section className="flex flex-col gap-2 border-t border-[var(--line2)] pt-5">
-                <Label>Security</Label>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={busy}
-                    onClick={() =>
-                      void withToast(
-                        () => sendResetLink.mutateAsync({ id: person.id }),
-                        "Password reset link sent.",
-                        "Couldn't send a reset link.",
-                      )
-                    }
-                  >
-                    Email reset link
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={busy}
-                    onClick={() => void handleSetTempPassword()}
-                  >
-                    Set temporary password
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={busy || isSelf}
-                    title={isSelf ? "You can't force-sign-out your own account." : undefined}
-                    onClick={() => void handleForceSignOut()}
-                  >
-                    Force sign-out
-                  </Button>
-                </div>
-              </section>
+              </div>
             ) : null}
 
             <section className="flex flex-col gap-2 border-t border-[var(--line2)] pt-5">
-              <Label>Danger zone</Label>
-              <div className="flex">
+              <Label>Member of · {person.groups.length}</Label>
+              {person.groups.length === 0 ? (
+                <p className="text-small text-[var(--ink3)]">
+                  Not in any group, so no access yet. Open a group on the{" "}
+                  <b className="text-foreground">Groups</b> tab to add them.
+                </p>
+              ) : (
+                <>
+                  <div className="border border-[var(--line)]">
+                    {person.groups.map((g) => (
+                      <div
+                        key={g.id}
+                        className="flex items-center justify-between gap-2.5 border-b border-[var(--line2)] px-3 py-2.5 last:border-b-0"
+                      >
+                        <span className="text-small font-semibold text-foreground">{g.name}</span>
+                        <Link
+                          href={`/admin/groups/${g.id}`}
+                          className="text-mono-xs font-semibold whitespace-nowrap text-[var(--brandink)] hover:underline"
+                        >
+                          Edit in group →
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-mono-xs text-[var(--ink3)]">
+                    To change what this person can open, open one of their groups — access is set
+                    there, not per person.
+                  </p>
+                </>
+              )}
+            </section>
+
+            <section className="flex flex-col gap-3 border-t border-[var(--line2)] pt-5">
+              <Label>Account actions</Label>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={busy}
+                  onClick={() =>
+                    void withToast(
+                      () => sendResetLink.mutateAsync({ id: person.id }),
+                      "Password reset link sent.",
+                      "Couldn't send a reset link.",
+                    )
+                  }
+                >
+                  Email reset link
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={busy}
+                  onClick={() => void handleSetTempPassword()}
+                >
+                  Set temporary password
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={busy || isSelf}
+                  title={isSelf ? "You can't force-sign-out your own account." : undefined}
+                  onClick={() => void handleForceSignOut()}
+                >
+                  Force sign-out
+                </Button>
+              </div>
+
+              <div className="flex items-center justify-between gap-3 pt-1">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-small font-semibold text-foreground">Account active</span>
+                  <span className="text-mono-xs text-[var(--ink3)]">
+                    Disabled people can&rsquo;t sign in.
+                  </span>
+                </div>
+                <Switch
+                  checked={person.status !== "disabled"}
+                  disabled={busy || isSelf}
+                  title={isSelf ? "You can't disable your own account." : undefined}
+                  onCheckedChange={(checked) =>
+                    void (checked
+                      ? withToast(
+                          () => enable.mutateAsync({ id: person.id }),
+                          "Person enabled.",
+                          "Couldn't enable this person.",
+                        )
+                      : handleDisable())
+                  }
+                />
+              </div>
+
+              <div className="flex items-center justify-between gap-3 border border-[var(--line)] p-3">
+                <div className="min-w-0">
+                  <div className="text-small font-semibold text-foreground">Remove person</div>
+                  <div className="text-mono-xs text-[var(--ink3)]">
+                    Revokes access and removes them from all groups.
+                  </div>
+                </div>
                 <Button
                   variant="destructive"
                   size="sm"
@@ -378,15 +399,18 @@ export function EditPersonSlideOver({
                   title={isSelf ? "You can't remove your own account." : undefined}
                   onClick={() => void handleRemove()}
                 >
-                  Remove person
+                  Remove
                 </Button>
               </div>
             </section>
           </SlideOverBody>
 
           <SlideOverFooter>
-            <Button variant="ghost" onClick={() => onOpenChange(false)}>
-              Close
+            <Button variant="ghost" onClick={handleClose} disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button type="submit" form="edit-person-form" disabled={isSubmitting || !isDirty}>
+              {isSubmitting ? "Saving…" : "Save changes"}
             </Button>
           </SlideOverFooter>
         </SlideOverContent>
