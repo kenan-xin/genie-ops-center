@@ -62,4 +62,6 @@ flowchart TD
 13. [Chat streaming proxy](./13-chat-proxy/index.md) — `/api/chat` SSE→ai-sdk stream, generation-guarded handle + send lease, reasoning/text parts, New chat.
 14. [Chat UI (AI Elements → Base UI)](./14-chat-ui/index.md) — useChat + AI Elements ported to Base UI + Ledger, Streamdown hardening, reasoning block, starters, feedback.
 
+**Rework backlog (15–23):** [design-conformance + Phase-3 review rework](./rework-backlog/index.md) — admin shell, kit fixes, correctness, and per-screen drift, sequenced into three waves.
+
 **Deferred (not ticketed):** Native solution runtime, 2FA/MFA, chat transcript persistence, durable feedback, SSO-to-embedded, attachments.
