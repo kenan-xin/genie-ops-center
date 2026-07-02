@@ -5,7 +5,7 @@ title: "Design Package (Reference)"
 
 # Design Package — Reference
 
-The original Claude Design output for the prototype, copied here verbatim so it survives (`/tmp` is ephemeral). This is **source reference**, not a planning artifact — read the _Genie Workspace — Epic Brief_ and _External Genie Chat API_ artifacts for what production actually does, and the **Prototype → production deltas** table in the brief for where production intentionally diverges from these files.
+The original Claude Design output for the prototype. The **interactive prototype, style guide, requirements spec, and design-system tokens are tracked here in-repo** — they are the **screen source of truth**: before implementing or reviewing any screen, open `Genie Control Station.dc.html` (+ `Genie Style Guide.dc.html` for component recipes) and lift the exact layout / IA / copy / values (it's one self-contained HTML doc — grep it by the screen's heading). Tokens are the _how_; the prototype is the _what_. This is **source reference**, not a planning artifact — read the _Genie Workspace — Epic Brief_ for what production actually does, and its **Prototype → production deltas** table for where production intentionally diverges (naming, no MFA, real data).
 
 > ⚠️ These files use prototype-era names ("Genie Control Station", "Demo Hub") and, in older prose, the **wrong fonts** (Archivo / Hanken Grotesk / IBM Plex Mono). Production naming is **Genie Workspace** and the font authority is `design-system/tokens/` (**Geist / Geist Mono**). When a doc conflicts with the brief, the brief wins.
 
@@ -19,6 +19,8 @@ The original Claude Design output for the prototype, copied here verbatim so it 
 | `design-system/`                       | The **maintained design system**: `styles.css` → `tokens/{colors,typography,spacing,fonts}.css`, plus `readme.md` + `SKILL.md`.               | **Token source of truth** carried into production code (Geist/Geist Mono, color/space/type scales, component recipes). |
 | `CLAUDE.md`                            | Prototype product rules (customer-vs-admin separation, theming Chat-only, access via groups, Ledger aesthetic).                               | Product-rule reference.                                                                                                |
 | `screenshots/` (139 PNGs)              | Captured prototype screens across breakpoints (`01-`/`02-`/`03-` = mobile/desktop/wide tiers; e.g. `02-p4-hub`, `02-p4-chat`, `02-ov-fixed`). | Visual ground-truth for each screen.                                                                                   |
+
+> **In-repo (tracked here):** the three `.dc.html` files above + `design-system/`. **Artifacts-only** (not mirrored — large binaries / design-process tooling): `screenshots/` (139 PNGs, ≈3.7 MB), `CLAUDE.md`, `support.js`, `uploads/` — they live in the Traycer epic's `artifacts/design-package/` if ever needed.
 
 ## Prototype runtime & designer tooling (not product spec)
 

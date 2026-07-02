@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0}
+  @keyframes sgSpin{to{transform:rotate(360deg)}}
+  @keyframes sgShimmer{0%{opacity:.45}50%{opacity:.9}100%{opacity:.45}}
+  .sgskel{background:#e2e5ea;animation:sgShimmer 1.1s ease-in-out infinite}
+  .sgrow:hover{background:#f2f4f7}
+</style>
+</helmet>
+
+<div style="--bg:#fbfcfd;--surface:#ffffff;--panel:#f2f4f7;--ink:#14161b;--ink2:#4a515c;--ink3:#8b929c;--faint:#aab0ba;--line:#c8cdd5;--line2:#e2e5ea;--brand:#2360c4;--brandtint:#eef4fc;--success:#1f9a5c;--successtint:#eafaf1;--warn:#b07d10;--warntint:#fbf3df;--error:#d94032;--errortint:#fbeae8;background:var(--bg);min-height:100vh;font-family:'Geist',system-ui,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased">
+
+  <!-- ===== MASTHEAD ===== -->
+  <div style="border-bottom:1px solid var(--ink);background:var(--surface)">
+    <div style="max-width:1040px;margin:0 auto;padding:40px 32px">
+      <div style="display:flex;align-items:center;gap:11px">
+        <div style="width:30px;height:30px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Geist';font-weight:800;font-size:16px">G</div>
+        <div style="font:600 11.5px 'Geist Mono';letter-spacing:.18em;color:var(--ink3)">GENIE · DESIGN SYSTEM</div>
+      </div>
+      <h1 style="font-family:'Geist';font-weight:800;font-size:52px;letter-spacing:-.03em;margin:22px 0 0;line-height:1">Ledger</h1>
+      <p style="font-size:16px;color:var(--ink2);line-height:1.6;max-width:600px;margin:14px 0 0">A firm, utilitarian interface language for Genie Workspace — where teams open AI agents and admins manage access, built as one consistent system to host production apps over time.</p>
+      <div style="display:flex;gap:28px;margin-top:26px;flex-wrap:wrap">
+        <div><div style="font:600 10.5px 'Geist Mono';letter-spacing:.12em;color:var(--ink3)">VERSION</div><div style="font:600 13px 'Geist Mono';margin-top:4px">1.0</div></div>
+        <div><div style="font:600 10.5px 'Geist Mono';letter-spacing:.12em;color:var(--ink3)">UPDATED</div><div style="font:600 13px 'Geist Mono';margin-top:4px">JUN 2026</div></div>
+        <div><div style="font:600 10.5px 'Geist Mono';letter-spacing:.12em;color:var(--ink3)">MODES</div><div style="font:600 13px 'Geist Mono';margin-top:4px">LIGHT · DARK</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 01 PRINCIPLES ===== -->
+  <section style="max-width:1040px;margin:0 auto;padding:52px 32px">
+    <div style="font:600 11.5px 'Geist Mono';letter-spacing:.14em;color:var(--brand)">01 — PRINCIPLES</div>
+    <h2 style="font-family:'Geist';font-weight:800;font-size:28px;letter-spacing:-.02em;margin:10px 0 0">What makes it Ledger</h2>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line2);border:1px solid var(--line2);margin-top:24px">
+      <div style="background:var(--surface);padding:22px 24px"><div style="font:600 10.5px 'Geist Mono';letter-spacing:.1em;color:var(--brand)">FIRM, NOT SOFT</div><div style="font-family:'Geist';font-weight:700;font-size:16px;margin-top:8px">Square-ish corners</div><div style="font-size:13px;color:var(--ink2);line-height:1.6;margin-top:6px">Radii stay between 0 and 3px. Corners read as cut, not rounded. Pills are reserved for toggles only.</div></div>
+      <div style="background:var(--surface);padding:22px 24px"><div style="font:600 10.5px 'Geist Mono';letter-spacing:.1em;color:var(--brand)">HAIRLINE STRUCTURE</div><div style="font-family:'Geist';font-weight:700;font-size:16px;margin-top:8px">1px keylines, not shadows</div><div style="font-size:13px;color:var(--ink2);line-height:1.6;margin-top:6px">Structure comes from thin rules. Shadows appear only on lifted surfaces — dialogs, toasts, dropdowns.</div></div>
+      <div style="background:var(--surface);padding:22px 24px"><div style="font:600 10.5px 'Geist Mono';letter-spacing:.1em;color:var(--brand)">DATA WEARS MONO</div><div style="font-family:'Geist';font-weight:700;font-size:16px;margin-top:8px">Labels in Geist Mono</div><div style="font-size:13px;color:var(--ink2);line-height:1.6;margin-top:6px">Eyebrows, statuses, counts, IDs and timestamps are uppercase mono with wide tracking — the "ledger" signal.</div></div>
+      <div style="background:var(--surface);padding:22px 24px"><div style="font:600 10.5px 'Geist Mono';letter-spacing:.1em;color:var(--brand)">COLOR IS MEANING</div><div style="font-family:'Geist';font-weight:700;font-size:16px;margin-top:8px">Blue = primary &amp; selection only</div><div style="font-size:13px;color:var(--ink2);line-height:1.6;margin-top:6px">Brand blue marks the primary action and current selection. Every other color is semantic — success, warning, error. No decoration.</div></div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px">
+      <span style="font:600 11.5px 'Geist Mono';letter-spacing:.06em;color:var(--ink2);border:1px solid var(--line);padding:6px 11px">NO GRADIENTS</span>
+      <span style="font:600 11.5px 'Geist Mono';letter-spacing:.06em;color:var(--ink2);border:1px solid var(--line);padding:6px 11px">NO EMOJI</span>
+      <span style="font:600 11.5px 'Geist Mono';letter-spacing:.06em;color:var(--ink2);border:1px solid var(--line);padding:6px 11px">NO DECORATIVE CIRCLES</span>
+      <span style="font:600 11.5px 'Geist Mono';letter-spacing:.06em;color:var(--ink2);border:1px solid var(--line);padding:6px 11px">MOBILE-FIRST</span>
+    </div>
+  </section>
+
+  <!-- ===== 02 COLOR ===== -->
+  <section style="max-width:1040px;margin:0 auto;padding:52px 32px;border-top:1px solid var(--line2)">
+    <div style="font:600 11.5px 'Geist Mono';letter-spacing:.14em;color:var(--brand)">02 — COLOR</div>
+    <h2 style="font-family:'Geist';font-weight:800;font-size:28px;letter-spacing:-.02em;margin:10px 0 0">Palette</h2>
+
+    <div style="font:600 10.5px 'Geist Mono';letter-spacing:.12em;color:var(--ink3);margin:28px 0 12px">INK SCALE — TEXT</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px">
+      <div><div style="height:72px;background:#14161b;border:1px solid var(--line2)"></div><div style="font:600 11px 'Geist';margin-top:8px">Ink</div><div style="font:500 11.5px 'Geist Mono';color:var(--ink3)">--ink · #14161B</div></div>
+      <div><div style="height:72px;background:#4a515c;border:1px solid var(--line2)"></div><div style="font:600 11px 'Geist';margin-top:8px">Ink 2</div><div style="font:500 11.5px 'Geist Mono';color:var(--ink3)">--ink2 · #4A515C</div></div>
+      <div><div style="height:72px;background:#8b929c;border:1px solid var(--line2)"></div><div style="font:600 11px 'Geist';margin-top:8px">Ink 3</div><div style="font:500 11.5px 'Geist Mono';color:var(--ink3)">--ink3 · #8B929C</div></div>
+      <div><div style="height:72px;background:#aab0ba;border:1px solid var(--line2)"></div><div style="font:600 11px 'Geist';margin-top:8px">Faint</div><div style="font:500 11.5px 'Geist Mono';color:var(--ink3)">--faint · #AAB0BA</div></div>
+      <div><div style="height:72px;background:#ffffff;border:1px solid var(--line)"></div><div style="font:600 11px 'Geist';margin-top:8px">On-ink</div><div style="font:500 11.5px 'Geist Mono';color:var(--ink3)">#FFFFFF</div></div>
+    </div>
+
+    <div style="font:600 10.5px 'Geist Mono';letter-spacing:.12em;color:var(--ink3);margin:32px 0 12px">SURFACES &amp; LINES</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px">
+      <div><div style="height:72px;background:#fbfcfd;border:1px solid var(--line2)"></div><div style="font:600 11px 'Geist';margin-top:8px">Background</div><div style="font:500 11.5px 'Geist Mono';color:var(--ink3)">--bg · #FBFCFD</div></div>
+      <div><div style="height:72px;background:#ffffff;border:1px solid var(--line2)"></div><div style="font:600 11px 'Geist';margin-top:8px">Surface</div><div style="font:500 11.5px 'Geist Mono';color:var(--ink3)">--surface · #FFFFFF</div></div>
+      <div><div style="height:72px;background:#f2f4f7;border:1px solid var(--line2)"></div><div style="font:600 11px 'Geist';margin-top:8px">Panel</div><div style="font:500 11.5px 'Geist Mono';color:var(--ink3)">--panel · #F2F4F7</div></div>
+      <div><div style="height:72px;background:#fff;border:1px solid #c8cdd5"></div><div style="font:600 11px 'Geist';margin-top:8px">Line</div><div style="font:500 11.5px 'Geist Mono';color:var(--ink3)">--line · #C8CDD5</div></div>
+      <div><div style="height:72px;background:#fff;border:1px solid #e2e5ea"></div><div style="font:600 11px 'Geist';margin-top:8px">Line 2</div><div style="font:500 11.5px 'Geist Mono';color:var(--ink3)">--line2 · #E2E5EA</div></div>
+    </div>
+
+    <div style="font:600 10.5px 'Geist Mono';letter-spacing:.12em;color:var(--ink3);margin:32px 0 12px">BRAND &amp; SEMANTIC — EACH WITH A TINT</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+      <div><div style="height:72px;background:#2360c4"></div><div style="height:24px;background:#eef4fc;border:1px solid var(--line2);border-top:none"></div><div style="font:600 11px 'Geist';margin-top:8px">Brand</div><div style="font:500 11.5px 'Geist Mono';color:var(--ink3)">#2360C4 / #EEF4FC</div></div>
+      <div><div style="height:72px;background:#1f9a5c"></div><div style="height:24px;background:#eafaf1;border:1px solid var(--line2);border-top:none"></div><div style="font:600 11px 'Geist';margin-top:8px">Success</div><div style="font:500 11.5px 'Geist Mono';color:var(--ink3)">#1F9A5C / #EAFAF1</div></div>
+      <div><div style="height:72px;background:#b07d10"></div><div style="height:24px;background:#fbf3df;border:1px solid var(--line2);border-top:none"></div><div style="font:600 11px 'Geist';margin-top:8px">Warning</div><div style="font:500 11.5px 'Geist Mono';color:var(--ink3)">#B07D10 / #FBF3DF</div></div>
+      <div><div style="height:72px;background:#d94032"></div><div style="height:24px;background:#fbeae8;border:1px solid var(--line2);border-top:none"></div><div style="font:600 11px 'Geist';margin-top:8px">Error</div><div style="font:500 11.5px 'Geist Mono';color:var(--ink3)">#D94032 / #FBEAE8</div></div>
+    </div>
+
+    <div style="display:flex;gap:14px;margin-top:24px;flex-wrap:wrap">
+      <div style="flex:1;min-width:240px;border:1px solid var(--line);background:var(--surface);padding:16px 18px"><div style="font:600 10.5px 'Geist Mono';letter-spacing:.1em;color:var(--success)">● DO</div><div style="font-size:13px;color:var(--ink2);line-height:1.6;margin-top:7px">Use blue for the one primary action per view and for the selected nav / row. Use tints behind status badges and inline callouts.</div></div>
+      <div style="flex:1;min-width:240px;border:1px solid var(--line);background:var(--surface);padding:16px 18px"><div style="font:600 10.5px 'Geist Mono';letter-spacing:.1em;color:var(--error)">● DON'T</div><div style="font-size:13px;color:var(--ink2);line-height:1.6;margin-top:7px">Don't use blue decoratively, stack multiple bright fills in one row, or invent hues outside the semantic set.</div></div>
+    </div>
+  </section>
+
+  <!-- ===== 03 TYPOGRAPHY ===== -->
+  <section style="max-width:1040px;margin:0 auto;padding:52px 32px;border-top:1px solid var(--line2)">
+    <div style="font:600 11.5px 'Geist Mono';letter-spacing:.14em;color:var(--brand)">03 — TYPOGRAPHY</div>
+    <h2 style="font-family:'Geist';font-weight:800;font-size:28px;letter-spacing:-.02em;margin:10px 0 0">Two families, three roles</h2>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line2);border:1px solid var(--line2);margin-top:24px">
+      <div style="background:var(--surface);padding:24px"><div style="font:600 10.5px 'Geist Mono';letter-spacing:.1em;color:var(--ink3)">DISPLAY · GEIST</div><div style="font-family:'Geist';font-weight:800;font-size:40px;letter-spacing:-.02em;margin-top:10px;line-height:1">Geist</div><div style="font-size:12.5px;color:var(--ink2);margin-top:10px;line-height:1.6">Headlines &amp; numbers. Weight 800, tight tracking (-.02em).</div></div>
+      <div style="background:var(--surface);padding:24px"><div style="font:600 10.5px 'Geist Mono';letter-spacing:.1em;color:var(--ink3)">UI / BODY · GEIST</div><div style="font-family:'Geist';font-weight:500;font-size:40px;margin-top:10px;line-height:1">Geist</div><div style="font-size:12.5px;color:var(--ink2);margin-top:10px;line-height:1.6">Everything interactive &amp; prose. Weights 400–700. Same family as display — one typeface carries both roles by weight.</div></div>
+      <div style="background:var(--surface);padding:24px"><div style="font:600 10.5px 'Geist Mono';letter-spacing:.1em;color:var(--ink3)">DATA / LABELS · GEIST MONO</div><div style="font-family:'Geist Mono';font-weight:600;font-size:34px;margin-top:10px;line-height:1.1">Geist Mono</div><div style="font-size:12.5px;color:var(--ink2);margin-top:10px;line-height:1.6">Eyebrows, status, IDs, timestamps, counts. Uppercase, tracked .06–.14em.</div></div>
+    </div>
+
+    <div style="font:600 10.5px 'Geist Mono';letter-spacing:.12em;color:var(--ink3);margin:32px 0 14px">TYPE SCALE · 3 BASE KNOBS → FIXED RATIOS (DESKTOP → 4K)</div>
+    <div style="border:1px solid var(--line2);background:var(--surface)">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:16px 20px;border-bottom:1px solid var(--line2)"><span style="font-family:'Geist';font-weight:800;font-size:31px;letter-spacing:-.02em">Title</span><span style="font:500 11.5px 'Geist Mono';color:var(--ink3);text-align:right">--base-h ×1.0 → display = h2<br>31 → 40px</span></div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:16px 20px;border-bottom:1px solid var(--line2)"><span style="font-family:'Geist';font-weight:800;font-size:24px;letter-spacing:-.02em">Card heading</span><span style="font:500 11.5px 'Geist Mono';color:var(--ink3);text-align:right">--base-h ×0.78 → cardhead<br>24 → 31px</span></div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:16px 20px;border-bottom:1px solid var(--line2)"><span style="font-family:'Geist';font-weight:700;font-size:18.5px">Subhead / card title</span><span style="font:500 11.5px 'Geist Mono';color:var(--ink3);text-align:right">--base-h ×0.60 → h3 = title<br>18.5 → 24px</span></div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:16px 20px;border-bottom:1px solid var(--line2)"><span style="font-family:'Geist';font-weight:400;font-size:16px">Body — the default reading size for prose and table cells.</span><span style="font:500 11.5px 'Geist Mono';color:var(--ink3);text-align:right">--base-b ×1.0 → body<br>16 → 19px</span></div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:16px 20px;border-bottom:1px solid var(--line2)"><span style="font-family:'Geist';font-weight:500;font-size:14px">Small / secondary</span><span style="font:500 11.5px 'Geist Mono';color:var(--ink3);text-align:right">--base-b ×0.88 → sm = xs<br>14 → 16.7px</span></div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:16px 20px"><span style="font:600 12px 'Geist Mono';letter-spacing:.12em">MONO LABEL</span><span style="font:500 11.5px 'Geist Mono';color:var(--ink3);text-align:right">--base-l ×1/1.13/1.27 → m-*<br>12 → 17.8px</span></div>
+    </div>
+    <div style="font-size:12.5px;color:var(--ink2);line-height:1.6;margin-top:12px;max-width:640px">Driven by <b>three base knobs</b> — heading, body, label — with every role a fixed ratio off its group base. Each breakpoint sets just 3 numbers. Tokens that share a value (display = h2, h3 = title, sm = xs) keep separate names only for semantic clarity in markup; never add an in-between size. Every role steps at the same breakpoints, so nothing stays frozen tiny while neighbours grow.</div>
+
+    <div style="border:1px solid var(--line);background:var(--surface);padding:18px 20px;margin-top:18px">
+      <div style="font:600 10.5px 'Geist Mono';letter-spacing:.12em;color:var(--brand)">SIGNATURE PATTERN</div>
+      <div style="font-family:'Geist';font-weight:800;font-size:19px;letter-spacing:-.01em;margin-top:6px">The mono eyebrow</div>
+      <div style="font-size:13px;color:var(--ink2);line-height:1.6;margin-top:6px;max-width:620px">Status moments lead with a tracked mono label — often prefixed with a ● status dot — sitting above a Geist headline. It replaces decorative icons entirely.</div>
+    </div>
+  </section>
+
+  <!-- ===== 03B RESPONSIVE ===== -->
+  <section style="max-width:1040px;margin:0 auto;padding:52px 32px;border-top:1px solid var(--line2)">
+    <div style="font:600 11.5px 'Geist Mono';letter-spacing:.14em;color:var(--brand)">03B — RESPONSIVE</div>
+    <h2 style="font-family:'Geist';font-weight:800;font-size:28px;letter-spacing:-.02em;margin:10px 0 0">Stepped scaling, mobile → 4K</h2>
+    <p style="font-size:15px;color:var(--ink2);line-height:1.6;max-width:640px;margin:12px 0 0">Type and layout step together at eight breakpoints (Tailwind-style — sizes jump at each tier and hold between, rather than scaling fluidly). Both the type tokens and the container/sidebar widths are redefined at each tier, so a screen never has big headings next to a stranded narrow column or frozen tiny labels.</p>
+
+    <div style="font:600 10.5px 'Geist Mono';letter-spacing:.12em;color:var(--ink3);margin:28px 0 12px">BREAKPOINTS</div>
+    <div style="border:1px solid var(--line);background:var(--surface);overflow:auto">
+      <div style="min-width:560px">
+        <div style="display:grid;grid-template-columns:1.3fr .8fr 1fr 1fr;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel);font:600 10.5px 'Geist Mono';letter-spacing:.07em;color:var(--ink2)"><div>TIER</div><div>MIN-WIDTH</div><div>BODY</div><div>DISPLAY</div></div>
+        <div style="display:grid;grid-template-columns:1.3fr .8fr 1fr 1fr;padding:11px 16px;border-bottom:1px solid var(--line2);align-items:center"><div style="font-weight:600;font-size:13.5px">Mobile</div><div style="font:500 12px 'Geist Mono';color:var(--ink2)">base</div><div style="font:500 12px 'Geist Mono';color:var(--ink2)">14.5px</div><div style="font:500 12px 'Geist Mono';color:var(--ink2)">24px</div></div>
+        <div style="display:grid;grid-template-columns:1.3fr .8fr 1fr 1fr;padding:11px 16px;border-bottom:1px solid var(--line2);align-items:center"><div style="font-weight:600;font-size:13.5px">Large mobile</div><div style="font:500 12px 'Geist Mono';color:var(--ink2)">480</div><div style="font:500 12px 'Geist Mono';color:var(--ink2)">15px</div><div style="font:500 12px 'Geist Mono';color:var(--ink2)">26px</div></div>
+        <div style="display:grid;grid-template-columns:1.3fr .8fr 1fr 1fr;padding:11px 16px;border-bottom:1px solid var(--line2);align-items:center"><div style="font-weight:600;font-size:13.5px">Tablet</div><div style="font:500 12px 'Geist Mono';color:var(--ink2)">768</div><div style="font:500 12px 'Geist Mono';color:var(--ink2)">15px</div><div style="font:500 12px 'Geist Mono';color:var(--ink2)">29px</div></div>
+        <div style="display:grid;grid-template-columns:1.3fr .8fr 1fr 1fr;padding:11px 16px;border-bottom:1px solid var(--line2);align-items:center"><div style="font-weight:600;font-size:13.5px">Laptop</div><div style="font:500 12px 'Geist Mono';color:var(--ink2)">1024</div><div style="font:500 12px 'Geist Mono';color:var(--ink2)">15.5px</div><div style="font:500 12px 'Geist Mono';color:var(--ink2)">33px</div></div>
+        <div style="display:grid;grid-template-columns:1.3fr .8fr 1fr 1fr;padding:11px 16px;border-bottom:1px solid var(--line2);align-items:center"><div style="font-weight:600;font-size:13.5px">Desktop</div><div style="font:500 12px 'Geist Mono';color:var(--ink2)">1280</div><div style="font:500 12px 'Geist Mono';color:var(--ink2)">16px</div><div style="font:500 12px 'Geist Mono';color:var(--ink2)">37px</div></div>
+        <div style="display:grid;grid-template-columns:1.3fr .8fr 1fr 1fr;padding:11px 16px;border-bottom:1px solid var(--line2);align-items:center"><div style="font-weight:600;font-size:13.5px">Large desktop</div><div style="font:500 12px 'Geist Mono';color:var(--ink2)">1440</div><div style="font:500 12px 'Geist Mono';color:var(--ink2)">16.5px</div><div style="font:500 12px 'Geist Mono';color:var(--ink2)">40px</div></div>
+        <div style="display:grid;grid-template-columns:1.3fr .8fr 1fr 1fr;padding:11px 16px;border-bottom:1px solid var(--line2);align-items:center"><div style="font-weight:600;font-size:13.5px">2K</div><div style="font:500 12px 'Geist Mono';color:var(--ink2)">1920</div><div style="font:500 12px 'Geist Mono';color:var(--ink2)">18px</div><div style="font:500 12px 'Geist Mono';color:var(--ink2)">46px</div></div>
+        <div style="display:grid;grid-template-columns:1.3fr .8fr 1fr 1fr;padding:11px 16px;align-items:center"><div style="font-weight:600;font-size:13.5px">4K</div><div style="font:500 12px 'Geist Mono';color:var(--ink2)">2560</div><div style="font:500 12px 'Geist Mono';color:var(--ink2)">19.5px</div><div style="font:500 12px 'Geist Mono';color:var(--ink2)">54px</div></div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:18px">
+      <div style="border:1px solid var(--line);background:var(--surface);padding:18px 20px"><div style="font:600 10.5px 'Geist Mono';letter-spacing:.1em;color:var(--brand)">CONTAINERS SCALE TOO</div><div style="font-size:13px;color:var(--ink2);line-height:1.6;margin-top:7px">Two content tiers: <b>--content-wide</b> (1180→1880) for grid / dual-pane screens, <b>--content-list</b> (1000→1500) for single-column lists &amp; settings. Auth card 400→600, sidebar 212→320. All token-driven per tier — nothing stranded narrow on a big display.</div></div>
+      <div style="border:1px solid var(--line);background:var(--surface);padding:18px 20px"><div style="font:600 10.5px 'Geist Mono';letter-spacing:.1em;color:var(--brand)">LAYOUT REFLOWS</div><div style="font-size:13px;color:var(--ink2);line-height:1.6;margin-top:7px">Below 920px the sidebar becomes an off-canvas drawer (hamburger) and tables collapse to stacked rows. The hub side-rail joins as a second column at 1180px+.</div></div>
+    </div>
+  </section>
+
+  <!-- ===== 04 SHAPE & SPACE ===== -->
+  <section style="max-width:1040px;margin:0 auto;padding:52px 32px;border-top:1px solid var(--line2)">
+    <div style="font:600 11.5px 'Geist Mono';letter-spacing:.14em;color:var(--brand)">04 — SHAPE &amp; SPACE</div>
+    <h2 style="font-family:'Geist';font-weight:800;font-size:28px;letter-spacing:-.02em;margin:10px 0 0">Corners, keylines, rhythm</h2>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:24px">
+      <div style="border:1px solid var(--line2);background:var(--surface);padding:18px"><div style="height:48px;background:var(--panel);border:1px solid var(--line);border-radius:0"></div><div style="font:600 11px 'Geist';margin-top:10px">0px — default</div><div style="font:500 11.5px 'Geist Mono';color:var(--ink3)">cards, inputs, badges</div></div>
+      <div style="border:1px solid var(--line2);background:var(--surface);padding:18px"><div style="height:48px;background:var(--panel);border:1px solid var(--line);border-radius:2px"></div><div style="font:600 11px 'Geist';margin-top:10px">2px — subtle</div><div style="font:500 11.5px 'Geist Mono';color:var(--ink3)">chips, small tiles</div></div>
+      <div style="border:1px solid var(--line2);background:var(--surface);padding:18px"><div style="height:48px;background:var(--panel);border:1px solid var(--line);border-radius:3px"></div><div style="font:600 11px 'Geist';margin-top:10px">3px — max</div><div style="font:500 11.5px 'Geist Mono';color:var(--ink3)">chat bubbles</div></div>
+      <div style="border:1px solid var(--line2);background:var(--surface);padding:18px"><div style="height:48px;display:flex;align-items:center"><div style="position:relative;width:38px;height:22px;border-radius:11px;background:var(--brand)"><div style="position:absolute;top:2px;left:18px;width:18px;height:18px;border-radius:50%;background:#fff"></div></div></div><div style="font:600 11px 'Geist';margin-top:10px">Pill — toggles only</div><div style="font:500 11.5px 'Geist Mono';color:var(--ink3)">the one exception</div></div>
+    </div>
+    <div style="font:600 10.5px 'Geist Mono';letter-spacing:.12em;color:var(--ink3);margin:30px 0 12px">SPACING STEPS (PX)</div>
+    <div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap">
+      <div style="text-align:center"><div style="width:4px;height:4px;background:var(--brand);margin:0 auto"></div><div style="font:500 11.5px 'Geist Mono';color:var(--ink3);margin-top:8px">4</div></div>
+      <div style="text-align:center"><div style="width:8px;height:8px;background:var(--brand);margin:0 auto"></div><div style="font:500 11.5px 'Geist Mono';color:var(--ink3);margin-top:8px">8</div></div>
+      <div style="text-align:center"><div style="width:12px;height:12px;background:var(--brand);margin:0 auto"></div><div style="font:500 11.5px 'Geist Mono';color:var(--ink3);margin-top:8px">12</div></div>
+      <div style="text-align:center"><div style="width:16px;height:16px;background:var(--brand);margin:0 auto"></div><div style="font:500 11.5px 'Geist Mono';color:var(--ink3);margin-top:8px">16</div></div>
+      <div style="text-align:center"><div style="width:20px;height:20px;background:var(--brand);margin:0 auto"></div><div style="font:500 11.5px 'Geist Mono';color:var(--ink3);margin-top:8px">20</div></div>
+      <div style="text-align:center"><div style="width:24px;height:24px;background:var(--brand);margin:0 auto"></div><div style="font:500 11.5px 'Geist Mono';color:var(--ink3);margin-top:8px">24</div></div>
+      <div style="text-align:center"><div style="width:32px;height:32px;background:var(--brand);margin:0 auto"></div><div style="font:500 11.5px 'Geist Mono';color:var(--ink3);margin-top:8px">32</div></div>
+    </div>
+  </section>
+
+  <!-- ===== 05 COMPONENTS ===== -->
+  <section style="max-width:1040px;margin:0 auto;padding:52px 32px;border-top:1px solid var(--line2)">
+    <div style="font:600 11.5px 'Geist Mono';letter-spacing:.14em;color:var(--brand)">05 — COMPONENTS</div>
+    <h2 style="font-family:'Geist';font-weight:800;font-size:28px;letter-spacing:-.02em;margin:10px 0 0">The kit</h2>
+
+    <!-- Buttons -->
+    <div style="font:600 10.5px 'Geist Mono';letter-spacing:.12em;color:var(--ink3);margin:28px 0 12px">BUTTONS</div>
+    <div style="border:1px solid var(--line2);background:var(--surface);padding:24px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <button style="height:40px;padding:0 18px;background:var(--brand);color:#fff;border:none;font-family:'Geist';font-weight:700;font-size:13px;cursor:pointer">Primary</button>
+      <button style="height:40px;padding:0 18px;background:var(--ink);color:#fff;border:none;font-family:'Geist';font-weight:700;font-size:13px;cursor:pointer">Dark</button>
+      <button style="height:40px;padding:0 16px;background:transparent;border:1px solid var(--line);font-family:'Geist';font-weight:600;font-size:13px;color:var(--ink);cursor:pointer">Ghost</button>
+      <button style="height:40px;padding:0 16px;background:transparent;border:1px solid var(--line);font-family:'Geist';font-weight:600;font-size:13px;color:var(--error);cursor:pointer">Destructive</button>
+      <span style="font:600 12px 'Geist';color:var(--brand);cursor:pointer">Text link →</span>
+    </div>
+
+    <!-- Inputs & select -->
+    <div style="font:600 10.5px 'Geist Mono';letter-spacing:.12em;color:var(--ink3);margin:24px 0 12px">INPUTS &amp; SELECT</div>
+    <div style="border:1px solid var(--line2);background:var(--surface);padding:24px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+      <div><label style="display:block;font:600 10.5px 'Geist Mono';letter-spacing:.1em;color:var(--ink2);margin-bottom:6px">EMAIL</label><input value="you@company.com" style="width:100%;height:40px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:0 12px;font-size:13.5px;font-family:'Geist';border-radius:0"/></div>
+      <div><label style="display:block;font:600 10.5px 'Geist Mono';letter-spacing:.1em;color:var(--ink2);margin-bottom:6px">FOCUSED</label><input value="typing…" style="width:100%;height:40px;border:1px solid var(--brand);outline:2px solid var(--brand);outline-offset:-1px;background:var(--surface);color:var(--ink);padding:0 12px;font-size:13.5px;font-family:'Geist';border-radius:0"/></div>
+      <div><label style="display:block;font:600 10.5px 'Geist Mono';letter-spacing:.1em;color:var(--ink2);margin-bottom:6px">SELECT</label><div style="position:relative;display:flex;align-items:center"><select style="appearance:none;-webkit-appearance:none;width:100%;height:40px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:0 32px 0 12px;font-size:13.5px;font-family:'Geist';border-radius:0;cursor:pointer"><option>Recently updated</option><option>Name (A–Z)</option></select><span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid var(--ink3);pointer-events:none"></span></div></div>
+    </div>
+
+    <!-- Status badges + select -->
+    <div style="font:600 10.5px 'Geist Mono';letter-spacing:.12em;color:var(--ink3);margin:24px 0 12px">STATUS BADGES</div>
+    <div style="border:1px solid var(--line2);background:var(--surface);padding:24px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <span style="font:600 11.5px 'Geist Mono';color:var(--success);background:var(--successtint);padding:4px 8px">● READY</span>
+      <span style="font:600 11.5px 'Geist Mono';color:var(--ink3);background:var(--panel);padding:4px 8px">DRAFT</span>
+      <span style="font:600 11.5px 'Geist Mono';color:var(--warn);background:var(--warntint);padding:4px 8px">● MAINTENANCE</span>
+      <span style="font:600 11.5px 'Geist Mono';color:var(--error);background:var(--errortint);padding:4px 8px">● DOWN</span>
+      <span style="font:600 11.5px 'Geist Mono';color:var(--warn);background:var(--warntint);padding:4px 8px">● PENDING</span>
+      <span style="font:600 11.5px 'Geist Mono';color:var(--ink3);background:var(--panel);padding:4px 8px">DISABLED</span>
+    </div>
+
+    <!-- Segmented / tabs / toggle -->
+    <div style="font:600 10.5px 'Geist Mono';letter-spacing:.12em;color:var(--ink3);margin:24px 0 12px">SEGMENTED · TABS · TOGGLE · STAR</div>
+    <div style="border:1px solid var(--line2);background:var(--surface);padding:24px;display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+      <div style="display:flex;border:1px solid var(--line);font:600 11px 'Geist'"><div style="padding:7px 13px;background:var(--ink);color:#fff">All</div><div style="padding:7px 13px;color:var(--ink2);border-left:1px solid var(--line)">Chat</div><div style="padding:7px 13px;color:var(--ink2);border-left:1px solid var(--line)">Native</div></div>
+      <div style="display:flex;gap:0;font:600 12.5px 'Geist'"><div style="padding:8px 4px;margin-right:16px;color:var(--ink);border-bottom:2px solid var(--brand)">People</div><div style="padding:8px 4px;margin-right:16px;color:var(--ink2)">Groups</div><div style="padding:8px 4px;color:var(--ink2)">Solutions</div></div>
+      <div style="position:relative;width:38px;height:22px;border-radius:11px;background:var(--brand)"><div style="position:absolute;top:2px;left:18px;width:18px;height:18px;border-radius:50%;background:#fff"></div></div>
+      <span style="font-size:18px;color:var(--warn)">★</span><span style="font-size:18px;color:var(--ink3)">☆</span>
+    </div>
+
+    <!-- Inline callout -->
+    <div style="font:600 10.5px 'Geist Mono';letter-spacing:.12em;color:var(--ink3);margin:24px 0 12px">INLINE CALLOUT &amp; CHIPS</div>
+    <div style="border:1px solid var(--line2);background:var(--surface);padding:24px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--brandtint);border:1px solid #d7e3f6"><span style="font:600 11.5px 'Geist Mono';letter-spacing:.08em;color:var(--brand);white-space:nowrap">HOW ACCESS WORKS</span><span style="font-size:12px;color:#2a4d80">Add a person to a group to grant solutions — there are no per-person permissions.</span></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap"><span style="font:600 11.5px 'Geist Mono';color:var(--ink2);background:var(--panel);border:1px solid var(--line2);padding:3px 8px">Healthcare Team</span><span style="font:600 11.5px 'Geist Mono';color:var(--ink2);background:var(--panel);border:1px solid var(--line2);padding:3px 8px">Finance Team</span><span style="font:600 11.5px 'Geist Mono';color:var(--ink2);background:var(--panel);border:1px solid var(--line2);padding:3px 8px">+2 more</span></div>
+    </div>
+
+    <!-- Table -->
+    <div style="font:600 10.5px 'Geist Mono';letter-spacing:.12em;color:var(--ink3);margin:24px 0 12px">TABLE ROW</div>
+    <div style="border:1px solid var(--line);background:var(--surface)">
+      <div style="display:grid;grid-template-columns:2.4fr .9fr .9fr 40px;padding:9px 16px;border-bottom:1px solid var(--line);background:var(--panel);font:600 11.5px 'Geist Mono';letter-spacing:.07em;color:var(--ink2)"><div>SOLUTION</div><div>TYPE</div><div>STATUS</div><div></div></div>
+      <div class="sgrow" style="display:grid;grid-template-columns:2.4fr .9fr .9fr 40px;padding:11px 16px;border-bottom:1px solid var(--line2);align-items:center">
+        <div style="display:flex;align-items:center;gap:11px"><div style="width:30px;height:30px;background:var(--panel);display:flex;align-items:center;justify-content:center;font-family:'Geist';font-weight:800;font-size:10px">PT</div><div><div style="font-size:13px;font-weight:600">Patient Intake Triage</div><div style="font-size:11px;color:var(--ink3)">Conversational symptom intake</div></div></div>
+        <div style="font:600 11.5px 'Geist Mono';color:var(--ink2)">CHAT</div>
+        <div><span style="font:600 11.5px 'Geist Mono';color:var(--success);background:var(--successtint);padding:3px 7px">● READY</span></div>
+        <div style="display:flex;justify-content:flex-end"><span style="font-size:15px;color:var(--warn)">★</span></div>
+      </div>
+      <div class="sgrow" style="display:grid;grid-template-columns:2.4fr .9fr .9fr 40px;padding:11px 16px;align-items:center">
+        <div style="display:flex;align-items:center;gap:11px"><div style="width:30px;height:30px;background:var(--panel);display:flex;align-items:center;justify-content:center;font-family:'Geist';font-weight:800;font-size:10px">CD</div><div><div style="font-size:13px;font-weight:600">Clinical Doc Summarizer</div><div style="font-size:11px;color:var(--ink3)">Summarize patient records</div></div></div>
+        <div style="font:600 11.5px 'Geist Mono';color:var(--ink2)">EMBED</div>
+        <div><span style="font:600 11.5px 'Geist Mono';color:var(--warn);background:var(--warntint);padding:3px 7px">● MAINTENANCE</span></div>
+        <div style="display:flex;justify-content:flex-end"><span style="font-size:15px;color:var(--ink3)">☆</span></div>
+      </div>
+    </div>
+
+    <!-- Overlays -->
+    <div style="font:600 10.5px 'Geist Mono';letter-spacing:.12em;color:var(--ink3);margin:24px 0 12px">OVERLAYS — DIALOG · TOAST</div>
+    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px">
+      <div style="border:1px solid var(--line);background:var(--surface);box-shadow:0 12px 34px rgba(20,30,50,.16)">
+        <div style="padding:20px 22px 16px"><div style="font-family:'Geist';font-weight:800;font-size:17px;letter-spacing:-.01em">Delete Finance Team?</div><div style="font-size:13px;color:var(--ink2);line-height:1.55;margin-top:8px">The group and the access it grants are removed. This can't be undone.</div></div>
+        <div style="padding:14px 22px;border-top:1px solid var(--line2);display:flex;justify-content:flex-end;gap:9px"><button style="height:38px;padding:0 16px;border:1px solid var(--line);background:transparent;font-family:'Geist';font-weight:600;font-size:12.5px;cursor:pointer">Cancel</button><button style="height:38px;padding:0 18px;border:none;background:var(--error);color:#fff;font-family:'Geist';font-weight:700;font-size:12.5px;cursor:pointer">Delete group</button></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;justify-content:center">
+        <div style="display:flex;align-items:stretch;background:var(--surface);border:1px solid var(--line);box-shadow:0 8px 26px rgba(20,30,50,.14)"><div style="width:4px;background:var(--success)"></div><div style="flex:1;display:flex;align-items:flex-start;gap:9px;padding:11px 12px"><span style="font-family:'Geist';font-weight:800;font-size:13px;color:var(--success)">✓</span><div style="flex:1;font-size:12.5px;color:var(--ink)">Configuration saved.</div><span style="color:var(--ink3);font-size:13px">✕</span></div></div>
+        <div style="display:flex;align-items:stretch;background:var(--surface);border:1px solid var(--line);box-shadow:0 8px 26px rgba(20,30,50,.14)"><div style="width:4px;background:var(--error)"></div><div style="flex:1;display:flex;align-items:flex-start;gap:9px;padding:11px 12px"><span style="font-family:'Geist';font-weight:800;font-size:13px;color:var(--error)">!</span><div style="flex:1;font-size:12.5px;color:var(--ink)">Enter a name and email to add a person.</div><span style="color:var(--ink3);font-size:13px">✕</span></div></div>
+      </div>
+    </div>
+
+    <!-- State heroes -->
+    <div style="font:600 10.5px 'Geist Mono';letter-spacing:.12em;color:var(--ink3);margin:24px 0 12px">STATE HEROES — CONFIRMATION · DISRUPTION · EMPTY · LOADING</div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px">
+      <div style="border:1px solid var(--line);background:var(--surface);padding:26px 24px;text-align:center"><div style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border:1.5px solid var(--success);background:var(--successtint);color:var(--success);font-family:'Geist';font-weight:800;font-size:17px">✓</div><div style="font:600 10.5px 'Geist Mono';letter-spacing:.12em;color:var(--success);margin-top:14px">PASSWORD UPDATED</div><div style="font-family:'Geist';font-weight:800;font-size:18px;margin-top:4px;letter-spacing:-.01em">All set</div></div>
+      <div style="border:1px solid var(--line);background:var(--surface);padding:26px 24px;text-align:center"><div style="width:30px;height:3px;background:var(--warn);margin:0 auto"></div><div style="font:600 10.5px 'Geist Mono';letter-spacing:.12em;color:var(--warn);margin-top:16px">● UNDER MAINTENANCE</div><div style="font-family:'Geist';font-weight:800;font-size:18px;margin-top:6px;letter-spacing:-.01em">Being updated</div></div>
+      <div style="border:1px solid var(--line);background:var(--surface);padding:26px 24px;text-align:center"><div style="width:42px;height:42px;border:1.5px dashed var(--line);margin:0 auto;display:flex;align-items:center;justify-content:center;color:var(--ink3);font-family:'Geist';font-weight:800">∅</div><div style="font-family:'Geist';font-weight:700;font-size:14px;margin-top:12px">No solutions yet</div><div style="font-size:12px;color:var(--ink2);margin-top:4px">Access is granted by your admin.</div></div>
+      <div style="border:1px solid var(--line);background:var(--surface);padding:20px 22px;display:flex;flex-direction:column;gap:12px;justify-content:center"><div style="display:flex;gap:10px;align-items:center"><div class="sgskel" style="height:11px;width:38%"></div><div class="sgskel" style="height:11px;width:24%"></div><div class="sgskel" style="height:11px;width:30%;margin-left:auto"></div></div><div style="display:flex;gap:10px;align-items:center"><div class="sgskel" style="height:11px;width:30%"></div><div class="sgskel" style="height:11px;width:28%"></div><div class="sgskel" style="height:11px;width:22%;margin-left:auto"></div></div><div style="display:flex;align-items:center;gap:10px;font:500 11.5px 'Geist Mono';color:var(--ink3)"><div style="width:18px;height:18px;border:2px solid var(--line2);border-top-color:var(--brand);border-radius:50%;animation:sgSpin .8s linear infinite"></div>LOADING…</div></div>
+    </div>
+
+    <!-- Chat bubbles -->
+    <div style="font:600 10.5px 'Geist Mono';letter-spacing:.12em;color:var(--ink3);margin:24px 0 12px">CHAT</div>
+    <div style="border:1px solid var(--line2);background:var(--surface);padding:24px;display:flex;flex-direction:column;gap:12px">
+      <div style="align-self:flex-start;max-width:70%;display:flex;gap:9px;align-items:flex-end"><div style="width:26px;height:26px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Geist';font-weight:800;font-size:10px">A</div><div style="background:var(--panel);padding:10px 13px;border-radius:3px;font-size:13.5px;line-height:1.5">Hi — how can I help you today?</div></div>
+      <div style="align-self:flex-end;max-width:70%;background:var(--brand);color:#fff;padding:10px 13px;border-radius:3px;font-size:13.5px;line-height:1.5">Check claim MX-44192</div>
+    </div>
+  </section>
+
+  <!-- ===== 06 STATUS SEMANTICS ===== -->
+  <section style="max-width:1040px;margin:0 auto;padding:52px 32px;border-top:1px solid var(--line2)">
+    <div style="font:600 11.5px 'Geist Mono';letter-spacing:.14em;color:var(--brand)">06 — STATUS SEMANTICS</div>
+    <h2 style="font-family:'Geist';font-weight:800;font-size:28px;letter-spacing:-.02em;margin:10px 0 0">What each color says</h2>
+    <div style="border:1px solid var(--line);background:var(--surface);margin-top:22px">
+      <div style="display:grid;grid-template-columns:140px 1fr 1.4fr;padding:10px 18px;border-bottom:1px solid var(--line);background:var(--panel);font:600 11.5px 'Geist Mono';letter-spacing:.07em;color:var(--ink2)"><div>TOKEN</div><div>STATES</div><div>MEANING</div></div>
+      <div style="display:grid;grid-template-columns:140px 1fr 1.4fr;padding:13px 18px;border-bottom:1px solid var(--line2);align-items:center"><div><span style="font:600 11.5px 'Geist Mono';color:var(--success);background:var(--successtint);padding:4px 8px">SUCCESS</span></div><div style="font:500 12.5px 'Geist Mono';color:var(--ink2)">Ready · Active · On</div><div style="font-size:12.5px;color:var(--ink2);line-height:1.5">Live, healthy, complete. Accessible to users.</div></div>
+      <div style="display:grid;grid-template-columns:140px 1fr 1.4fr;padding:13px 18px;border-bottom:1px solid var(--line2);align-items:center"><div><span style="font:600 11.5px 'Geist Mono';color:var(--warn);background:var(--warntint);padding:4px 8px">WARNING</span></div><div style="font:500 12.5px 'Geist Mono';color:var(--ink2)">Maintenance · Pending</div><div style="font-size:12.5px;color:var(--ink2);line-height:1.5">Temporary or awaiting action. Recoverable, non-blocking.</div></div>
+      <div style="display:grid;grid-template-columns:140px 1fr 1.4fr;padding:13px 18px;border-bottom:1px solid var(--line2);align-items:center"><div><span style="font:600 11.5px 'Geist Mono';color:var(--error);background:var(--errortint);padding:4px 8px">ERROR</span></div><div style="font:500 12.5px 'Geist Mono';color:var(--ink2)">Down · Failed · Offline</div><div style="font-size:12.5px;color:var(--ink2);line-height:1.5">Broken or destructive. Also the color of delete actions.</div></div>
+      <div style="display:grid;grid-template-columns:140px 1fr 1.4fr;padding:13px 18px;align-items:center"><div><span style="font:600 11.5px 'Geist Mono';color:var(--ink3);background:var(--panel);padding:4px 8px">NEUTRAL</span></div><div style="font:500 12.5px 'Geist Mono';color:var(--ink2)">Draft · Disabled</div><div style="font-size:12.5px;color:var(--ink2);line-height:1.5">Inactive or not yet published. No urgency.</div></div>
+    </div>
+  </section>
+
+  <!-- ===== 07 DARK MODE ===== -->
+  <section style="max-width:1040px;margin:0 auto;padding:52px 32px;border-top:1px solid var(--line2)">
+    <div style="font:600 11.5px 'Geist Mono';letter-spacing:.14em;color:var(--brand)">07 — DARK MODE</div>
+    <h2 style="font-family:'Geist';font-weight:800;font-size:28px;letter-spacing:-.02em;margin:10px 0 0">Same bones, inverted</h2>
+    <p style="font-size:13.5px;color:var(--ink2);line-height:1.6;max-width:620px;margin:10px 0 0">The system ships light and dark. Dark keeps the identical structure — hairlines, square corners, mono labels — on a deep slate base, with brand blue lightened for contrast.</p>
+    <div style="margin-top:22px;background:#0f1217;border:1px solid #2a313c;padding:26px 24px">
+      <div style="display:flex;align-items:center;gap:11px;margin-bottom:20px"><div style="width:26px;height:26px;background:#fff;color:#0f1217;display:flex;align-items:center;justify-content:center;font-family:'Geist';font-weight:800;font-size:13px">G</div><div style="font:600 10.5px 'Geist Mono';letter-spacing:.16em;color:#7e8696">GENIE · DARK</div></div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px">
+        <div><div style="height:54px;background:#0f1217;border:1px solid #2a313c"></div><div style="font:500 10.5px 'Geist Mono';color:#7e8696;margin-top:7px">BG #0F1217</div></div>
+        <div><div style="height:54px;background:#171b22;border:1px solid #2a313c"></div><div style="font:500 10.5px 'Geist Mono';color:#7e8696;margin-top:7px">SURFACE</div></div>
+        <div><div style="height:54px;background:#2a313c;border:1px solid #2a313c"></div><div style="font:500 10.5px 'Geist Mono';color:#7e8696;margin-top:7px">LINE</div></div>
+        <div><div style="height:54px;background:#e6e9ee;border:1px solid #2a313c"></div><div style="font:500 10.5px 'Geist Mono';color:#7e8696;margin-top:7px">TEXT</div></div>
+        <div><div style="height:54px;background:#5b9bf0;border:1px solid #2a313c"></div><div style="font:500 10.5px 'Geist Mono';color:#7e8696;margin-top:7px">BRAND</div></div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;margin-top:20px;flex-wrap:wrap">
+        <button style="height:38px;padding:0 16px;background:#5b9bf0;color:#0f1217;border:none;font-family:'Geist';font-weight:700;font-size:12.5px;cursor:pointer">Primary</button>
+        <button style="height:38px;padding:0 16px;background:transparent;border:1px solid #2a313c;color:#e6e9ee;font-family:'Geist';font-weight:600;font-size:12.5px;cursor:pointer">Ghost</button>
+        <span style="font:600 11.5px 'Geist Mono';color:#5fcf94;background:#10301f;padding:4px 8px">● READY</span>
+        <span style="font:600 11.5px 'Geist Mono';color:#e6e9ee;background:#171b22;border:1px solid #2a313c;padding:4px 8px">DRAFT</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <div style="border-top:1px solid var(--ink);background:var(--surface)">
+    <div style="max-width:1040px;margin:0 auto;padding:24px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <div style="font:500 11.5px 'Geist Mono';letter-spacing:.1em;color:var(--ink3)">GENIE · LEDGER DESIGN SYSTEM · v1.0</div>
+      <div style="font:500 11.5px 'Geist Mono';letter-spacing:.1em;color:var(--ink3)">GEIST · GEIST MONO</div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

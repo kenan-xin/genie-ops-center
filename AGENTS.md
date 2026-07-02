@@ -64,6 +64,8 @@ export const useExampleStore = create<ExampleState>()(
 
 Ledger tokens are the source of truth in `src/app/globals.css`. **Never hard-code a px font size** — use the `text-display … text-mono-lg` utilities (mapped to the responsive `--t-*`/`--m-*` tokens). Square corners (radius 0–3px; pill only on `Switch`), hairline keylines over shadows, brand blue for primary/selection only. Motion is `.15–.22s` and is disabled under `prefers-reduced-motion` (global reset in `globals.css`).
 
+**Screens: the prototype is the source of truth — open it before you build.** The tokens above are the _how_ (color/type/spacing); the prototype is the _what_ (layout, information architecture, exact copy, per-screen component composition). Before implementing **or reviewing** any screen, open `docs/design-package/Genie Control Station.dc.html` (and `docs/design-package/Genie Style Guide.dc.html` for component recipes) — it's one self-contained HTML doc, so grep it by the screen's heading/copy — and lift the exact structure, copy, and values. Skipping this is what caused the screen-level drift the design audit catalogued (e.g. login shipping "Welcome back" instead of the design's "Sign in / Continue / Administrator sign-in"). Honor the epic-brief **"Prototype → production deltas"**: production intentionally differs (naming "Genie Workspace"/"Solutions", no MFA, real data/persistence) — match the design on everything else.
+
 ## Code organization & folder structure
 
 **North star:** app router by surface, features by domain, shared UI by abstraction, server by infrastructure. Adopted as a boundary/convention now; the `src/features/*` tree is grown **in time, per ticket**, not pre-created empty.

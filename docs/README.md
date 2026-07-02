@@ -13,11 +13,11 @@ In-repo mirror of the planning artifacts. Planning happens in Traycer; this `/do
 | [external-chat-api-contract](./external-chat-api-contract/index.md) | The **observed** external Genie chat SSE contract (captured live)                    |
 | [tickets](./tickets/index.md)                                       | Implementation breakdown + dependency graph + status                                 |
 | [execution-log](./execution-log/index.md)                           | Accepted deviations recorded during implementation                                   |
-| [design-package](./design-package/index.md)                         | "Ledger" design system — tokens + recipes                                            |
+| [design-package](./design-package/index.md)                         | "Ledger" design system (tokens + recipes) **+ the interactive prototype (`.dc.html`) — screen source of truth** |
 | [deployment](./deployment.md)                                       | Production topology — app image + **external** Postgres, env contract, compose files |
 | [foundation-walkthrough.html](./foundation-walkthrough.html)        | Visual review guide for the built foundation (open in a browser)                     |
 
 ## Not mirrored here
 
-- **Design package binaries** — the prototype `.dc.html` files and ~140 screenshots (≈3.7 MB) stay in the Traycer artifacts; only the design-system tokens/recipes are mirrored (they're what the code consumes).
+- **Design package screenshots + designer tooling** — the ~140 screenshots (≈3.7 MB binaries), `CLAUDE.md`, `support.js`, and `uploads/` stay in the Traycer artifacts. The interactive prototype `.dc.html` files **are now mirrored** into `design-package/` (they're the screen source of truth, and keeping them out is what let the UI drift from the design).
 - **Critique / review artifacts** — review history. Their conclusions are already folded into the tech plan, so they're not duplicated here.
