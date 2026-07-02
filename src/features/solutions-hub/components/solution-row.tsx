@@ -60,9 +60,8 @@ export const MONO_TILE: CSSProperties = {
 /**
  * Per-row mono tile style: spreads {@link MONO_TILE} then overrides the
  * background/text with the solution's accent colors when set, falling back to
- * the neutral `--panel`/`--ink` tokens. This is the only UI consumer of the
- * accent-color plumbing — `MONO_TILE` alone stays neutral for non-solution
- * contexts (the no-access empty states).
+ * the neutral `--panel`/`--ink` tokens. `MONO_TILE` stays exported as the
+ * shared neutral base this helper spreads; per-row accenting lives here.
  */
 export function monoTileStyle(solution: HubSolution): CSSProperties {
   return {
