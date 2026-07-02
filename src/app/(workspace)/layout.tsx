@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { getServerAuth } from "@/server/authz";
+import { caller } from "@/server/trpc/caller";
 
 import { WorkspaceChrome } from "./_components/workspace-chrome";
 
@@ -18,10 +19,15 @@ export default async function WorkspaceLayout({ children }: { children: React.Re
   if (auth.status === "unauthenticated") redirect("/login");
   if (auth.status === "password-change-required") redirect("/change-password");
 
-  // Favorites cache for the PINNED rail. The granted+unarchived predicate and
-  // persistence land with the favorites feature ticket; the shell renders the
-  // rail off an empty list until then (matching the prototype's sideFavHas gate).
-  const favorites: { id: string; slug: string; name: string }[] = [];
+  // PINNED favorites rail. `favorites` is access-gated by the same predicate as
+  // the hub (granted + unarchived + customer-visible), so a revoked/archived/
+  // drafted favorite never renders in the rail. The first 6 drive the sidebar;
+  // the rest are reachable from /favorites.
+  const favorites = (await caller.solutionsHub.favorites()).slice(0, 6).map((s) => ({
+    id: s.id,
+    slug: s.slug,
+    name: s.name,
+  }));
 
   return (
     <WorkspaceChrome userName={auth.user.name} userRole={auth.user.role} favorites={favorites}>
