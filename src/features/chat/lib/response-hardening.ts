@@ -26,16 +26,23 @@ const ALLOWED_IMAGE_PROTOCOLS = new Set(["https:"]);
  * layer also blocks known-dangerous schemes like `javascript:`/`data:`
  * upstream of this, but the allow-list here is the explicit, documented
  * boundary — not an implicit default we're trusting to stay put).
+ *
+ * Requires ABSOLUTE URLs (review P1-B): parsing is done WITHOUT a base, so a
+ * relative URL (`/api/…`, `//host/…`) — which a base would resolve to `https:`
+ * — fails to parse and is rejected. A relative `src`/`href` otherwise reaches
+ * the DOM same-origin and carries session cookies to app routes on load. The
+ * returned value is the parsed absolute URL (never the original input), so a
+ * can't-happen parse/`href` round-trip drift can't slip a value through.
  */
 export function chatUrlTransform(url: string, key: string): string | null {
   let parsed: URL;
   try {
-    parsed = new URL(url, "https://chat-answer.invalid/");
+    parsed = new URL(url);
   } catch {
     return null;
   }
   const allowed = key === "src" ? ALLOWED_IMAGE_PROTOCOLS : ALLOWED_LINK_PROTOCOLS;
-  return allowed.has(parsed.protocol) ? url : null;
+  return allowed.has(parsed.protocol) ? parsed.href : null;
 }
 
 /** Only this tag/attribute pair is allowed beyond Streamdown's own defaults. */

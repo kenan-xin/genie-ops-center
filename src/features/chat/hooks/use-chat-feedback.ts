@@ -29,7 +29,7 @@ export function useChatFeedback() {
         return next;
       });
       if (!isClearing && vote === "down") {
-        toast({ tone: "info", description: "Thanks for the feedback." });
+        toast({ tone: "info", description: "Thanks — we'll use this to improve responses." });
       }
     },
     [votes, toast],

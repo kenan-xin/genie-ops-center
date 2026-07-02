@@ -66,6 +66,16 @@ export async function* readSseDataLines(
         }
         newlineIndex = buffer.indexOf("\n");
       }
+      // No newline in the buffer: a single unterminated `data:` line can grow
+      // past `maxLineBytes` toward `maxTotalBytes` (review P3-A). Bound it the
+      // same way a terminated line would be — the trailing segment is exactly
+      // the line-in-progress.
+      if (newlineIndex === -1 && Buffer.byteLength(buffer, "utf8") > limits.maxLineBytes) {
+        throw new SseLimitExceededError(
+          "line",
+          `Upstream event line exceeded ${limits.maxLineBytes} bytes`,
+        );
+      }
     }
   } finally {
     reader.releaseLock();

@@ -250,6 +250,22 @@ async function main() {
       totalCapThrew = e instanceof SseLimitExceededError && e.kind === "total";
     }
     check("oversized total throws SseLimitExceededError(total)", totalCapThrew);
+
+    // Unterminated line grows past maxLineBytes without ever hitting the
+    // newline loop's check (review P3-A): two chunks, no trailing newline.
+    let unterminatedThrew = false;
+    try {
+      await drain(
+        readSseDataLines(encodeChunks(["data: " + "x".repeat(40), "x".repeat(40)]), {
+          maxLineBytes: 50,
+          maxTotalBytes: 1_000_000,
+          maxEvents: 1_000,
+        }),
+      );
+    } catch (e) {
+      unterminatedThrew = e instanceof SseLimitExceededError && e.kind === "line";
+    }
+    check("oversized UNTERMINATED line throws SseLimitExceededError(line)", unterminatedThrew);
   }
 
   console.info("\n[4] genie-contract: malformed JSON / schema-invalid event -> controlled error");
@@ -694,6 +710,218 @@ async function main() {
         "Ready, granted Embedded solution POSTed to /api/chat returns 400, not 500",
         res.status === 400,
         `got ${res.status}`,
+      );
+    }
+
+    console.info(
+      "\n[11] route-level: SSRF->502, status-block, held-lease->409, content-type, newChat-vs-lease",
+    );
+    {
+      const [g] = await db
+        .insert(group)
+        .values({ name: `chat-proxy-route-${suffix}` })
+        .returning();
+      createdGroupIds.push(g!.id);
+      await db.insert(groupMember).values({ groupId: g!.id, userId: testUserId });
+
+      const signInRes = await auth.api.signInEmail({
+        body: { email: testEmail, password: testPassword },
+        asResponse: true,
+      });
+      const setCookie = signInRes.headers.getSetCookie?.() ?? [];
+      const cookieHeader = setCookie.map((c) => c.split(";")[0]).join("; ");
+      const { POST } = await import("@/app/api/chat/route");
+      const { NextRequest } = await import("next/server");
+
+      const post = (solutionId: string) =>
+        POST(
+          new NextRequest("http://localhost:3000/api/chat", {
+            method: "POST",
+            headers: { "content-type": "application/json", cookie: cookieHeader },
+            body: JSON.stringify({ solutionId, prompt: "hello" }),
+          }),
+        );
+
+      // An on-allow-list endpoint the route would otherwise reach (for the
+      // status-block / held-lease / content-type cases below).
+      const onListEndpoint = "https://good.example.com/chat";
+
+      // SSRF -> controlled 502 (not 500): a Ready, granted chat solution whose
+      // endpoint is off the allow-list. assertAllowedEndpoint throws before any
+      // fetch, the route maps UpstreamSsrfError -> 502.
+      const [offList] = await db
+        .insert(solution)
+        .values({
+          name: `chat-proxy-offlist-${suffix}`,
+          slug: `chat-proxy-offlist-${suffix}`,
+          type: "chat",
+          status: "ready",
+          config: { botUuid: "bot-off", apiEndpoint: "https://evil.example.com/chat" },
+        })
+        .returning();
+      createdSolutionIds.push(offList!.id);
+      await db.insert(groupSolution).values({ groupId: g!.id, solutionId: offList!.id });
+      const offListRes = await post(offList!.id);
+      check(
+        "off-allow-list chat endpoint returns a controlled 502, not 500",
+        offListRes.status === 502,
+        `got ${offListRes.status}`,
+      );
+
+      // Maintenance / Down / Draft are blocked by assertCanRun BEFORE the fetch.
+      // Track fetch calls via a global stub to prove the upstream was never hit.
+      let fetchCalls = 0;
+      const originalFetch = globalThis.fetch;
+      globalThis.fetch = (() => {
+        fetchCalls++;
+        return Promise.resolve(
+          new Response("data: {}\n\n", {
+            status: 200,
+            headers: { "content-type": "text/event-stream" },
+          }),
+        );
+      }) as typeof fetch;
+      try {
+        for (const status of ["maintenance", "down", "draft"] as const) {
+          const [s] = await db
+            .insert(solution)
+            .values({
+              name: `chat-proxy-${status}-${suffix}`,
+              slug: `chat-proxy-${status}-${suffix}`,
+              type: "chat",
+              status,
+              config: { botUuid: `bot-${status}`, apiEndpoint: onListEndpoint },
+            })
+            .returning();
+          createdSolutionIds.push(s!.id);
+          await db.insert(groupSolution).values({ groupId: g!.id, solutionId: s!.id });
+          const r = await post(s!.id);
+          check(
+            `${status} solution is blocked (not 2xx/200)`,
+            r.status >= 400 && r.status < 500,
+            `got ${r.status}`,
+          );
+        }
+        check("Maintenance/Down/Draft never reached the upstream fetch", fetchCalls === 0);
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+
+      // Held-lease -> 409: acquire the send lease, then POST must not stream.
+      const [ready] = await db
+        .insert(solution)
+        .values({
+          name: `chat-proxy-ready-${suffix}`,
+          slug: `chat-proxy-ready-${suffix}`,
+          type: "chat",
+          status: "ready",
+          config: { botUuid: "bot-ready", apiEndpoint: onListEndpoint },
+        })
+        .returning();
+      createdSolutionIds.push(ready!.id);
+      await db.insert(groupSolution).values({ groupId: g!.id, solutionId: ready!.id });
+
+      const held = await acquireLease(testUserId, ready!.id, "route-owner", 60_000);
+      check("route-level case starts with the lease acquired", held === true);
+      const heldRes = await post(ready!.id);
+      check(
+        "POST while a lease is held returns 409 already-sending",
+        heldRes.status === 409,
+        `got ${heldRes.status}`,
+      );
+      await releaseLease(testUserId, ready!.id, "route-owner");
+
+      // Wrong content-type / non-2xx -> 502: a stubbed fetch returning a JSON
+      // error body. The route maps UpstreamResponseError -> 502.
+      globalThis.fetch = (() =>
+        Promise.resolve(
+          new Response(JSON.stringify({ error: "upstream broke" }), {
+            status: 500,
+            headers: { "content-type": "application/json" },
+          }),
+        )) as typeof fetch;
+      try {
+        const badTypeRes = await post(ready!.id);
+        check(
+          "non-2xx / wrong content-type upstream returns 502, not 500",
+          badTypeRes.status === 502,
+          `got ${badTypeRes.status}`,
+        );
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+
+      // newChat during a held lease -> rejected (review P1-A): acquire a lease,
+      // then the tRPC mutation must NOT bump generation / clear the handle and
+      // must surface the conflict.
+      const { createCallerFactory } = await import("@/server/trpc/init");
+      const { chatRouter } = await import("@/features/chat/server/router");
+      const caller = createCallerFactory(chatRouter)({
+        auth: { status: "authenticated", user: { id: testUserId } },
+        headers: new Headers(),
+      } as any);
+
+      const leaseForNew = await acquireLease(testUserId, ready!.id, "newchat-owner", 60_000);
+      check("newChat-vs-lease case starts with the lease acquired", leaseForNew === true);
+      const handleBefore = await loadHandle(testUserId, ready!.id);
+      let conflictCode: string | null = null;
+      try {
+        await caller.newChat({ solutionId: ready!.id });
+      } catch (e: any) {
+        conflictCode = e?.code ?? null;
+      }
+      const handleAfter = await loadHandle(testUserId, ready!.id);
+      check(
+        "newChat during a held lease throws a CONFLICT code",
+        conflictCode === "CONFLICT",
+        `got ${conflictCode}`,
+      );
+      check(
+        "newChat during a held lease did NOT bump generation",
+        handleAfter.generation === handleBefore.generation,
+        `${handleBefore.generation} -> ${handleAfter.generation}`,
+      );
+      check(
+        "newChat during a held lease did NOT clear the handle",
+        handleAfter.externalSessionUuid === handleBefore.externalSessionUuid,
+        `${handleBefore.externalSessionUuid} -> ${handleAfter.externalSessionUuid}`,
+      );
+      await releaseLease(testUserId, ready!.id, "newchat-owner");
+
+      // And once the lease is free, newChat does reset.
+      const ok = await caller.newChat({ solutionId: ready!.id });
+      check("newChat after the lease is released succeeds", ok.ok === true);
+      const handleReset = await loadHandle(testUserId, ready!.id);
+      check(
+        "newChat after release bumps generation",
+        handleReset.generation === handleBefore.generation + 1,
+        `got ${handleReset.generation}`,
+      );
+
+      // newChat type-guard (review P2-A, mirrors /api/chat B4): a Ready,
+      // granted Embedded solution must be rejected before creating a handle.
+      const [embedded2] = await db
+        .insert(solution)
+        .values({
+          name: `chat-proxy-embedded2-${suffix}`,
+          slug: `chat-proxy-embedded2-${suffix}`,
+          type: "embedded",
+          status: "ready",
+          config: { iframeUrl: "https://embed.example.com/app" },
+        })
+        .returning();
+      createdSolutionIds.push(embedded2!.id);
+      await db.insert(groupSolution).values({ groupId: g!.id, solutionId: embedded2!.id });
+      let embeddedCode: string | null = null;
+      try {
+        await caller.newChat({ solutionId: embedded2!.id });
+      } catch (e: any) {
+        embeddedCode = e?.code ?? null;
+      }
+      check(
+        "newChat on an Embedded solution is rejected with BAD_REQUEST, not 500",
+        embeddedCode === "BAD_REQUEST",
+        `got ${embeddedCode}`,
       );
     }
   } finally {

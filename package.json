@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
+    "typecheck:scripts": "tsc --noEmit -p tsconfig.scripts.json",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "format": "oxfmt --write",

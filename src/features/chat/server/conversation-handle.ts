@@ -37,9 +37,17 @@ export async function loadHandle(userId: string, solutionId: string): Promise<Ha
  * generation and an empty `sessionUUID` → the external API starts a fresh
  * conversation. Because persistence is generation-guarded, a response still
  * streaming from the *old* conversation can't resurrect it after this call.
+ *
+ * Lease-guarded (review P1-A): the `setWhere` clause only fires the update when
+ * no unexpired lease is held, so a direct tRPC `newChat` while a `/api/chat`
+ * send is mid-stream can't bump the generation / clear `externalSessionUuid`
+ * out from under the in-flight request. Mirrors `acquireLease`'s race-free
+ * pattern: when `setWhere` evaluates false Postgres affects (and RETURNS) zero
+ * rows — row presence alone proves the reset landed. Returns `true` iff the
+ * reset happened; `false` means a live lease blocked it.
  */
-export async function resetChatSession(userId: string, solutionId: string): Promise<void> {
-  await db
+export async function resetChatSession(userId: string, solutionId: string): Promise<boolean> {
+  const rows = await db
     .insert(chatSessionHandle)
     .values({ userId, solutionId, generation: 1, externalSessionUuid: null })
     .onConflictDoUpdate({
@@ -49,7 +57,10 @@ export async function resetChatSession(userId: string, solutionId: string): Prom
         externalSessionUuid: null,
         updatedAt: new Date(),
       },
-    });
+      setWhere: sql`${chatSessionHandle.leaseOwner} is null or ${chatSessionHandle.leaseExpiresAt} is null or ${chatSessionHandle.leaseExpiresAt} < now()`,
+    })
+    .returning({ generation: chatSessionHandle.generation });
+  return rows.length > 0;
 }
 
 const DEFAULT_LEASE_TTL_MS = 60_000;

@@ -157,6 +157,33 @@ function main() {
     );
   }
 
+  console.info(
+    "\n[11] relative / protocol-relative URLs are rejected (no same-origin request surface)",
+  );
+  {
+    // Relative href must be dropped — it would otherwise resolve same-origin
+    // and carry session cookies to app routes (review P1-B).
+    check("relative href is rejected (null)", chatUrlTransform("/admin/users", "href") === null);
+    check("relative nested href is rejected (null)", chatUrlTransform("api/chat", "href") === null);
+    // Relative image src must be dropped too (same-origin <img> loads carry cookies).
+    check("relative image src is rejected (null)", chatUrlTransform("/x.png", "src") === null);
+    // Protocol-relative //host resolves to https: under a base, so the
+    // absolute-URL requirement (parse with no base) is what blocks it.
+    check(
+      "protocol-relative //host is rejected (null)",
+      chatUrlTransform("//evil.example.com/x", "src") === null,
+    );
+    // Absolute https still passes, and the absolute (parsed) URL is returned.
+    check(
+      "absolute https href passes through",
+      chatUrlTransform("https://example.com/docs", "href") === "https://example.com/docs",
+    );
+    check(
+      "absolute mailto passes through",
+      chatUrlTransform("mailto:ops@example.com", "href") === "mailto:ops@example.com",
+    );
+  }
+
   console.info(`\n${failures === 0 ? "ALL PASS" : `${failures} FAILURE(S)`}\n`);
   process.exit(failures === 0 ? 0 : 1);
 }
