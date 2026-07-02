@@ -25,6 +25,7 @@
   .csbtn{transition:filter .15s ease, background .15s ease, border-color .15s ease}
   .csbtn:hover{filter:brightness(.94)}
   .csghost:hover{background:var(--panel,#f6f7f9)}
+  .csicon:hover{background:var(--panel,#f6f7f9);border-color:var(--ink,#14161b)}
   ::placeholder{color:var(--ink3,#8b929c)}
   @media (prefers-reduced-motion:reduce){.csdot{animation:none}}
   input:focus,textarea:focus{outline:2px solid var(--brand,#2360c4);outline-offset:-1px}
@@ -182,7 +183,6 @@
       <div style="margin-top:16px;text-align:center"><a onClick="{{ goLogin }}" style="font-size:var(--t-sm);color:var(--ink3,#8b929c);text-decoration:none;cursor:pointer;border-bottom:1px solid var(--line,#c8cdd5);padding-bottom:1px">← Back to sign-in</a></div>
     </div>
     </sc-if>
-    <div style="text-align:center;margin-top:18px;font:500 var(--m-sm) 'IBM Plex Mono';letter-spacing:.1em;color:var(--ink3,#8b929c)">SOC 2 TYPE II · SAMPLE DATA ONLY</div>
   </div>
 </div>
 </sc-if>
@@ -205,6 +205,14 @@
         <div class="csnav" onClick="{{ goRecent }}" style="{{ navRecent }}">Recent</div>
         <div class="csnav" onClick="{{ goFavorites }}" style="{{ navFavorites }}">Favorites</div>
         <div class="csnav" onClick="{{ goAccount }}" style="{{ navAccount }}">Account</div>
+        <sc-if value="{{ sideFavHas }}">
+        <div style="font:600 var(--m-sm) 'IBM Plex Mono';letter-spacing:.13em;color:var(--ink3,#8b929c);padding:16px 6px 8px">PINNED</div>
+        <sc-for list="{{ sideFavList }}" as="f" hint-placeholder-count="2">
+          <div class="csnav" onClick="{{ f.open }}" style="{{ f.style }};display:block;text-align:left;overflow:hidden">
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block">{{ f.name }}</span>
+          </div>
+        </sc-for>
+        </sc-if>
       </sc-if>
       <sc-if value="{{ atAdmin }}">
         <div style="display:inline-flex;align-items:center;gap:6px;background:var(--ink,#14161b);color:var(--bg,#fff);padding:4px 9px;font:600 var(--m-xs) 'IBM Plex Mono';letter-spacing:.1em;margin:0 6px 12px">● ADMIN CONSOLE</div>
@@ -256,7 +264,7 @@
         </sc-if>
         <sc-if value="{{ hubHasAccess }}">
         <div style="max-width:600px">
-          <div style="font-size:var(--t-title);color:var(--ink2,#4a515c);line-height:1.55">Open any solution to try it live. Everything runs on sample data — nothing here is connected to a real system.</div>
+          <div style="font-size:var(--t-title);color:var(--ink2,#4a515c);line-height:1.55">Open any solution to try it live.</div>
         </div>
         <div class="cs-hubgrid" style="margin-top:20px;align-items:start">
         <div>
@@ -533,7 +541,7 @@
                 <div style="margin:22px auto 0;max-width:460px;border:1.5px dashed var(--line,#c8cdd5);background:var(--panel,#f6f7f9);padding:34px 20px">
                   <div style="width:42px;height:42px;border:1.5px solid var(--ink3,#8b929c);margin:0 auto;display:flex;align-items:center;justify-content:center;color:var(--ink3,#8b929c);font-size:var(--t-h2)">↑</div>
                   <div style="font-size:var(--t-body);color:var(--ink,#14161b);margin-top:12px;font-weight:600">Drag &amp; drop, or click to browse</div>
-                  <div style="font:500 var(--m-md) 'IBM Plex Mono';color:var(--ink3,#8b929c);margin-top:6px">PDF · MAX 20MB · SAMPLE DATA</div>
+                  <div style="font:500 var(--m-md) 'IBM Plex Mono';color:var(--ink3,#8b929c);margin-top:6px">PDF · MAX 20MB</div>
                 </div>
                 <div style="max-width:460px;margin:14px auto 0;border:1px solid var(--line,#c8cdd5);display:flex;align-items:center;gap:11px;padding:11px 13px;text-align:left">
                   <div style="width:30px;height:30px;background:var(--brandtint,#eef4fc);color:var(--brandink,#2360c4);display:flex;align-items:center;justify-content:center;font:700 var(--m-sm) 'IBM Plex Mono'">PDF</div>
@@ -606,7 +614,7 @@
               </sc-if>
               <sc-if value="{{ embedLoaded }}">
               <div style="padding:24px 28px">
-                <div style="font:600 var(--m-md) 'IBM Plex Mono';color:var(--brandink,#2360c4);letter-spacing:.08em">SMART-API APP · SAMPLE DATA</div>
+                <div style="font:600 var(--m-md) 'IBM Plex Mono';color:var(--brandink,#2360c4);letter-spacing:.08em">SMART-API APP</div>
                 <div style="font-family:'Archivo';font-weight:800;font-size:var(--t-h2);color:var(--ink,#14161b);letter-spacing:-.02em;margin-top:5px">{{ demo.name }}</div>
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border:1px solid var(--line,#c8cdd5);margin-top:16px">
                   <div style="padding:14px 16px;border-right:1px solid var(--line2,#e2e5ea)"><div style="font:500 var(--m-xs) 'IBM Plex Mono';color:var(--ink3,#8b929c)">PROCESSED TODAY</div><div style="font-family:'Archivo';font-weight:800;font-size:var(--t-h2);color:var(--ink,#14161b);margin-top:3px">1,284</div></div>
@@ -692,12 +700,15 @@
                       <sc-if value="{{ d.notArchived }}"><select value="{{ d.statusValue }}" onChange="{{ d.onStatus }}" style="{{ d.statusSelStyle }}"><option value="Ready">Ready</option><option value="Draft">Draft</option><option value="Maintenance">Maintenance</option><option value="Down">Down</option></select></sc-if>
                       <sc-if value="{{ d.archived }}"><span style="font:500 var(--m-md) 'IBM Plex Mono';color:var(--ink3,#8b929c)">Hidden from hub</span></sc-if>
                     </div>
-                    <div style="display:flex;align-items:center;justify-content:flex-end;flex-wrap:nowrap;gap:13px;font:600 var(--t-xs) 'Hanken Grotesk'">
-                      <sc-if value="{{ d.configurable }}"><span onClick="{{ d.openConfig }}" class="csnav" style="cursor:pointer;color:var(--brandink,#2360c4);white-space:nowrap">Configure</span></sc-if>
-                      <span onClick="{{ d.duplicate }}" class="csnav" style="cursor:pointer;color:var(--ink2,#4a515c);white-space:nowrap">Duplicate</span>
-                      <sc-if value="{{ d.notArchived }}"><span onClick="{{ d.archive }}" class="csnav" style="cursor:pointer;color:var(--ink2,#4a515c);white-space:nowrap">Archive</span></sc-if>
-                      <sc-if value="{{ d.archived }}"><span onClick="{{ d.unarchive }}" class="csnav" style="cursor:pointer;color:var(--ink2,#4a515c);white-space:nowrap">Restore</span></sc-if>
-                      <span onClick="{{ d.del }}" class="csnav" style="cursor:pointer;color:var(--error,#d94032);white-space:nowrap">Delete</span>
+                    <div style="display:flex;align-items:center;justify-content:flex-end;flex-wrap:nowrap;gap:6px">
+                      <sc-if value="{{ d.configurable }}">
+                      <button onClick="{{ d.openConfig }}" title="Configure" class="csicon" style="width:30px;height:30px;flex-shrink:0;border:1px solid var(--line,#c8cdd5);background:transparent;color:var(--brandink,#2360c4);display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
+                      </sc-if>
+                      <sc-if value="{{ d.notConfigurable }}"><span style="width:30px;height:30px;flex-shrink:0"></span></sc-if>
+                      <button onClick="{{ d.duplicate }}" title="Duplicate" class="csicon" style="width:30px;height:30px;flex-shrink:0;border:1px solid var(--line,#c8cdd5);background:transparent;color:var(--ink2,#4a515c);display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="12" height="12" rx="0"></rect><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"></path></svg></button>
+                      <sc-if value="{{ d.notArchived }}"><button onClick="{{ d.archive }}" title="Archive" class="csicon" style="width:30px;height:30px;flex-shrink:0;border:1px solid var(--line,#c8cdd5);background:transparent;color:var(--ink2,#4a515c);display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="4"></rect><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8"></path><path d="M10 13h4"></path></svg></button></sc-if>
+                      <sc-if value="{{ d.archived }}"><button onClick="{{ d.unarchive }}" title="Restore" class="csicon" style="width:30px;height:30px;flex-shrink:0;border:1px solid var(--line,#c8cdd5);background:transparent;color:var(--ink2,#4a515c);display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v5h5"></path></svg></button></sc-if>
+                      <button onClick="{{ d.del }}" title="Delete" class="csicon" style="width:30px;height:30px;flex-shrink:0;border:1px solid var(--line,#c8cdd5);background:transparent;color:var(--error,#d94032);display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18"></path><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"></path><path d="M19 6l-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg></button>
                     </div>
                   </div>
                 </sc-for>
@@ -1006,6 +1017,7 @@
                 </div>
                 <div style="font-size:var(--t-xs);color:var(--ink3,#8b929c);margin-top:6px;line-height:1.5">Updates live as you switch themes. Create or edit themes in the <b style="color:var(--ink,#14161b)">Theme Builder</b>.</div>
               </div>
+              <div><label style="display:block;font:600 var(--m-sm) 'IBM Plex Mono';letter-spacing:.1em;color:var(--ink2,#4a515c);margin-bottom:6px">CHAT STREAMING API ENDPOINT</label><input value="{{ cfgApiEndpoint }}" onInput="{{ onCfgApiEndpoint }}" placeholder="https://dev-genie.001.gs/public-api/v2/workflow/chatbot/chats" style="width:100%;height:38px;border:1px solid var(--line,#c8cdd5);background:var(--surface,#fff);color:var(--ink,#14161b);padding:0 11px;font-size:var(--t-sm);font-family:'IBM Plex Mono'"><div style="font-size:var(--t-xs);color:var(--ink3,#8b929c);margin-top:5px">Endpoint this solution streams responses from.</div></div>
               <div><label style="display:block;font:600 var(--m-sm) 'IBM Plex Mono';letter-spacing:.1em;color:var(--ink2,#4a515c);margin-bottom:6px">WELCOME MESSAGE</label><input value="{{ cfgWelcome }}" onInput="{{ onCfgWelcome }}" style="width:100%;height:38px;border:1px solid var(--line,#c8cdd5);background:var(--surface,#fff);color:var(--ink,#14161b);padding:0 11px;font-size:var(--t-body);font-family:'Hanken Grotesk'"></div>
               <div><label style="display:block;font:600 var(--m-sm) 'IBM Plex Mono';letter-spacing:.1em;color:var(--ink2,#4a515c);margin-bottom:6px">CONVERSATION STARTERS</label><input value="{{ cfgStarters }}" onInput="{{ onCfgStarters }}" style="width:100%;height:38px;border:1px solid var(--line,#c8cdd5);background:var(--surface,#fff);color:var(--ink,#14161b);padding:0 11px;font-size:var(--t-body);font-family:'Hanken Grotesk'"><div style="font-size:var(--t-xs);color:var(--ink3,#8b929c);margin-top:5px">Separate with · — shown as quick-reply chips in the chat.</div></div>
               <div onClick="{{ toggleCfgFeedback }}" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer"><div style="font-size:var(--t-sm);color:var(--ink,#14161b)">Collect thumbs-up / down feedback</div><div style="{{ cfgFeedbackTrack }}"><div style="{{ cfgFeedbackKnob }}"></div></div></div>
@@ -1383,7 +1395,7 @@ class Component extends DCLogic {
   flowFinish = ()=> { const f=this.state.accountFlow; const u=this.USERS.find(x=>x.id===this.state.editUserId); const nm=u?this.uinfo(u).name:'the user'; const em=u?this.uinfo(u).email:''; let msg=''; if(f.kind==='password') msg = f.method==='link' ? 'Reset link sent to '+em+'.' : 'Temporary password set for '+nm+'.'; else if(f.kind==='mfa') msg = f.method==='require' ? 'MFA reset — '+nm+' re-enrols at next sign-in.' : 'MFA enrolment link sent to '+em+'.'; else msg='All sessions for '+nm+' revoked.'; this.setState({ accountFlow:null, userActionMsg:msg }); this.toast(msg); };
   toggleUserStatus = ()=> this.setState(s=>{ const u=this.USERS.find(x=>x.id===s.editUserId); const cur=s.userStatusOverride[s.editUserId]||(u?u.status:'Active'); const nx=cur==='Active'?'Disabled':'Active'; return { userStatusOverride:{...s.userStatusOverride,[s.editUserId]:nx}, userActionMsg:'User '+(nx==='Active'?'re-enabled':'disabled')+'.' }; });
   removeUser = ()=> { const id=this.state.editUserId; const u=this.USERS.find(x=>x.id===id); const nm=u?this.uinfo(u).name:'this person'; this.askConfirm({ title:'Remove '+nm+'?', body:'They lose access immediately and are removed from all groups. This can\u2019t be undone.', confirmLabel:'Remove person', danger:true, onConfirm:()=>{ this.setState(s=>({ removedUserIds:[...s.removedUserIds, id], groups:s.groups.map(g=>({...g, memberIds:g.memberIds.filter(x=>x!==id)})), userDialog:false })); this.toast(nm+' removed.'); } }); };
-  _cfgDefaults(d){ return { welcome: this.greetFor(d), starters:(this.STARTERS[d.id]||this.STARTERS._).join(' · '), feedback:true }; }
+  _cfgDefaults(d){ return { welcome: this.greetFor(d), starters:(this.STARTERS[d.id]||this.STARTERS._).join(' · '), feedback:true, apiEndpoint: d.typeKey==='chat' ? 'https://dev-genie.001.gs/public-api/v2/workflow/chatbot/chats' : '' }; }
   openConfig = (id)=> { const d=this.DEMOS.find(x=>x.id===id); this.setState(s=>({ configDemo:id, demoMenuId:null, demoConfig: s.demoConfig[id] ? s.demoConfig : {...s.demoConfig, [id]: this._cfgDefaults(d)} })); };
   toggleDemoMenu = (id)=> this.setState(s=>({ demoMenuId: s.demoMenuId===id?null:id }));
   closeDemoMenu = ()=> this.setState({ demoMenuId:null });
@@ -1394,6 +1406,7 @@ class Component extends DCLogic {
   _setCfg(patch){ const id=this.state.configDemo; this.setState(s=>({ demoConfig:{...s.demoConfig, [id]:{...s.demoConfig[id], ...patch}} })); }
   onCfgWelcome = (e)=> { const v=e.target.value; this._setCfg({ welcome:v }); };
   onCfgStarters = (e)=> { const v=e.target.value; this._setCfg({ starters:v }); };
+  onCfgApiEndpoint = (e)=> { const v=e.target.value; this._setCfg({ apiEndpoint:v }); };
   toggleCfgFeedback = ()=> { const id=this.state.configDemo; this._setCfg({ feedback: !(this.state.demoConfig[id]||{}).feedback }); };
   saveConfig = ()=> { const id=this.state.configDemo; const d=this.DEMOS.find(x=>x.id===id); this.setState({ configDemo:null }); this.toast('Configuration saved.'); };
   closeConfig = ()=> this.setState({ configDemo:null });
@@ -1585,7 +1598,7 @@ class Component extends DCLogic {
     if(low.includes('headache')||low.includes('symptom')) return 'Thanks. A 3-day headache with no other red-flag symptoms is usually low urgency. I can book a same-week telehealth visit — would you like that?';
     if(low.includes('verify')||low.includes('id')||v==='kyc') return 'Great. To verify your identity I\u2019ll need a government ID and a quick selfie. Tap the + button to upload your document when ready.';
     if(low.includes('permit')||low.includes('renew')) return 'Your business permit #BP-2231 is eligible for renewal. The fee is $85 and processing takes 2 business days. Want me to start the renewal?';
-    return 'Got it — here\u2019s a quick summary based on sample data. In a live demo this response streams from your configured Genie agent. What would you like to explore next?';
+    return 'Got it — here\u2019s a quick summary. In a live demo this response streams from your configured Genie agent. What would you like to explore next?';
   }
   setMsgRef = (el)=>{ this._msg=el; };
 
@@ -1648,9 +1661,9 @@ class Component extends DCLogic {
     const adq=(s.adminDemoSearch||'').toLowerCase(); const adt=s.adminDemoType||'all'; const ads=s.adminDemoSort||'name';
     const adFilt=(key,label)=>({ label, set:()=>this.setAdminDemoType(key), style:"padding:6px 12px;cursor:pointer;color:"+(adt===key?'var(--onbrand,#fff)':'var(--ink2,#4a515c)')+";background:"+(adt===key?'var(--ink,#14161b)':'transparent')+";"+(key!=='all'?'border-left:1px solid var(--line,#c8cdd5);':'') });
     const adminTypeFilters=[adFilt('all','All'),adFilt('chat','Chat'),adFilt('native','Native'),adFilt('embedded','Embedded')];
-    const demosAdmin=this.DEMOS.filter(x=>(adt==='all'||x.typeKey===adt)&&(!adq||x.name.toLowerCase().includes(adq))).map(x=>({ ...x, typeLabel:x.typeKey==='embedded'?'EMBED':x.type.toUpperCase(), statusValue:this.dstat(x), onStatus:(e)=>this.setDemoStatus(x.id,e), statusSelStyle:(()=>{ const m=this.statusMeta(this.dstat(x)); return "font:600 var(--m-sm) 'IBM Plex Mono';letter-spacing:.06em;color:"+m.color+";background:"+m.tint+";border:1px solid "+m.color+";padding:4px 8px;cursor:pointer;border-radius:0"; })(), isNative:x.typeKey==='native', configurable:(x.typeKey!=='native')&&!s.demoArchived[x.id], openConfig:()=>this.openConfig(x.id),
-      archived:!!s.demoArchived[x.id], notArchived:!s.demoArchived[x.id], menuOpen:s.demoMenuId===x.id, toggleMenu:()=>this.toggleDemoMenu(x.id), duplicate:()=>this.duplicateSolution(x.id), archive:()=>this.archiveSolution(x.id), unarchive:()=>this.unarchiveSolution(x.id), del:()=>this.deleteSolution(x.id),
-      menuBtnStyle:"width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid "+(s.demoMenuId===x.id?'var(--ink,#14161b)':'var(--line,#c8cdd5)')+";color:var(--ink2,#4a515c);font-size:var(--t-title);line-height:1;margin-left:7px;vertical-align:middle" })).sort((a,b)=> ads==='status'?(a.status.localeCompare(b.status)||a.name.localeCompare(b.name)): ads==='type'?(a.type.localeCompare(b.type)||a.name.localeCompare(b.name)): a.name.localeCompare(b.name));
+    const demosAdmin=this.DEMOS.filter(x=>(adt==='all'||x.typeKey===adt)&&(!adq||x.name.toLowerCase().includes(adq))).map(x=>{ const isConfig=(x.typeKey!=='native')&&!s.demoArchived[x.id]; return { ...x, typeLabel:x.typeKey==='embedded'?'EMBED':x.type.toUpperCase(), statusValue:this.dstat(x), onStatus:(e)=>this.setDemoStatus(x.id,e), statusSelStyle:(()=>{ const m=this.statusMeta(this.dstat(x)); return "font:600 var(--m-sm) 'IBM Plex Mono';letter-spacing:.06em;color:"+m.color+";background:"+m.tint+";border:1px solid "+m.color+";padding:4px 8px;cursor:pointer;border-radius:0"; })(), isNative:x.typeKey==='native', configurable:isConfig, openConfig:()=>this.openConfig(x.id),
+      archived:!!s.demoArchived[x.id], notArchived:!s.demoArchived[x.id], notConfigurable:!isConfig, menuOpen:s.demoMenuId===x.id, toggleMenu:()=>this.toggleDemoMenu(x.id), duplicate:()=>this.duplicateSolution(x.id), archive:()=>this.archiveSolution(x.id), unarchive:()=>this.unarchiveSolution(x.id), del:()=>this.deleteSolution(x.id),
+      menuBtnStyle:"width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid "+(s.demoMenuId===x.id?'var(--ink,#14161b)':'var(--line,#c8cdd5)')+";color:var(--ink2,#4a515c);font-size:var(--t-title);line-height:1;margin-left:7px;vertical-align:middle" }; }).sort((a,b)=> ads==='status'?(a.status.localeCompare(b.status)||a.name.localeCompare(b.name)): ads==='type'?(a.type.localeCompare(b.type)||a.name.localeCompare(b.name)): a.name.localeCompare(b.name));
     const cfg=s.configDemo?this.DEMOS.find(x=>x.id===s.configDemo):null;
     const cfgData=cfg?(s.demoConfig[cfg.id]||this._cfgDefaults(cfg)):null;
     const eu=s.editUserId?this.USERS.find(u=>u.id===s.editUserId):null;
@@ -1828,6 +1841,8 @@ class Component extends DCLogic {
       hubNoAccess, hubHasAccess:!hubNoAccess, recentFull, favFull, recentEmpty:recentFull.length===0, favEmpty:favFull.length===0, recentHas:recentFull.length>0, favHas:favFull.length>0,
       atRecent, atFavorites, goRecent:this.goRecent, goFavorites:this.goFavorites,
       navRecent: navBase + (atRecent?navOn:navOff), navFavorites: navBase + (atFavorites?navOn:navOff),
+      sideFavHas: _resolve(s.favIds).length>0,
+      sideFavList: _resolve(s.favIds).slice(0,6).map(x=>({ id:x.id, name:x.name, open:()=>this.openDemo(x.id), style: navBase + ((atViewer && s.demoId===x.id) ? navOn : navOff) })),
       demos, hubEmpty: filteredList.length===0, hubMore: filteredList.length>s.hubLimit, sortBy:s.sortBy||'recent', onSort:this.setSort, onContentScroll:this.onContentScroll, loadMore:this.loadMore, resultCount: Math.min(s.hubLimit,filteredList.length)+' OF '+filteredList.length+' SHOWN',
       demo, demoIsChat:d.typeKey==='chat', demoIsNative:d.typeKey==='native', demoIsEmbedded:d.typeKey==='embedded',
       demoLive: this.openable(this.dstat(d)) && this.dstat(d)!=='Maintenance' && this.dstat(d)!=='Down',
@@ -1855,6 +1870,7 @@ class Component extends DCLogic {
       accountFlowOpen:!!afv, af:afv, closeAccountFlow:this.closeAccountFlow, setFlowMethod:this.setFlowMethod, setMethodLink:()=>this.setFlowMethod('link'), setMethodTemp:()=>this.setFlowMethod('temp'), setMethodRequire:()=>this.setFlowMethod('require'), setMethodEmail:()=>this.setFlowMethod('email'), toggleRequireChange:this.toggleRequireChange, copyTempPw:this.copyTempPw, flowNext:this.flowNext, flowFinish:this.flowFinish,
       configOpen:!!cfg, closeConfig:this.closeConfig, cfgPvHeader:cfgThemeObj.headerColor, cfgPvBot:cfgThemeObj.botBubble, cfgPvBotText:cfgThemeObj.botText, cfgPvUser:cfgThemeObj.userBubble, cfgPvRadius:cfgThemeObj.radius+'px', cfgPvFont:cfgThemeObj.font, cfgPvName:cfgThemeObj.name, cfgPvPlaceholder:cfgThemeObj.placeholder, cfgName:cfg?cfg.name:'', cfgTypeLabel:cfg?(cfg.typeKey==='embedded'?'Embedded':cfg.type+' solution'):'', cfgIsChat:!!cfg&&cfg.typeKey==='chat', cfgIsEmbedded:!!cfg&&cfg.typeKey==='embedded', cfgSlug:cfg?cfg.slug:'', cfgThemeId, onCfgTheme:(e)=>{ if(cfg) this.setDemoTheme(cfg.id,e); }, openConfig:this.openConfig, closeConfig:this.closeConfig, saveConfig:this.saveConfig, stopProp:this.stopProp,
       cfgWelcome:cfgData?cfgData.welcome:'', cfgStarters:cfgData?cfgData.starters:'', onCfgWelcome:this.onCfgWelcome, onCfgStarters:this.onCfgStarters, toggleCfgFeedback:this.toggleCfgFeedback,
+      cfgApiEndpoint:cfgData?cfgData.apiEndpoint:'', onCfgApiEndpoint:this.onCfgApiEndpoint,
       cfgFeedbackTrack:"position:relative;width:38px;height:22px;border-radius:11px;flex-shrink:0;cursor:pointer;transition:background .15s;background:"+(cfgData&&cfgData.feedback?'var(--brand,#2360c4)':'var(--line,#c8cdd5)'),
       cfgFeedbackKnob:"position:absolute;top:2px;left:"+(cfgData&&cfgData.feedback?'18px':'2px')+";width:18px;height:18px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.25)",
       groupsView, groupsEmpty:groupsView.length===0, selGroupName:selGroup.name, selGroupDesc:selGroup.desc, selGroupDemoCount:selGroup.demoIds.length, selGroupMemberCount:selGroup.memberIds.length, totalDemos:this.DEMOS.length,

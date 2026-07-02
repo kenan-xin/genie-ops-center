@@ -7,7 +7,6 @@ user-invocable: true
 Read `readme.md` in this folder first, then load `styles.css` (it `@import`s all tokens + fonts) so designs pick up the real custom properties. The living visual spec is `../Genie Style Guide.dc.html`.
 
 Core rules to honor every time:
-
 - Aesthetic is **"Ledger"** — firm, square-ish corners (radius 0–3px; pills for toggles only), hairline keylines over shadows, monospace uppercase labels, brand blue `#2360c4` only for primary action + selection, all other color strictly semantic.
 - Fonts: Geist (display + UI/body, by weight), Geist Mono (data/labels).
 - Responsive type & layout: every size and key container width is a stepped token (mobile→4K). Use the `--t-*` / `--m-*` / container tokens from `tokens/`; never hard-code px font sizes.

@@ -11,81 +11,40 @@
   --space-12: 48px;
 
   /* Radius — square-ish. 0 default; 3px max. Pills (11px+) are for TOGGLES ONLY. */
-  --radius-0: 0px; /* cards, inputs, badges, buttons */
-  --radius-1: 2px; /* chips, small tiles */
-  --radius-2: 3px; /* chat bubbles (the max for content) */
+  --radius-0: 0px;     /* cards, inputs, badges, buttons */
+  --radius-1: 2px;     /* chips, small tiles */
+  --radius-2: 3px;     /* chat bubbles (the max for content) */
   --radius-pill: 11px; /* toggle tracks only */
 
   /* Elevation — keylines do the work; shadow only on lifted surfaces */
-  --shadow-toast: 0 8px 26px rgba(20, 30, 50, 0.16);
-  --shadow-dialog: 0 12px 34px rgba(20, 30, 50, 0.18);
-  --shadow-side: -16px 0 40px rgba(20, 30, 50, 0.18); /* right-edge slide-over */
+  --shadow-toast:  0 8px 26px rgba(20,30,50,.16);
+  --shadow-dialog: 0 12px 34px rgba(20,30,50,.18);
+  --shadow-side:   -16px 0 40px rgba(20,30,50,.18); /* right-edge slide-over */
 
   /* Motion — short, mechanical; no bounce */
-  --ease: cubic-bezier(0.4, 0, 0.2, 1);
-  --dur-fast: 0.15s;
-  --dur-base: 0.22s; /* drawer / slide-over */
+  --ease: cubic-bezier(.4,0,.2,1);
+  --dur-fast: .15s;
+  --dur-base: .22s;  /* drawer / slide-over */
 
   /* Responsive container widths — step with the type scale (see typography.css).
      Defaults are mobile/base; redefined at the breakpoints below. */
-  --auth-w: 400px; /* auth/modal card width */
+  --auth-w: 400px;          /* auth/modal card width */
   --auth-pad: 26px 22px 24px;
-  --content-wide: 1180px; /* grid / dual-pane work screens: hub, access, overview, admin */
-  --content-mid: 900px; /* optional narrow reading column */
-  --content-list: 1000px; /* single-column screens: recent, favorites, account */
-  --sidebar-w: 212px; /* static sidebar (≥920px) */
+  --content-wide: 1180px;   /* grid / dual-pane work screens: hub, access, overview, admin */
+  --content-mid: 900px;     /* optional narrow reading column */
+  --content-list: 1000px;   /* single-column screens: recent, favorites, account */
+  --sidebar-w: 212px;       /* static sidebar (≥920px) */
 }
 
 /* Container + sidebar ladder — same breakpoints as type.
    Layout reflow rules (NOT tokens, apply directly):
    - <920px : sidebar becomes off-canvas drawer (hamburger); tables collapse to stacked rows.
    - ≥1180px: hub gains a second column (side-rail). */
-@media (min-width: 1024px) {
-  :root {
-    --auth-w: 440px;
-    --auth-pad: 38px 38px 34px;
-    --content-wide: 1240px;
-    --content-mid: 960px;
-    --content-list: 1060px;
-  }
-}
-@media (min-width: 1280px) {
-  :root {
-    --auth-w: 460px;
-    --content-wide: 1320px;
-    --content-mid: 1000px;
-    --content-list: 1120px;
-  }
-}
-@media (min-width: 1440px) {
-  :root {
-    --auth-w: 480px;
-    --content-wide: 1400px;
-    --content-mid: 1080px;
-    --content-list: 1200px;
-    --sidebar-w: 236px;
-  }
-}
-@media (min-width: 1920px) {
-  :root {
-    --auth-w: 520px;
-    --auth-pad: 48px 48px 44px;
-    --content-wide: 1560px;
-    --content-mid: 1180px;
-    --content-list: 1320px;
-    --sidebar-w: 264px;
-  }
-}
-@media (min-width: 2560px) {
-  :root {
-    --auth-w: 600px;
-    --auth-pad: 56px 56px 52px;
-    --content-wide: 1880px;
-    --content-mid: 1320px;
-    --content-list: 1500px;
-    --sidebar-w: 320px;
-  }
-}
+@media (min-width:1024px){ :root{ --auth-w:440px; --auth-pad:38px 38px 34px; --content-wide:1240px; --content-mid:960px; --content-list:1060px; } }
+@media (min-width:1280px){ :root{ --auth-w:460px; --content-wide:1320px; --content-mid:1000px; --content-list:1120px; } }
+@media (min-width:1440px){ :root{ --auth-w:480px; --content-wide:1400px; --content-mid:1080px; --content-list:1200px; --sidebar-w:236px; } }
+@media (min-width:1920px){ :root{ --auth-w:520px; --auth-pad:48px 48px 44px; --content-wide:1560px; --content-mid:1180px; --content-list:1320px; --sidebar-w:264px; } }
+@media (min-width:2560px){ :root{ --auth-w:600px; --auth-pad:56px 56px 52px; --content-wide:1880px; --content-mid:1320px; --content-list:1500px; --sidebar-w:320px; } }
 
 /* Focus ring (applies to inputs/textareas/selects): */
 /*   outline: 2px solid var(--brand); outline-offset: -1px; */
