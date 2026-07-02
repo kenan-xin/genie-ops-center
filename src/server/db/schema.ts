@@ -62,6 +62,12 @@ export const solution = pgTable("solution", {
   archived: boolean("archived").notNull().default(false),
   themeId: uuid("theme_id").references(() => theme.id), // chat-only, nullable
   config: jsonb("config").notNull().default({}), // type-specific, zod-validated at the tRPC boundary
+  // Bumped when a chat solution's backend-identifying config (apiEndpoint/botUuid)
+  // changes. The chat proxy reads this before calling the external API and
+  // persists a conversation handle only if it's unchanged — so changing the
+  // endpoint/bot can't leave a stored conversation id pointing at the old backend
+  // (incl. handles that don't exist yet). See tech-plan → chat.
+  chatConfigVersion: integer("chat_config_version").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -128,6 +134,12 @@ export const chatSessionHandle = pgTable(
       .references(() => solution.id, { onDelete: "cascade" }),
     externalSessionUuid: text("external_session_uuid"), // the Genie conversation id; null ⇒ next send starts a fresh conversation
     generation: integer("generation").notNull().default(0), // bumped by "New chat"; the chat route upserts the returned uuid only if generation is unchanged → guards the in-flight-stream race
+    // Short-TTL in-flight send lease per (user, solution) — serializes concurrent
+    // sends (ticket 13). Acquire via atomic conditional update where no unexpired
+    // lease exists; clear in `finally` ONLY if leaseOwner still matches (so an old
+    // request's finally can't clear a newer lease after TTL takeover).
+    leaseOwner: text("lease_owner"), // random per-request token; null ⇒ no lease held
+    leaseExpiresAt: timestamp("lease_expires_at"), // null or past ⇒ lease is free
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (t) => [primaryKey({ columns: [t.userId, t.solutionId] })],

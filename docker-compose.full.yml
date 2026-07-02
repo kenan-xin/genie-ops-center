@@ -43,7 +43,7 @@ services:
       # First-admin bootstrap. Seeded only on a fresh (empty-user) DB; clear after.
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
-      EXTERNAL_CHAT_API_BASE: ${EXTERNAL_CHAT_API_BASE:-}
+      GENIE_CHAT_API_ALLOWED_ORIGINS: ${GENIE_CHAT_API_ALLOWED_ORIGINS:-}
       ALLOWED_IFRAME_ORIGINS: ${ALLOWED_IFRAME_ORIGINS:-}
     ports:
       - "${APP_PORT:-3000}:3000"

@@ -18,9 +18,9 @@ sequenceDiagram
 
   U->>R: POST { solutionId, prompt }
   R->>R: getSession + assertCanRun(user, solution)
-  R->>DB: load solution.config.botUuid + apiEndpoint; lookup chat_session_handle
-  R->>R: assertSafeExternalUrl(apiEndpoint)   (SSRF re-check, admin-configured)
-  R->>G: POST { uuid:botUuid, userPrompt:prompt, sessionUUID, language, ... }
+  R->>DB: load type/config (assert type==='chat'); read solution.chatConfigVersion
+  R->>R: assertAllowedEndpoint(apiEndpoint, GENIE_CHAT_API_ALLOWED_ORIGINS)
+  R->>G: POST { uuid:botUuid, userPrompt:prompt, sessionUUID, language, ... }  (redirect: "manual", timeouts)
   activate G
   loop processing events
     G-->>R: data {status:processing, answer?, reasoning?, uuid:convId}
@@ -46,13 +46,19 @@ Built with `createUIMessageStream({ execute({ writer }) })` + `createUIMessageSt
 
 **On `status: "completed"`:** emit `text-end` (+ `reasoning-end` if open) and `finish` (carry `outputTokens`). **Do not re-emit `answer` _or_ `reasoning`** — the completed event echoes both in full, and re-emitting would duplicate the message/thinking. Then **upsert the returned `uuid` into `chat_session_handle` only if its `generation` is unchanged** (see conversation model). A contract test feeds `processing.reasoning` + `completed.reasoning` and asserts the final UI message has exactly one reasoning block and one answer. The exact manual `finish`/usage writer shape is verified in the **same SDK type spike** as the reasoning parts; if manual usage chunks aren't supported, emit a `data-usage` part and let the route finish after `text-end`.
 
-**Invariants:** `assertCanRun` gates the route (Maintenance/Down/Draft never stream). Bot identity = `solution.config.botUuid`, read server-side. The streaming endpoint is **per-solution** (`solution.config.apiEndpoint`, FR-ADM-S-03) — there is **no app-wide `EXTERNAL_CHAT_API_BASE` env**. Because the endpoint is admin-configured, the proxy re-runs the SSRF guard (`assertSafeExternalUrl`, `src/lib/url-guard.ts`) before the fetch: `https`-only, private/loopback/link-local hosts (incl. `169.254.x` metadata) rejected — a stored value never reaches `fetch()` un-vetted. The endpoint never reaches the client.
+**Invariants:**
+- `assertCanRun` gates the route (Maintenance/Down/Draft never stream) — but it does **not** check type, so the route must **independently parse `config` and reject unless `type==='chat'`** (a Ready *Embedded* solution POSTed here must 400, not 500 — critique B4).
+- Bot identity = `solution.config.botUuid`, read server-side.
+- **Endpoint (FR-ADM-S-03):** per-solution `solution.config.apiEndpoint`; there is **no app-wide env base**. Trust model = an **ops allow-list of origins** (`GENIE_CHAT_API_ALLOWED_ORIGINS`): the endpoint's *origin* must be on the list. The proxy calls `assertAllowedEndpoint(apiEndpoint, chatAllowedOrigins())` (`src/lib/url-guard.ts`) before the fetch **and re-validates any redirect target** — set `redirect: "manual"` and reject/re-check 3xx (a followed redirect to an internal URL is the SSRF hole a naive fetch leaves open). Because the host is pre-approved we don't chase DNS-rebinding across the internet; the allow-list is the gate, the private-IP check is belt-and-suspenders. The endpoint never reaches the client.
+- **Bounded fetch (critique H4):** an admin-configured endpoint can hang/tarpit. The proxy must set a connect + idle(no-data) + total-stream timeout via `AbortController`, wire `request.signal` so a client disconnect cancels the upstream, and bound event-line bytes / total answer bytes / event count. Prompt has a max length (request schema). Reject non-2xx / wrong content-type; on malformed SSE or an `errorMessage`/unexpected `status`, emit a controlled error and **do not** persist the handle.
 
 ## Conversation model — one thread + "New chat"
 
 - One persistent external conversation per `(user, solution)`, stored as `chat_session_handle` (handle only, **no transcript**) with a **`generation`** counter. On open, resume by sending the stored `externalSessionUuid`; the route reads `generation` _before_ calling the external API and upserts the returned `uuid` **only if `generation` is unchanged** at completion.
 - **"New chat"** increments `generation` (and nulls `externalSessionUuid`) in a transaction → the next message sends an empty `sessionUUID` → a fresh external conversation. Because the upsert is **generation-guarded**, a response still streaming from the old conversation **cannot resurrect** the old `uuid` after a reset (the critical race the re-critique caught). "New chat" is disabled while a stream is in flight. **Concurrent sends are serialized by a short-TTL DB in-flight lease per `(user, solution)`** — acquired before the external call, cleared in a `finally`, returning a visible "already sending" if held; _not_ a transaction held open across the SSE stream. The `generation` guard (reset safety) and the lease (send serialization) solve **different** races — both are needed. Tests cover concurrent-send and concurrent-new-chat-vs-send.
 - **Resume = model-continuity, blank-but-continuable screen:** on reopen the UI shows the configured greeting (no past bubbles — we store no messages and the external API has no history GET), but the bot still carries prior context. Visible history is a later slice (needs transcript storage).
+- **Config-change invalidation (critique B3):** the handle stores an external conversation id bound to a specific backend/bot. When an admin changes `apiEndpoint` or `botUuid`, `solution.chatConfigVersion` is bumped (done in `solutions.update`). The route reads `chatConfigVersion` before the external call and **persists the returned conversation id only if it's unchanged at completion** — so a stale id can't attach to the new backend, **including the case where no handle row exists yet** (a first-message stream at the old version won't persist against the new config). This is a *solution-level* version guard, distinct from the per-handle `generation` (which is the user's own "New chat" reset). **In-flight decision (H3):** an already-streaming response finishes on the old config (the user sees one last old-backend answer) but its handle is **not** persisted; we do **not** kill in-flight streams on config change. Immediate cutover is a later option (set Maintenance first, or terminate on version drift).
+- **Lease storage (critique B2):** the in-flight send lease lives on `chat_session_handle` (`leaseOwner`, `leaseExpiresAt`) — acquire with an atomic conditional update where no unexpired lease exists; clear in `finally` **only if `leaseOwner` still matches**, so an old request's `finally` can't clear a newer lease after TTL takeover.
 
 ## Client: ai-sdk-ui + AI Elements (Ledger-skinned)
 

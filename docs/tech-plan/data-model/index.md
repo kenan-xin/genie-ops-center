@@ -85,6 +85,7 @@ export const solution = pgTable("solution", {
   archived: boolean("archived").notNull().default(false),
   themeId: uuid("theme_id").references(() => theme.id), // chat-only, nullable
   config: jsonb("config").notNull().default({}), // type-specific, zod-validated (below)
+  chatConfigVersion: integer("chat_config_version").notNull().default(0), // bumped when apiEndpoint/botUuid change; chat proxy persists a conversation handle only if unchanged (FR-ADM-S-03)
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -150,6 +151,8 @@ export const chatSessionHandle = pgTable(
       .references(() => solution.id, { onDelete: "cascade" }),
     externalSessionUuid: text("external_session_uuid"), // nullable — the Genie conversation id; null ⇒ next send starts a fresh conversation
     generation: integer("generation").notNull().default(0), // bumped by "New chat"; the chat route upserts the returned uuid only if generation is unchanged → guards the in-flight-stream race
+    leaseOwner: text("lease_owner"), // short-TTL send lease (ticket 13): random per-request token; null ⇒ free
+    leaseExpiresAt: timestamp("lease_expires_at"), // null/past ⇒ lease free; clear in finally only if leaseOwner matches
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (t) => [primaryKey({ columns: [t.userId, t.solutionId] })],

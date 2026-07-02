@@ -33,9 +33,12 @@ const configSchema = z.object({
 
   PORT: z.coerce.number().int().positive().default(3000),
 
-  // Note: the external Genie chat API base is NOT an env var — it's per-solution
-  // config (`solution.config.apiEndpoint`, FR-ADM-S-03). See src/lib/url-guard.ts
-  // for the SSRF validation on that admin-configured URL.
+  // Approved origins for per-solution chat streaming endpoints (FR-ADM-S-03).
+  // The chat endpoint is per-solution config, not a single base — but it must
+  // resolve to an origin on THIS list (the SSRF gate + default-seed + rotation
+  // point). Comma-separated, e.g. "https://dev-genie.001.gs". Empty ⇒ no chat
+  // solution can be saved/streamed until an origin is approved. See url-guard.ts.
+  GENIE_CHAT_API_ALLOWED_ORIGINS: z.string().default(""),
 
   // iframe CSP frame-src allow-list. Comma-separated origins; empty ⇒ none.
   ALLOWED_IFRAME_ORIGINS: z.string().default(""),
@@ -68,5 +71,13 @@ export function allowedIframeOrigins(env = process.env): string[] {
   return (env.ALLOWED_IFRAME_ORIGINS ?? "")
     .split(",")
     .map((o) => o.trim())
+    .filter(Boolean);
+}
+
+/** GENIE_CHAT_API_ALLOWED_ORIGINS as a trimmed array (empty string ⇒ []). */
+export function chatAllowedOrigins(env = process.env): string[] {
+  return (env.GENIE_CHAT_API_ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((o) => o.trim().replace(/\/$/, ""))
     .filter(Boolean);
 }

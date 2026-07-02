@@ -3,8 +3,10 @@ import "server-only";
 import { TRPCError } from "@trpc/server";
 import { and, eq, ilike, or, sql } from "drizzle-orm";
 
+import { chatAllowedOrigins } from "@/server/config";
 import { db } from "@/server/db";
 import { solution, theme } from "@/server/db/schema";
+import { assertAllowedEndpoint } from "@/lib/url-guard";
 import { adminProcedure, createTRPCRouter } from "@/server/trpc/init";
 
 import {
@@ -31,6 +33,26 @@ import {
  */
 
 type DbSolution = typeof solution.$inferSelect;
+
+/**
+ * SSRF gate for chat solutions (FR-ADM-S-03): the endpoint's origin must be on
+ * the ops allow-list (`GENIE_CHAT_API_ALLOWED_ORIGINS`). No-op for non-chat.
+ * Re-checked before the proxy fetch in ticket 13; this is the write boundary.
+ */
+function assertChatEndpointAllowed(
+  type: SolutionType,
+  config: ChatConfig | EmbeddedConfig | NativeConfig,
+): void {
+  if (type !== "chat") return;
+  try {
+    assertAllowedEndpoint((config as ChatConfig).apiEndpoint, chatAllowedOrigins(), "apiEndpoint");
+  } catch (e) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: e instanceof Error ? e.message : "Chat endpoint not allowed",
+    });
+  }
+}
 
 function toSolution(row: DbSolution, themeName: string | null = null): Solution {
   return {
@@ -166,6 +188,7 @@ export const solutionsRouter = createTRPCRouter({
         message: "Configuration doesn't match the selected type.",
       });
     }
+    assertChatEndpointAllowed(input.type, validated.data.config);
     const slug = await resolveUniqueSlug(slugify(input.name));
     const [row] = await db
       .insert(solution)
@@ -195,6 +218,7 @@ export const solutionsRouter = createTRPCRouter({
         message: "Configuration doesn't match the selected type.",
       });
     }
+    assertChatEndpointAllowed(input.type, validated.data.config);
     // themeId⇔type invariant (tech-plan → data-model): only chat may bind a theme.
     if (input.themeId && input.type !== "chat") {
       throw new TRPCError({
@@ -211,6 +235,23 @@ export const solutionsRouter = createTRPCRouter({
       if (!t) throw new TRPCError({ code: "BAD_REQUEST", message: "Theme not found" });
     }
 
+    // Bump chatConfigVersion when the backend-identifying config changes, so the
+    // chat proxy won't persist a conversation handle against a stale backend
+    // (FR-ADM-S-03 / critique B3). Compare against the stored row.
+    const [existing] = await db
+      .select({ type: solution.type, config: solution.config })
+      .from(solution)
+      .where(eq(solution.id, input.id))
+      .limit(1);
+    if (!existing) throw new TRPCError({ code: "NOT_FOUND", message: "Solution not found" });
+    const oldChat = existing.type === "chat" ? (existing.config as Partial<ChatConfig>) : null;
+    const newChat = input.type === "chat" ? (validated.data.config as ChatConfig) : null;
+    const backendChanged =
+      newChat != null &&
+      (oldChat == null ||
+        oldChat.apiEndpoint !== newChat.apiEndpoint ||
+        oldChat.botUuid !== newChat.botUuid);
+
     const slug = await resolveUniqueSlug(slugify(input.name), input.id);
     const [row] = await db
       .update(solution)
@@ -222,6 +263,7 @@ export const solutionsRouter = createTRPCRouter({
         type: input.type,
         config: validated.data.config,
         themeId: input.type === "chat" ? (input.themeId ?? null) : null,
+        ...(backendChanged ? { chatConfigVersion: sql`${solution.chatConfigVersion} + 1` } : {}),
         updatedAt: new Date(),
       })
       .where(eq(solution.id, input.id))

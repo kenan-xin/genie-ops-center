@@ -116,7 +116,7 @@ The most detailed mechanism — full spec in the **[Chat sub-artifact](./chat/in
 - **Build:** Next.js `output: 'standalone'`, multi-stage Dockerfile. One image, configured per deployment by env.
 - **Migrations — single owner:** the better-auth CLI **generates Drizzle schema source** for the auth tables (committed into our schema alongside domain tables); **drizzle-kit owns the only migration history** (`drizzle-kit generate`); the container entrypoint runs **`drizzle migrate` only**, under a Postgres advisory lock. **Never** run better-auth's own `migrate`.
 - **First-admin bootstrap (guarded):** no public signup. On startup, **only if the `user` table is empty**, seed one `user,admin` from `ADMIN_EMAIL`/`ADMIN_PASSWORD` — but **validate the password against the same strength rule**, set **force-change-on-first-login**, and **log a one-time bootstrap event**. Deployment docs: clear `ADMIN_PASSWORD` after first boot.
-- **Config/secrets (env):** `DATABASE_URL`, better-auth secret + base URL, `ALLOWED_IFRAME_ORIGINS`, `ADMIN_EMAIL`/`ADMIN_PASSWORD`. (The chat streaming endpoint is **per-solution config** (`solution.config.apiEndpoint`), not an env — see [chat](./chat/index.md).)
+- **Config/secrets (env):** `DATABASE_URL`, better-auth secret + base URL, `GENIE_CHAT_API_ALLOWED_ORIGINS`, `ALLOWED_IFRAME_ORIGINS`, `ADMIN_EMAIL`/`ADMIN_PASSWORD`. (The chat streaming endpoint is **per-solution config** (`solution.config.apiEndpoint`), not a base env — but its origin must be on `GENIE_CHAT_API_ALLOWED_ORIGINS`; see [chat](./chat/index.md).)
 
 ## Boundaries & non-goals
 
