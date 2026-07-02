@@ -9,8 +9,10 @@
  * `import * as schema` (see src/server/auth.ts) lets the drizzle adapter resolve
  * every model by name. Keep this file as the one re-export point.
  */
+import { desc } from "drizzle-orm";
 import {
   boolean,
+  index,
   integer,
   jsonb,
   pgTable,
@@ -46,7 +48,12 @@ export const groupMember = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
   },
-  (t) => [primaryKey({ columns: [t.groupId, t.userId] })],
+  (t) => [
+    primaryKey({ columns: [t.groupId, t.userId] }),
+    // isGrantedSolution / assertCanSee join from the user side; PK leads on
+    // group_id, so the user-filtered lookup needs the reverse direction.
+    index("group_member_user_id_group_id_idx").on(t.userId, t.groupId),
+  ],
 );
 
 export const solution = pgTable("solution", {
@@ -82,7 +89,12 @@ export const groupSolution = pgTable(
       .notNull()
       .references(() => solution.id, { onDelete: "cascade" }),
   },
-  (t) => [primaryKey({ columns: [t.groupId, t.solutionId] })],
+  (t) => [
+    primaryKey({ columns: [t.groupId, t.solutionId] }),
+    // "which groups grant this solution" / access-overview direction; PK leads
+    // on group_id, so the solution-filtered lookup needs the reverse direction.
+    index("group_solution_solution_id_group_id_idx").on(t.solutionId, t.groupId),
+  ],
 );
 
 export const theme = pgTable(
@@ -120,7 +132,13 @@ export const recent = pgTable(
       .references(() => solution.id, { onDelete: "cascade" }),
     openedAt: timestamp("opened_at").defaultNow().notNull(),
   },
-  (t) => [primaryKey({ columns: [t.userId, t.solutionId] })], // upsert openedAt; query top-6
+  (t) => [
+    primaryKey({ columns: [t.userId, t.solutionId] }), // upsert openedAt; query top-6
+    // Top-6 recents by recency: PK leads on user_id but its second column is
+    // solution_id, which doesn't help a time-ordered read, so back the recency
+    // ordering explicitly (newest-first).
+    index("recent_user_id_opened_at_idx").on(t.userId, desc(t.openedAt)),
+  ],
 );
 
 export const chatSessionHandle = pgTable(
