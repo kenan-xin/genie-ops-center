@@ -111,7 +111,7 @@ function TransferSide({
                   <span
                     aria-hidden
                     className={cn(
-                      "flex size-4 shrink-0 items-center justify-center border text-[10px] leading-none",
+                      "flex size-4 shrink-0 items-center justify-center border text-mono-xs leading-none",
                       active
                         ? "border-[var(--brand)] bg-[var(--brand)] text-white"
                         : "border-[var(--line)] bg-transparent",

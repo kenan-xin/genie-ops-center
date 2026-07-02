@@ -125,7 +125,7 @@ export function PinnedFavorites({ favorites }: { favorites: PinnedFavorite[] }) 
                 color: "var(--ink3)",
                 cursor: "grab",
                 flexShrink: 0,
-                fontSize: 11,
+                fontSize: "var(--m-sm)",
                 letterSpacing: "-1px",
               }}
             >

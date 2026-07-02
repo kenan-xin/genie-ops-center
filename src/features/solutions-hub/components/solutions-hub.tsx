@@ -353,7 +353,7 @@ function RecentRailRow({ solution }: { solution: HubSolution }) {
           justifyContent: "center",
           fontFamily: "var(--font-display)",
           fontWeight: 800,
-          fontSize: 10,
+          fontSize: "var(--m-xs)",
         }}
       >
         {solution.monogram ?? solution.name.slice(0, 2)}
