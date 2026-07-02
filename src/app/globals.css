@@ -475,7 +475,32 @@
 .cs-hubgrid > aside {
   margin-top: 16px;
 }
-@media (min-width: 960px) {
+/* Hub content padding ladder (prototype .cs-hubpad). Mobile-first 24px;
+   scales up at each tier so wide screens breathe instead of hugging edges. */
+.cs-hubpad {
+  padding: 24px;
+}
+@media (min-width: 920px) {
+  .cs-hubpad {
+    padding: 34px 40px;
+  }
+}
+@media (min-width: 1440px) {
+  .cs-hubpad {
+    padding: 40px 52px;
+  }
+}
+@media (min-width: 1920px) {
+  .cs-hubpad {
+    padding: 48px 64px;
+  }
+}
+@media (min-width: 2560px) {
+  .cs-hubpad {
+    padding: 60px 80px;
+  }
+}
+@media (min-width: 920px) {
   .cs-thead {
     display: grid;
   }

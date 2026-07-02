@@ -102,11 +102,7 @@ export function SolutionsHub() {
   if (!hasAny) return <NoAccess />;
 
   return (
-    <div
-      ref={scrollRef}
-      className="cs-hubpad"
-      style={{ padding: 24, maxWidth: "var(--content-wide)" }}
-    >
+    <div ref={scrollRef} className="cs-hubpad" style={{ maxWidth: "var(--content-wide)" }}>
       <div style={{ maxWidth: 600 }}>
         <p
           style={{ margin: 0, fontSize: "var(--t-title)", color: "var(--ink2)", lineHeight: 1.55 }}
@@ -242,7 +238,7 @@ export function SolutionsHub() {
 
 function HubSkeleton() {
   return (
-    <div className="cs-hubpad" style={{ padding: 24, maxWidth: "var(--content-wide)" }}>
+    <div className="cs-hubpad" style={{ maxWidth: "var(--content-wide)" }}>
       <Skeleton style={{ height: 28, width: 320 }} />
       <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 8 }}>
         {Array.from({ length: 5 }, (_, i) => (
@@ -383,7 +379,7 @@ function RecentRailRow({ solution }: { solution: HubSolution }) {
 /** FR-HUB-01: granted set is empty. */
 function NoAccess() {
   return (
-    <div className="cs-hubpad" style={{ padding: 24, maxWidth: "var(--content-wide)" }}>
+    <div className="cs-hubpad" style={{ maxWidth: "var(--content-wide)" }}>
       <div
         style={{
           maxWidth: 520,
