@@ -25,7 +25,7 @@ export function PasswordStrengthMeter({ value }: { value: string }) {
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex gap-1" aria-hidden>
-        {[1, 2, 3, 4, 5].map((seg) => (
+        {[1, 2, 3, 4].map((seg) => (
           <span
             key={seg}
             className={cn(
@@ -42,7 +42,7 @@ export function PasswordStrengthMeter({ value }: { value: string }) {
           value ? TEXT[tone] : "text-[var(--ink3)]",
         )}
       >
-        {value ? `Strength: ${label}` : "Use 3 of: length, upper, lower, digit, symbol"}
+        {value ? `Strength: ${label}` : "Use 3 of: length, mixed case, digit, symbol"}
       </span>
     </div>
   );

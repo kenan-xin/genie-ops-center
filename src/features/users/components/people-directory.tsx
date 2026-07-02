@@ -22,7 +22,13 @@ import {
 import { relativeTime } from "@/lib/relative-time";
 import { useTRPC } from "@/trpc/provider";
 
-import { ROLE_LABEL, STATUS_LABEL, type Person, type PersonSort } from "../schemas/person";
+import {
+  ROLE_LABEL,
+  STATUS_LABEL,
+  type Person,
+  type PersonSort,
+  type PersonStatus,
+} from "../schemas/person";
 import { EditPersonSlideOver } from "./edit-person-slide-over";
 import { InvitePersonDialog } from "./invite-person-dialog";
 
@@ -32,7 +38,8 @@ const SORT_OPTIONS: { value: PersonSort; label: string }[] = [
   { value: "status", label: "Sort by status" },
 ];
 
-const STATUS_TONE = { active: "success", pending: "warn", disabled: "error" } as const;
+const STATUS_TONE = { active: "success", pending: "warn", disabled: "neutral" } as const;
+const DOTTED_STATUS = new Set<PersonStatus>(["active", "pending"]);
 const SKELETON_ROWS = [0, 1, 2, 3, 4];
 
 /** People directory (FR-ADM-P-01): search + sort, one slide-over per person for everything else. */
@@ -126,7 +133,10 @@ export function PeopleDirectory() {
                   </TableCell>
                   <TableCell>{ROLE_LABEL[person.role]}</TableCell>
                   <TableCell>
-                    <StatusBadge tone={STATUS_TONE[person.status]} dot>
+                    <StatusBadge
+                      tone={STATUS_TONE[person.status]}
+                      dot={DOTTED_STATUS.has(person.status)}
+                    >
                       {STATUS_LABEL[person.status]}
                     </StatusBadge>
                   </TableCell>
