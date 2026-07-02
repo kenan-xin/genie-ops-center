@@ -5,24 +5,24 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { FieldError, FormError } from "@/components/ui/form-feedback";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { SegmentedControl } from "@/components/ui/segmented";
+import {
+  SlideOver,
+  SlideOverBody,
+  SlideOverContent,
+  SlideOverFooter,
+  SlideOverHeader,
+  SlideOverTitle,
+} from "@/components/ui/slide-over";
 import { useToast } from "@/components/ui/toast";
 import { useTRPC } from "@/trpc/provider";
 
-import { invitePersonSchema, type InvitePersonValues } from "../schemas/person";
+import { invitePersonSchema, ROLE_OPTIONS, type InvitePersonValues } from "../schemas/person";
 
-/** Invite (FR-ADM-P-02): name + email + role → pending person, reset-link email. */
+/** Add a person (FR-ADM-P-02): name + email + role → pending person, reset-link email. Proto 1037-1090. */
 export function InvitePersonDialog({
   open,
   onOpenChange,
@@ -64,66 +64,81 @@ export function InvitePersonDialog({
   });
 
   return (
-    <Dialog
+    <SlideOver
       open={open}
       onOpenChange={(next) => {
         if (!next) reset();
         onOpenChange(next);
       }}
     >
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Invite a person</DialogTitle>
-          <DialogDescription>
-            They&rsquo;ll get an email to set their own password. The account stays pending until
-            they do.
-          </DialogDescription>
-        </DialogHeader>
+      <SlideOverContent>
+        <SlideOverHeader>
+          <SlideOverTitle>Add person</SlideOverTitle>
+        </SlideOverHeader>
 
-        <form onSubmit={onSubmit} className="flex flex-col gap-4 px-5 pb-1" noValidate>
-          <FormError message={errors.root?.message} />
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="invite-name">Name</Label>
-            <Input id="invite-name" autoComplete="name" {...register("name")} />
-            <FieldError message={errors.name?.message} />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="invite-email">Email</Label>
-            <Input id="invite-email" type="email" autoComplete="email" {...register("email")} />
-            <FieldError message={errors.email?.message} />
-          </div>
-          <div className="flex items-center justify-between gap-4 border-t border-[var(--line2)] pt-4">
-            <div className="flex flex-col gap-0.5">
-              <Label htmlFor="invite-admin">Grant admin access</Label>
-              <span className="text-small text-[var(--ink2)]">
-                Admins get the Admin Portal on top of normal access.
-              </span>
+        <SlideOverBody>
+          <form
+            id="invite-person-form"
+            onSubmit={onSubmit}
+            className="flex flex-col gap-4"
+            noValidate
+          >
+            <FormError message={errors.root?.message} />
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="invite-name">Full name</Label>
+              <Input
+                id="invite-name"
+                autoComplete="name"
+                placeholder="Alex Morgan"
+                {...register("name")}
+              />
+              <FieldError message={errors.name?.message} />
             </div>
-            <Controller
-              control={control}
-              name="role"
-              render={({ field }) => (
-                <Switch
-                  id="invite-admin"
-                  name={field.name}
-                  checked={field.value === "admin"}
-                  onCheckedChange={(checked) => field.onChange(checked ? "admin" : "user")}
-                  onBlur={field.onBlur}
-                />
-              )}
-            />
-          </div>
-        </form>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="invite-email">Email</Label>
+              <Input
+                id="invite-email"
+                type="email"
+                autoComplete="email"
+                placeholder="alex@company.com"
+                {...register("email")}
+              />
+              <FieldError message={errors.email?.message} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label>Role</Label>
+              <Controller
+                control={control}
+                name="role"
+                render={({ field }) => (
+                  <SegmentedControl
+                    options={ROLE_OPTIONS}
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  />
+                )}
+              />
+            </div>
+            <p className="text-mono-xs text-[var(--ink3)]">
+              New people start with no solution access. Add them to a group on the{" "}
+              <b className="text-foreground">Groups</b> tab to grant solutions.
+            </p>
+            <p className="text-small text-[var(--ink2)]">
+              They&rsquo;ll get an email to set their own password. The account stays pending until
+              they do.
+            </p>
+          </form>
+        </SlideOverBody>
 
-        <DialogFooter>
+        <SlideOverFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={() => void onSubmit()} disabled={isSubmitting}>
-            {isSubmitting ? "Sending…" : "Send invite"}
+          <Button type="submit" form="invite-person-form" disabled={isSubmitting}>
+            {isSubmitting ? "Creating…" : "Create person"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SlideOverFooter>
+      </SlideOverContent>
+    </SlideOver>
   );
 }
