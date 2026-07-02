@@ -121,6 +121,26 @@ export function StatusNotice({ status, name }: { status: "maintenance" | "down";
             >
               ← Back
             </Link>
+            <a
+              href="https://status.genie.ai"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                height: 40,
+                padding: "0 20px",
+                background: "var(--brand)",
+                color: "#fff",
+                border: "none",
+                fontFamily: "var(--font-sans)",
+                fontWeight: 700,
+                fontSize: "var(--t-body)",
+                textDecoration: "none",
+              }}
+            >
+              View status page ↗
+            </a>
           </div>
         )}
       </div>
