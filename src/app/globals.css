@@ -482,6 +482,14 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  /* Row cell padding + hairline separator (prototype `rowStyle`,
+     "padding:16px 16px;border-bottom:1px solid var(--line2)"). The `.cs-trow`
+     class is layout-only in the prototype; padding lived on each row's inline
+     style and was dropped in the port — restored here so it applies uniformly
+     to every list row (hub, recent, favorites). The horizontal 16px matches
+     the `.cs-thead` header so columns align. */
+  padding: 16px;
+  border-bottom: 1px solid var(--line2);
 }
 .cs-hide {
   display: none;

@@ -31,7 +31,7 @@ export function SolutionListPage({
   const has = (solutions?.length ?? 0) > 0;
 
   return (
-    <div className="cs-hubpad" style={{ padding: 24, maxWidth: "var(--content-wide)" }}>
+    <div className="cs-hubpad" style={{ maxWidth: "var(--content-wide)" }}>
       <h1
         style={{
           margin: 0,

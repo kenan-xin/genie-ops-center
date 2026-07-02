@@ -32,7 +32,7 @@ export default function AccountPage() {
   const user = session?.user;
 
   return (
-    <div className="max-w-[var(--content-wide)]">
+    <div className="cs-hubpad" style={{ maxWidth: "var(--content-wide)" }}>
       <header className="flex items-center gap-[13px]">
         <span
           aria-hidden
