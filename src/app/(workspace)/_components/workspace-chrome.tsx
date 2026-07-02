@@ -42,15 +42,20 @@ export function WorkspaceChrome({
   const pathname = usePathname();
   const drawerOpen = useWorkspaceChromeStore((s) => s.drawerOpen);
   const setDrawerOpen = useWorkspaceChromeStore((s) => s.setDrawerOpen);
+  const sidebarHidden = useWorkspaceChromeStore((s) => s.sidebarHidden);
+  const setSidebarHidden = useWorkspaceChromeStore((s) => s.setSidebarHidden);
   const mode = useWorkspaceChromeStore((s) => s.mode);
   const exitMode = useWorkspaceChromeStore((s) => s.exitMode);
 
-  // Close the mobile drawer on navigation.
+  // Close the mobile drawer + reset the viewer's sidebar-only toggle on
+  // navigation, so a fresh route never opens with a hidden sidebar.
   useEffect(() => {
     setDrawerOpen(false);
-  }, [pathname, setDrawerOpen]);
+    setSidebarHidden(false);
+  }, [pathname, setDrawerOpen, setSidebarHidden]);
 
   const chromeHidden = mode === "standalone" || mode === "present";
+  const sidebarCollapsed = !chromeHidden && sidebarHidden;
 
   const sidebarInner = (
     <>
@@ -136,8 +141,10 @@ export function WorkspaceChrome({
         />
       ) : null}
 
-      {/* Sidebar: persistent ≥920px, off-canvas drawer <920px (CSS-driven). */}
-      {!chromeHidden ? (
+      {/* Sidebar: persistent ≥920px, off-canvas drawer <920px (CSS-driven).
+          The viewer's `▤` toggle collapses it alone (header stays); chrome
+          modes hide it together with the header. */}
+      {!chromeHidden && !sidebarCollapsed ? (
         <aside
           className="ws-side"
           data-open={drawerOpen ? "" : undefined}
