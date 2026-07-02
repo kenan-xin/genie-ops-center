@@ -361,6 +361,23 @@
   animation: csSpin 0.8s linear infinite;
 }
 
+/* Skeleton shimmer (prototype @keyframes csShimmer) — opacity .45↔.9 over 1.1s.
+   Honors prefers-reduced-motion via the global reset below. */
+@keyframes csShimmer {
+  0% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0.45;
+  }
+}
+.cs-shimmer {
+  animation: csShimmer 1.1s ease-in-out infinite;
+}
+
 /* Honor reduced-motion across the whole kit — one place, every component. */
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -13,7 +13,7 @@ const SlideOverClose = DialogPrimitive.Close;
 function SlideOverContent({ className, children, ...props }: DialogPrimitive.Popup.Props) {
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-[rgba(8,10,14,0.32)] transition-opacity duration-200 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0" />
+      <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-[rgba(8,10,14,0.45)] transition-opacity duration-200 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0" />
       <DialogPrimitive.Viewport className="fixed inset-0 z-50 flex justify-end">
         <DialogPrimitive.Popup
           data-slot="slide-over-content"
