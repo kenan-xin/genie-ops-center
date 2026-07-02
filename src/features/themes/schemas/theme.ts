@@ -39,15 +39,44 @@ export const themeConfigSchema = z.object({
 });
 export type ThemeConfig = z.infer<typeof themeConfigSchema>;
 
+/** Curated header/accent swatches for the Elements tab (replaces a raw colour input). */
+export const HEADER_SWATCHES = [
+  "#14161b",
+  "#2360c4",
+  "#0f1319",
+  "#1f9a5c",
+  "#b07d10",
+  "#8b3fd9",
+] as const;
+
+/** Curated user-bubble swatches for the Elements tab. */
+export const BUBBLE_SWATCHES = [
+  "#2360c4",
+  "#14161b",
+  "#7fb2f0",
+  "#1f9a5c",
+  "#d94032",
+  "#8b3fd9",
+] as const;
+
+/** Curated corner-radius presets (segmented control, replaces the raw range input). */
+export const RADIUS_PRESETS = [
+  { value: 0, label: "Sharp" },
+  { value: 10, label: "Soft" },
+  { value: 20, label: "Round" },
+] as const;
+
 /** Curated presets — Elements fields to seed when a preset is picked. */
 export const THEME_PRESETS: {
   id: string;
   label: string;
+  description: string;
   config: Omit<ThemeConfig, "preset" | "customCss">;
 }[] = [
   {
     id: "default",
     label: "Default",
+    description: "Ink header, brand-blue bubbles, balanced corners.",
     config: {
       headerColor: "#14161b",
       bubbleColor: "#2360c4",
@@ -59,6 +88,7 @@ export const THEME_PRESETS: {
   {
     id: "midnight",
     label: "Midnight",
+    description: "Dark header, soft sky-blue accents, sharper corners.",
     config: {
       headerColor: "#0f1319",
       bubbleColor: "#7fb2f0",
@@ -70,6 +100,7 @@ export const THEME_PRESETS: {
   {
     id: "meadow",
     label: "Meadow",
+    description: "Fresh green, fully rounded and friendly.",
     config: {
       headerColor: "#1f9a5c",
       bubbleColor: "#1f9a5c",
@@ -81,6 +112,7 @@ export const THEME_PRESETS: {
   {
     id: "classic",
     label: "Classic",
+    description: "Muted grey, sharp corners, serif type.",
     config: {
       headerColor: "#4a515c",
       bubbleColor: "#4a515c",

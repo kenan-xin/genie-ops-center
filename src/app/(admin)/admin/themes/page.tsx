@@ -1,12 +1,14 @@
-import { ThemeList } from "@/features/themes/components/theme-list";
+import { ThemeBuilder } from "@/features/themes/components/theme-builder";
 import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 
-// Admin: Themes (FR-ADM-T-01) — thin route composing the feature slice.
+// Admin: Theme Builder (FR-ADM-T) — thin route composing the feature slice.
+// No id in the URL yet: the builder lands on the first saved theme once the
+// list loads (or shows the empty state if there isn't one).
 export default function ThemesPage() {
   prefetch(trpc.themes.list.queryOptions());
   return (
     <HydrateClient>
-      <ThemeList />
+      <ThemeBuilder selectedId={null} />
     </HydrateClient>
   );
 }
