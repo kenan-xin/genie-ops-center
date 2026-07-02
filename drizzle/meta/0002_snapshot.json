@@ -110,12 +110,8 @@
           "name": "account_user_id_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -181,12 +177,8 @@
           "name": "chat_session_handle_user_id_user_id_fk",
           "tableFrom": "chat_session_handle",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -194,12 +186,8 @@
           "name": "chat_session_handle_solution_id_solution_id_fk",
           "tableFrom": "chat_session_handle",
           "tableTo": "solution",
-          "columnsFrom": [
-            "solution_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["solution_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -207,10 +195,7 @@
       "compositePrimaryKeys": {
         "chat_session_handle_user_id_solution_id_pk": {
           "name": "chat_session_handle_user_id_solution_id_pk",
-          "columns": [
-            "user_id",
-            "solution_id"
-          ]
+          "columns": ["user_id", "solution_id"]
         }
       },
       "uniqueConstraints": {},
@@ -241,12 +226,8 @@
           "name": "favorite_user_id_user_id_fk",
           "tableFrom": "favorite",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -254,12 +235,8 @@
           "name": "favorite_solution_id_solution_id_fk",
           "tableFrom": "favorite",
           "tableTo": "solution",
-          "columnsFrom": [
-            "solution_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["solution_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -267,10 +244,7 @@
       "compositePrimaryKeys": {
         "favorite_user_id_solution_id_pk": {
           "name": "favorite_user_id_solution_id_pk",
-          "columns": [
-            "user_id",
-            "solution_id"
-          ]
+          "columns": ["user_id", "solution_id"]
         }
       },
       "uniqueConstraints": {},
@@ -369,12 +343,8 @@
           "name": "group_member_group_id_group_id_fk",
           "tableFrom": "group_member",
           "tableTo": "group",
-          "columnsFrom": [
-            "group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["group_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -382,12 +352,8 @@
           "name": "group_member_user_id_user_id_fk",
           "tableFrom": "group_member",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -395,10 +361,7 @@
       "compositePrimaryKeys": {
         "group_member_group_id_user_id_pk": {
           "name": "group_member_group_id_user_id_pk",
-          "columns": [
-            "group_id",
-            "user_id"
-          ]
+          "columns": ["group_id", "user_id"]
         }
       },
       "uniqueConstraints": {},
@@ -451,12 +414,8 @@
           "name": "group_solution_group_id_group_id_fk",
           "tableFrom": "group_solution",
           "tableTo": "group",
-          "columnsFrom": [
-            "group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["group_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -464,12 +423,8 @@
           "name": "group_solution_solution_id_solution_id_fk",
           "tableFrom": "group_solution",
           "tableTo": "solution",
-          "columnsFrom": [
-            "solution_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["solution_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -477,10 +432,7 @@
       "compositePrimaryKeys": {
         "group_solution_group_id_solution_id_pk": {
           "name": "group_solution_group_id_solution_id_pk",
-          "columns": [
-            "group_id",
-            "solution_id"
-          ]
+          "columns": ["group_id", "solution_id"]
         }
       },
       "uniqueConstraints": {},
@@ -540,12 +492,8 @@
           "name": "recent_user_id_user_id_fk",
           "tableFrom": "recent",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -553,12 +501,8 @@
           "name": "recent_solution_id_solution_id_fk",
           "tableFrom": "recent",
           "tableTo": "solution",
-          "columnsFrom": [
-            "solution_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["solution_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -566,10 +510,7 @@
       "compositePrimaryKeys": {
         "recent_user_id_solution_id_pk": {
           "name": "recent_user_id_solution_id_pk",
-          "columns": [
-            "user_id",
-            "solution_id"
-          ]
+          "columns": ["user_id", "solution_id"]
         }
       },
       "uniqueConstraints": {},
@@ -659,12 +600,8 @@
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -674,9 +611,7 @@
         "session_token_unique": {
           "name": "session_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -779,12 +714,8 @@
           "name": "solution_theme_id_theme_id_fk",
           "tableFrom": "solution",
           "tableTo": "theme",
-          "columnsFrom": [
-            "theme_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["theme_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -794,9 +725,7 @@
         "solution_slug_unique": {
           "name": "solution_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -946,9 +875,7 @@
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
