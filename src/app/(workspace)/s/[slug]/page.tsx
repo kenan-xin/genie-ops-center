@@ -61,6 +61,8 @@ export default async function SolutionViewerPage({
           <EmbeddedView iframeUrl={surface.iframeUrl} />
         ) : surface.kind === "chat-slot" ? (
           <ChatSlot
+            accentColor={s.accentColor}
+            accentColorInvert={s.accentColorInvert}
             feedbackEnabled={surface.feedbackEnabled}
             monogram={s.monogram}
             name={s.name}

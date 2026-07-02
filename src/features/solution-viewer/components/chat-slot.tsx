@@ -20,6 +20,8 @@ export function ChatSlot({
   welcomeMessage,
   starterPrompts,
   feedbackEnabled,
+  accentColor,
+  accentColorInvert,
 }: {
   solutionId: string;
   name: string;
@@ -27,6 +29,8 @@ export function ChatSlot({
   welcomeMessage?: string;
   starterPrompts?: string[];
   feedbackEnabled: boolean;
+  accentColor?: string | null;
+  accentColorInvert?: string | null;
 }) {
   return (
     <div
@@ -55,8 +59,8 @@ export function ChatSlot({
             flexShrink: 0,
             padding: "13px 18px",
             borderBottom: "1px solid var(--line)",
-            background: "var(--brand)",
-            color: "#fff",
+            background: accentColor ?? "var(--brand)",
+            color: accentColorInvert ?? "#fff",
             display: "flex",
             alignItems: "center",
             gap: 11,
