@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { SegmentedControl } from "@/components/ui/segmented";
 import { Skeleton } from "@/components/ui/skeleton";
+import { relativeTime } from "@/lib/relative-time";
 
 import { useHubSolutions, useRecents } from "../api/hub";
 import type { HubSolution } from "../server/queries";
@@ -372,7 +373,7 @@ function RecentRailRow({ solution }: { solution: HubSolution }) {
           {solution.name}
         </div>
         <div style={{ font: "500 var(--m-xs) var(--font-mono)", color: "var(--ink3)" }}>
-          {solution.type === "embedded" ? "EMBED" : solution.type.toUpperCase()}
+          {solution.lastOpenedAt ? relativeTime(solution.lastOpenedAt) : ""}
         </div>
       </div>
     </Link>
