@@ -1,5 +1,5 @@
 // Scaffolding placeholder for skeleton routes. Type is driven entirely by
-// Ledger tokens (mono eyebrow + Geist display), never hard-coded px.
+// Ledger tokens (mono eyebrow + Archivo display), never hard-coded px.
 export function Placeholder({
   eyebrow,
   title,

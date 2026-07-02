@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
-// Ledger buttons: square corners, Geist, type via the --t-* scale (never px/rem
+// Ledger buttons: square corners, Hanken Grotesk, type via the --t-* scale (never px/rem
 // — this resolves ticket 01's carry-forward). Brand fill is reserved for
 // `primary`; press = colour shift only (no shrink).
 const buttonVariants = cva(

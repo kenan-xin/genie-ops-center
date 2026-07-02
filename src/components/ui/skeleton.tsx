@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
-// Shimmer skeleton bar (on --line2). animate-pulse is opacity-based and is
-// disabled under prefers-reduced-motion via the global reset.
+// Shimmer skeleton bar (on --line2). Uses the cs-shimmer keyframe (opacity
+// .45↔.9), disabled under prefers-reduced-motion via the global reset.
 function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div

@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-// Ledger empty state: dashed square keyline tile + glyph, Geist title,
+// Ledger empty state: dashed square keyline tile + glyph, Archivo title,
 // muted body, optional CTA.
 function EmptyState({
   className,

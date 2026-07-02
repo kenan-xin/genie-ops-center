@@ -9,7 +9,7 @@
    Genie · "Ledger" design tokens — SOURCE OF TRUTH.
    Copied from design-package/design-system/tokens/*.
    Fonts load via next/font (layout.tsx) and surface as
-   --font-geist-sans / --font-geist-mono; family tokens bind to them.
+   --font-archivo / --font-hanken / --font-plex-mono; family tokens bind to them.
    ============================================================ */
 
 /* --- COLOR (tokens/colors.css) --- */
@@ -468,7 +468,7 @@
    Solutions hub catalogue (FR-HUB). Ported from the prototype's
    `.cs-hubgrid` / `.cs-trow` / `.cs-thead` / `.csrow` / `.cs-hide`.
    Mobile-first: rows stack as a single-column flex list and the
-   TYPE/UPDATED columns hide; ≥960px the table-grid (2.4 .8 .8 .6 40)
+   TYPE/UPDATED columns hide; ≥920px the table-grid (2.4 .8 .8 .6 40)
    appears with a header row. The two-column hub layout (list + side
    rail) turns on ≥1180px and widens the rail up to 4K.
    ============================================================ */

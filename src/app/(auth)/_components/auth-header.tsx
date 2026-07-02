@@ -1,4 +1,4 @@
-// Shared auth-card header: Geist title at the card-head scale (not the page
+// Shared auth-card header: Archivo title at the card-head scale (not the page
 // --t-display) + optional description. `badge` is for real status/role states
 // only (e.g. the admin "● ADMINISTRATOR" chip) — most screens pass none.
 export function AuthHeader({
