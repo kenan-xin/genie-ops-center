@@ -16,7 +16,7 @@ export default async function LoginPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <AuthHeader eyebrow="Sign in" title="Welcome back" />
+      <AuthHeader title="Sign in" description="Use your organization account to continue." />
       <SignInForm mode="workspace" notice={notice ? NOTICES[notice] : undefined} />
     </div>
   );

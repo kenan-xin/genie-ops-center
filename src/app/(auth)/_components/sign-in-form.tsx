@@ -68,18 +68,36 @@ export function SignInForm({ mode, notice }: { mode: "workspace" | "admin"; noti
     router.replace(mode === "admin" ? "/admin" : "/");
   });
 
+  const isAdmin = mode === "admin";
+
   return (
     <div className="flex flex-col gap-6">
       {notice ? <NoticeBanner message={notice} /> : null}
       <FormError message={formError} />
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" autoComplete="email" {...register("email")} />
+          <Label htmlFor="email">{isAdmin ? "Admin email" : "Email"}</Label>
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            placeholder={isAdmin ? "admin@genie.ai" : "you@company.com"}
+            {...register("email")}
+          />
           <FieldError message={errors.email?.message} />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="password">Password</Label>
+          <div className="flex items-baseline justify-between">
+            <Label htmlFor="password">Password</Label>
+            {isAdmin ? null : (
+              <Link
+                href="/forgot-password"
+                className="text-small text-[var(--brandink)] underline-offset-4 hover:underline"
+              >
+                Forgot password?
+              </Link>
+            )}
+          </div>
           <Input
             id="password"
             type="password"
@@ -89,15 +107,24 @@ export function SignInForm({ mode, notice }: { mode: "workspace" | "admin"; noti
           <FieldError message={errors.password?.message} />
         </div>
         <Button type="submit" disabled={isSubmitting} className="mt-1 w-full">
-          {isSubmitting ? "Signing in…" : "Sign in"}
+          {isSubmitting ? "Signing in…" : isAdmin ? "Sign in" : "Continue"}
         </Button>
       </form>
-      <Link
-        href="/forgot-password"
-        className="text-small text-[var(--brandink)] underline-offset-4 hover:underline"
-      >
-        Forgot your password?
-      </Link>
+      {isAdmin ? (
+        <Link
+          href="/login"
+          className="block text-center text-small text-[var(--ink3)] underline-offset-4 hover:underline"
+        >
+          ← Back to sign-in
+        </Link>
+      ) : (
+        <Link
+          href="/admin/login"
+          className="block text-center text-small text-[var(--ink3)] underline-offset-4 hover:underline"
+        >
+          Administrator sign-in →
+        </Link>
+      )}
     </div>
   );
 }

@@ -114,7 +114,7 @@ export function SetNewPasswordForm({
             ? "Saving…"
             : variant === "activate"
               ? "Activate account"
-              : "Reset password"}
+              : "Update password"}
         </Button>
       </form>
     </div>

@@ -7,9 +7,9 @@ export default function AdminLoginPage() {
   return (
     <div className="flex flex-col gap-8">
       <AuthHeader
-        eyebrow="Admin"
-        title="Administrator sign in"
-        description="Sign in with your administrator account."
+        badge="Administrator"
+        title="Admin Portal sign-in"
+        description="Elevated access. All actions are logged."
       />
       <SignInForm mode="admin" />
     </div>
