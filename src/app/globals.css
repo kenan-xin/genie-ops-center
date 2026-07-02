@@ -339,6 +339,17 @@
   }
 }
 
+/* Spinner (viewer embed loading, etc.). Reduced-motion is honored globally
+   below (animation-duration → 0.01ms) so this never spins for those users. */
+@keyframes csSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.csSpin {
+  animation: csSpin 0.8s linear infinite;
+}
+
 /* Honor reduced-motion across the whole kit — one place, every component. */
 @media (prefers-reduced-motion: reduce) {
   *,
