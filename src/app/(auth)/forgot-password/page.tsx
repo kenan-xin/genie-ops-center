@@ -1,15 +1,8 @@
-import { AuthHeader } from "../_components/auth-header";
 import { ForgotPasswordForm } from "../_components/forgot-password-form";
 
+// The header lives inside the client form, not here — the confirmation state
+// swaps the whole card head ("Reset your password" → "Check your email"), which
+// a server component can't react to.
 export default function ForgotPasswordPage() {
-  return (
-    <div className="flex flex-col gap-8">
-      <AuthHeader
-        eyebrow="Reset"
-        title="Forgot password"
-        description="Enter your email and we'll send a link to reset your password."
-      />
-      <ForgotPasswordForm />
-    </div>
-  );
+  return <ForgotPasswordForm />;
 }

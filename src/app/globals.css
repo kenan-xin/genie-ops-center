@@ -236,6 +236,17 @@
   }
 }
 
+/* Auth viewport padding (prototype `.cs-authpad`, lines 55,113) — 18px base,
+   40px once the sidebar breakpoint clears so the card never hugs the edge. */
+.auth-page {
+  padding: 18px;
+}
+@media (min-width: 920px) {
+  .auth-page {
+    padding: 40px;
+  }
+}
+
 /* ============================================================
    shadcn ⇄ Ledger bridge — map shadcn semantic tokens onto Ledger.
    Defined once; dark mode tracks automatically because the Ledger

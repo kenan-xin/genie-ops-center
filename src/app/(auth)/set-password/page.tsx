@@ -13,7 +13,6 @@ export default async function SetPasswordPage({
   return (
     <div className="flex flex-col gap-8">
       <AuthHeader
-        eyebrow="Activate"
         title="Set your password"
         description="Choose a strong password to activate your account."
       />

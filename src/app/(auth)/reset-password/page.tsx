@@ -13,9 +13,8 @@ export default async function ResetPasswordPage({
   return (
     <div className="flex flex-col gap-8">
       <AuthHeader
-        eyebrow="Reset"
         title="Set a new password"
-        description="Choose a strong password to finish resetting your account."
+        description="Choose a strong password you haven't used before."
       />
       <SetNewPasswordForm token={token} variant="reset" linkError={Boolean(error)} />
     </div>
