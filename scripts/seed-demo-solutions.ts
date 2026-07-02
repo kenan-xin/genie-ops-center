@@ -29,6 +29,9 @@ type DemoSpec = {
   description: string;
   status: "ready" | "maintenance" | "down" | "draft";
   iframeUrl: string;
+  /** Optional accent color pair — sets the tile background + text tint. */
+  accentColor?: string;
+  accentColorInvert?: string;
 };
 
 const DEMOS: DemoSpec[] = [
@@ -38,6 +41,8 @@ const DEMOS: DemoSpec[] = [
     description: "Embedded Smart-API loan application review console.",
     status: "ready",
     iframeUrl: LOAN_REVIEW_IFRAME,
+    accentColor: "#2360c4",
+    accentColorInvert: "#ffffff",
   },
   {
     name: "Doc Summarizer",
@@ -45,6 +50,8 @@ const DEMOS: DemoSpec[] = [
     description: "Embedded clinical document summarizer (under maintenance).",
     status: "maintenance",
     iframeUrl: LOAN_REVIEW_IFRAME,
+    accentColor: "#1f9a5c",
+    accentColorInvert: "#ffffff",
   },
   {
     name: "Claims Triage",
@@ -52,6 +59,8 @@ const DEMOS: DemoSpec[] = [
     description: "Embedded claims triage board (down — exercises the outage notice).",
     status: "down",
     iframeUrl: LOAN_REVIEW_IFRAME,
+    accentColor: "#b07d10",
+    accentColorInvert: "#ffffff",
   },
   {
     name: "Policy Drafter",
@@ -99,6 +108,8 @@ async function upsertDemo(spec: DemoSpec): Promise<string> {
         description: spec.description,
         config,
         archived: false,
+        accentColor: spec.accentColor ?? null,
+        accentColorInvert: spec.accentColorInvert ?? null,
         updatedAt: new Date(),
       })
       .where(eq(solution.id, existing.id));
@@ -115,6 +126,8 @@ async function upsertDemo(spec: DemoSpec): Promise<string> {
       monogram: spec.monogram,
       description: spec.description,
       config,
+      accentColor: spec.accentColor ?? null,
+      accentColorInvert: spec.accentColorInvert ?? null,
     })
     .returning({ id: solution.id });
   return created!.id;

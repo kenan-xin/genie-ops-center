@@ -57,6 +57,21 @@ export const MONO_TILE: CSSProperties = {
   fontSize: "var(--t-xs)",
 };
 
+/**
+ * Per-row mono tile style: spreads {@link MONO_TILE} then overrides the
+ * background/text with the solution's accent colors when set, falling back to
+ * the neutral `--panel`/`--ink` tokens. This is the only UI consumer of the
+ * accent-color plumbing — `MONO_TILE` alone stays neutral for non-solution
+ * contexts (the no-access empty states).
+ */
+export function monoTileStyle(solution: HubSolution): CSSProperties {
+  return {
+    ...MONO_TILE,
+    background: solution.accentColor ?? "var(--panel)",
+    color: solution.accentColorInvert ?? "var(--ink)",
+  };
+}
+
 /** `true` when the row opens the viewer (status !== draft). Drafts are hidden
  *  from customers by the predicate, but maintenance/down rows ARE openable —
  *  the viewer shows a notice (FR-ADM-S-05). */

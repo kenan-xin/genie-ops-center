@@ -12,8 +12,8 @@ import type { HubSort } from "../schemas/hub";
 import {
   favoriteStarStyle,
   isOpenable,
+  monoTileStyle,
   monogramOrFallback,
-  MONO_TILE,
   typeLabel,
   updatedLabel,
 } from "./solution-row";
@@ -76,7 +76,7 @@ export function SolutionListRow({ solution, sort }: { solution: HubSolution; sor
   const inner = (
     <>
       <div style={{ display: "flex", alignItems: "center", gap: 11, minWidth: 0, flex: 1 }}>
-        <span aria-hidden style={MONO_TILE}>
+        <span aria-hidden style={monoTileStyle(solution)}>
           {monogramOrFallback(solution.monogram, solution.name)}
         </span>
         <div style={{ minWidth: 0 }}>
