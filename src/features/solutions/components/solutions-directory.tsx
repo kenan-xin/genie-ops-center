@@ -339,7 +339,7 @@ function SolutionRow({ solution, onEdit }: { solution: Solution; onEdit: () => v
             disabled={busy}
             aria-label={`Status for ${solution.name}`}
             className={cn(
-              "h-auto w-auto gap-1.5 border px-2 py-1 font-mono text-mono-sm font-semibold tracking-[0.06em] uppercase",
+              "h-auto w-auto gap-1.5 border px-2 py-1 font-mono text-mono-sm font-semibold tracking-[0.06em]",
               STATUS_SELECT_CLASS[solution.status],
             )}
           />
