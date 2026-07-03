@@ -74,7 +74,7 @@ function GrantsTransfer({ groupId }: { groupId: string }) {
   const setSolutions = useSetSolutions();
 
   if (isPending) {
-    return <Skeleton className="h-64 w-full" />;
+    return <Skeleton className="h-[clamp(380px,52vh,640px)] w-full" />;
   }
   if (isError || !data) {
     return (

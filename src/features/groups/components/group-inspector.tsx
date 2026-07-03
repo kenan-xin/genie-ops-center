@@ -175,6 +175,9 @@ function GroupInspectorBody({ groupId, onClose }: { groupId: string; onClose: ()
             onChange={(ids) => void commitMembers(ids)}
             availableLabel="Available people"
             targetLabel="Members"
+            className="gap-2.5"
+            paneHeightClassName="max-h-[300px]"
+            showHeaderActions={false}
           />
         </div>
       </div>

@@ -32,6 +32,9 @@ type SideProps = {
   variant: "available" | "target";
   bulkLabel: string;
   onBulkAction: () => void;
+  paneHeightClassName: string;
+  onHeaderAction?: (filteredIds: string[]) => void;
+  headerActionLabel?: string;
 };
 
 function matches(item: TransferItem, query: string) {
@@ -53,6 +56,9 @@ function TransferSide({
   variant,
   bulkLabel,
   onBulkAction,
+  paneHeightClassName,
+  onHeaderAction,
+  headerActionLabel,
 }: SideProps) {
   const filtered = items.filter((item) => matches(item, query));
   const allSelected = filtered.length > 0 && filtered.every((i) => selected.has(i.id));
@@ -74,6 +80,18 @@ function TransferSide({
         >
           {heading} &middot; {items.length}
         </span>
+        {onHeaderAction && (isTarget ? items.length > 0 : filtered.length > 0) ? (
+          <button
+            type="button"
+            onClick={() => onHeaderAction(filtered.map((i) => i.id))}
+            className={cn(
+              "shrink-0 text-small font-semibold whitespace-nowrap transition-colors hover:text-[var(--ink)]",
+              isTarget ? "text-[var(--ink2)]" : "text-[var(--brandink)]",
+            )}
+          >
+            {headerActionLabel}
+          </button>
+        ) : null}
       </div>
       <div className="flex items-center gap-2 border-b border-[var(--line2)] p-2">
         <input
@@ -90,7 +108,7 @@ function TransferSide({
           className="h-8"
         />
       </div>
-      <ul className="max-h-64 min-h-32 overflow-y-auto">
+      <ul className={cn(paneHeightClassName, "overflow-y-auto")}>
         {filtered.length === 0 ? (
           <li className="px-3 py-4 text-small text-[var(--ink3)]">No items.</li>
         ) : (
@@ -176,6 +194,8 @@ export function TransferList({
   availableLabel = "Available",
   targetLabel = "Granted",
   className,
+  paneHeightClassName = "h-[clamp(380px,52vh,640px)]",
+  showHeaderActions = true,
 }: {
   items: TransferItem[];
   value: string[];
@@ -183,6 +203,14 @@ export function TransferList({
   availableLabel?: string;
   targetLabel?: string;
   className?: string;
+  paneHeightClassName?: string;
+  /**
+   * Header quick-links ("Add all shown →" / "Revoke all", AG-05). Prototype
+   * only draws these on the Access · Grants list — the group-inspector
+   * Members list omits them — so callers that must not show them (the
+   * inspector) pass `false`.
+   */
+  showHeaderActions?: boolean;
 }) {
   const [availableSelected, setAvailableSelected] = useState<Set<string>>(new Set());
   const [targetSelected, setTargetSelected] = useState<Set<string>>(new Set());
@@ -234,8 +262,21 @@ export function TransferList({
     setTargetSelected(new Set());
   }
 
+  function addAllShown(ids: string[]) {
+    const add = ids.filter((id) => !valueSet.has(id));
+    if (add.length === 0) return;
+    onChange(Array.from(new Set([...value, ...add])));
+    setAvailableSelected(new Set());
+  }
+
+  function revokeAll() {
+    if (value.length === 0) return;
+    onChange([]);
+    setTargetSelected(new Set());
+  }
+
   return (
-    <div className={cn("grid grid-cols-1 gap-3 sm:grid-cols-2", className)}>
+    <div className={cn("grid grid-cols-1 gap-6 sm:grid-cols-2", className)}>
       <TransferSide
         heading={availableLabel}
         items={availableItems}
@@ -247,6 +288,9 @@ export function TransferList({
         variant="available"
         bulkLabel={`Add ${availableSelected.size} →`}
         onBulkAction={moveToTarget}
+        paneHeightClassName={paneHeightClassName}
+        onHeaderAction={showHeaderActions ? addAllShown : undefined}
+        headerActionLabel="Add all shown →"
       />
       <TransferSide
         heading={targetLabel}
@@ -259,6 +303,9 @@ export function TransferList({
         variant="target"
         bulkLabel={`Revoke ${targetSelected.size}`}
         onBulkAction={moveToAvailable}
+        paneHeightClassName={paneHeightClassName}
+        onHeaderAction={showHeaderActions ? () => revokeAll() : undefined}
+        headerActionLabel="Revoke all"
       />
     </div>
   );
