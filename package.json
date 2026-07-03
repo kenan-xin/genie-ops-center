@@ -8,6 +8,8 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "typecheck:scripts": "tsc --noEmit -p tsconfig.scripts.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "format": "oxfmt --write",
@@ -68,7 +70,8 @@
     "oxfmt": "^0.57.0",
     "oxlint": "^1.72.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.9"
   },
   "engines": {
     "node": ">=24"

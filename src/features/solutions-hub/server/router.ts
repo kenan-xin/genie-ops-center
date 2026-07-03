@@ -8,6 +8,7 @@ import { favorite, recent, solution } from "@/server/db/schema";
 import { assertCanSee, canSee } from "@/server/features/solution-access";
 import { createTRPCRouter, protectedProcedure } from "@/server/trpc/init";
 
+import { resolveFavoriteReorder } from "../lib/reorder";
 import { listFavoriteSolutions, listHubSolutions, listRecentSolutions } from "./queries";
 import {
   listHubSchema,
@@ -158,12 +159,7 @@ export const solutionsHubRouter = createTRPCRouter({
             (b.lastOpenedAt ?? b.updatedAt).getTime() - (a.lastOpenedAt ?? a.updatedAt).getTime(),
         );
         const currentIds = current.map((r) => r.solutionId);
-        const currentSet = new Set(currentIds);
-
-        const provided = input.orderedSolutionIds.filter((id) => currentSet.has(id));
-        const providedSet = new Set(provided);
-        const rest = currentIds.filter((id) => !providedSet.has(id));
-        const final = [...provided, ...rest];
+        const final = resolveFavoriteReorder(currentIds, input.orderedSolutionIds);
 
         // Single bulk UPDATE (via unnest) instead of one UPDATE per row: it's
         // one round trip regardless of favorite count, and — since it's one
