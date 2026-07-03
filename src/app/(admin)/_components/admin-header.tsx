@@ -14,6 +14,9 @@ import { ADMIN_NAV_ITEMS } from "../_lib/admin-nav-items";
  * item. Right: theme toggle.
  */
 function titleFor(pathname: string): string {
+  // Account is reached from the footer profile, not the nav — so it has no
+  // ADMIN_NAV_ITEMS entry to derive a title from.
+  if (pathname.startsWith("/admin/account")) return "Account";
   return ADMIN_NAV_ITEMS.find((item) => item.isActive(pathname))?.label ?? "Admin";
 }
 

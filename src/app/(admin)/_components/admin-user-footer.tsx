@@ -14,10 +14,10 @@ import { authClient } from "@/lib/auth-client";
  * chip is fixed "ADMIN" rather than derived — Admin framing in place of the
  * workspace footer's "WORKSPACE OWNER" / "WORKSPACE MEMBER".
  *
- * The identity link goes to `/account` (the shared, workspace-hosted account
- * screen — there's no admin-only account page) which doubles as the way back
- * into the customer workspace, replacing the old top-bar's explicit
- * "Back to workspace" link.
+ * The identity link goes to `/admin/account` — the admin's own account screen,
+ * rendered inside the admin chrome (same `AccountScreen` as the workspace
+ * `/account`, but kept within the console so clicking the profile never drops
+ * the admin into the customer workspace).
  */
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -45,7 +45,7 @@ export function AdminUserFooter({ name }: { name: string }) {
       }}
     >
       <Link
-        href="/account"
+        href="/admin/account"
         className="adm-nav-item"
         style={{
           display: "flex",
