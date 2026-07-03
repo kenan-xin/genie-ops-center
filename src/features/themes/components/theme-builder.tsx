@@ -397,7 +397,13 @@ function ThemeBuilderEditor({ theme, allThemes }: { theme: ThemeRow; allThemes: 
                       height="220px"
                       theme="dark"
                       placeholder=".bubble.user { ... }"
-                      extensions={[css(), Prec.highest(cssEditorTheme)]}
+                      extensions={[
+                        css(),
+                        Prec.highest(cssEditorTheme),
+                        // Label the contenteditable textbox for screen readers (the old
+                        // textarea had <Label htmlFor>; CodeMirror needs this explicitly).
+                        EditorView.contentAttributes.of({ "aria-label": "Custom CSS" }),
+                      ]}
                       basicSetup={{
                         lineNumbers: false,
                         foldGutter: false,
