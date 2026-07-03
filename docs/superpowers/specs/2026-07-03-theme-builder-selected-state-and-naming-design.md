@@ -1,7 +1,7 @@
 # Theme Builder — selected-state fixes + theme naming
 
 **Date:** 2026-07-03
-**Status:** Design — awaiting review
+**Status:** Approved — ready for implementation plan
 **Scope:** `src/features/themes/components/theme-builder.tsx`, `src/components/ui/tabs.tsx`
 **No** database, schema, or tRPC changes.
 
@@ -48,7 +48,7 @@ Two issues in the admin Theme Builder (`/admin/themes`):
 - Enforcing unique theme names (no uniqueness constraint exists today).
 - Auto-focusing the name field on "+ New theme".
 
-## Design decisions (recommended — confirm at review)
+## Design decisions (confirmed)
 
 - **Issue #1 preset card → Option A: brand border + `--brandtint` fill.** Matches the existing
   Saved-theme chips and the account-dialog selected-card pattern. Clearly selected without the
