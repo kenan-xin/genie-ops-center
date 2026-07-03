@@ -64,6 +64,15 @@ export function ForgotPasswordForm() {
           If an account exists for <span className="text-foreground">{getValues("email")}</span>, a
           reset link is on its way. The link expires in 60 minutes.
         </p>
+        <Button
+          type="button"
+          size="auth"
+          className="w-full"
+          disabled={isSubmitting}
+          onClick={() => onSubmit()}
+        >
+          Resend link
+        </Button>
         <Link
           href="/login"
           className="block text-center text-small text-[var(--ink3)] underline-offset-4 hover:underline"
