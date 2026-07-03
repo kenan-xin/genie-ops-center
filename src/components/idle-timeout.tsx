@@ -15,6 +15,7 @@ import {
 import { authClient } from "@/lib/auth-client";
 
 const SESSION_MS = 15 * 60 * 1000; // server sliding session lifetime (auth.ts expiresIn)
+export const SESSION_MINUTES = SESSION_MS / 60_000;
 const COUNTDOWN_S = 60; // grace period inside the modal
 // Warn BEFORE the server would expire, so the "Stay signed in" refetch still
 // lands inside the valid window and actually slides the session forward — if we

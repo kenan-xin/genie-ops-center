@@ -28,7 +28,13 @@ export function FormError({ message }: { message?: string | null }) {
 export function NoticeBanner({ message }: { message?: string | null }) {
   if (!message) return null;
   return (
-    <div className="flex items-start gap-2 border border-[var(--success)] bg-[var(--successtint)] px-[11px] py-[9px] text-small text-[var(--success)]">
+    // <output>'s default display/semantics don't fit this bordered banner;
+    // role="status" on <div> mirrors FormError's role="alert" pattern above.
+    <div
+      // eslint-disable-next-line jsx-a11y/prefer-tag-over-role
+      role="status"
+      className="flex items-start gap-2 border border-[var(--success)] bg-[var(--successtint)] px-[11px] py-[9px] text-small text-[var(--success)]"
+    >
       <span aria-hidden className="font-heading font-extrabold leading-none">
         ✓
       </span>

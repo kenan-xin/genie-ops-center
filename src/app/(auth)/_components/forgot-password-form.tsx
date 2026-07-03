@@ -64,6 +64,8 @@ export function ForgotPasswordForm() {
           If an account exists for <span className="text-foreground">{getValues("email")}</span>, a
           reset link is on its way. The link expires in 60 minutes.
         </p>
+        {/* Relies on the RHF email value being retained from the first submit —
+            do not `reset()` the form on this success branch, or resend has no address. */}
         <Button
           type="button"
           size="auth"

@@ -95,6 +95,7 @@ export function SetNewPasswordForm({
             <button
               type="button"
               onClick={() => setShowPassword((s) => !s)}
+              aria-pressed={showPassword}
               className="text-small text-[var(--brandink)] underline-offset-4 hover:underline"
             >
               {showPassword ? "Hide" : "Show"}

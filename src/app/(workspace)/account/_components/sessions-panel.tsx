@@ -7,6 +7,7 @@ import { useConfirm } from "@/components/ui/confirm";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { useToast } from "@/components/ui/toast";
+import { SESSION_MINUTES } from "@/components/idle-timeout";
 import { authClient } from "@/lib/auth-client";
 import { relativeTime } from "@/lib/relative-time";
 
@@ -28,15 +29,14 @@ const SESSIONS_KEY = ["account", "sessions"] as const;
  * devices has no backing data (no "remember me" trust column, no better-auth
  * config), so that row is informational-only with no button — a "Forget all"
  * that no-oped would be worse than no card at all. Session timeout IS real
- * (`IDLE_TIMEOUT_MINUTES` mirrors idle-timeout.tsx's SESSION_MS), so that row
- * shows the true idle minutes. There's no "Preview" button because
- * idle-timeout.tsx exposes no callable trigger — its warning state is private
- * to the <IdleTimeout> instance mounted in workspace-chrome.tsx, with no
- * context/store/export this panel could call into. Faking a trigger (e.g. a
- * local look-alike dialog) would misrepresent the real 15-minute mechanism, so
- * it's omitted rather than simulated.
+ * (`SESSION_MINUTES`, imported from idle-timeout.tsx, is derived from that
+ * module's SESSION_MS), so that row shows the true idle minutes. There's no
+ * "Preview" button because idle-timeout.tsx exposes no callable trigger — its
+ * warning state is private to the <IdleTimeout> instance mounted in
+ * workspace-chrome.tsx, with no context/store/export this panel could call
+ * into. Faking a trigger (e.g. a local look-alike dialog) would misrepresent
+ * the real 15-minute mechanism, so it's omitted rather than simulated.
  */
-const IDLE_TIMEOUT_MINUTES = 15; // keep in sync with SESSION_MS in idle-timeout.tsx
 export function SessionsPanel() {
   const { toast } = useToast();
   const confirm = useConfirm();
@@ -238,7 +238,7 @@ export function SessionsPanel() {
           <div className="min-w-0">
             <div className="text-body text-[var(--ink)]">Session timeout</div>
             <div className="mt-0.5 text-mono-xs text-[var(--ink3)]">
-              You&apos;re signed out automatically after {IDLE_TIMEOUT_MINUTES} minutes idle.
+              You&apos;re signed out automatically after {SESSION_MINUTES} minutes idle.
             </div>
           </div>
           {/* No "Preview" button: idle-timeout.tsx exposes no callable trigger
