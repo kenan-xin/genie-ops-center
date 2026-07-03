@@ -23,6 +23,7 @@
   --bg: #fbfcfd;
   --surface: #ffffff;
   --panel: #f2f4f7;
+  --panel-chat: #f1f3f6; /* bot chat bubble — slightly darker than --panel (prototype .dc.html:507) */
   --line: #c8cdd5;
   --line2: #e2e5ea;
   --rule: #14161b;
@@ -53,6 +54,7 @@
   --bg: #13171e;
   --surface: #181d25;
   --panel: #1d242e;
+  --panel-chat: #1d242e; /* dark: match --panel (no prototype dark ground truth; keeps dark unchanged) */
   --line: #313a46;
   --line2: #262e38;
   --rule: #3a4454;

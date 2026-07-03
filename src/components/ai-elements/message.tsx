@@ -46,7 +46,7 @@ export const MessageContent = ({
       "max-w-[80%] rounded-[3px] px-[13px] py-[10px] text-body leading-normal",
       from === "user"
         ? "max-w-[78%] bg-primary text-primary-foreground"
-        : "bg-[var(--panel)] text-foreground",
+        : "bg-[var(--panel-chat)] text-foreground",
       className,
     )}
     style={
