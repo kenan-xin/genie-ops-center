@@ -18,10 +18,9 @@ export function ThemeToggle() {
   return (
     <Button
       variant="ghost"
-      size="icon"
       aria-label="Toggle theme"
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      style={{ fontSize: "var(--m-lg)", fontFamily: "var(--font-mono)" }}
+      className="size-[30px] p-0 text-body"
     >
       {mounted ? (isDark ? "☼" : "☾") : "·"}
     </Button>
