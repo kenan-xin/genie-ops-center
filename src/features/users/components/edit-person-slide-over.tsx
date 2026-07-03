@@ -263,6 +263,7 @@ export function EditPersonSlideOver({
                   <Button
                     variant="ghost"
                     size="sm"
+                    className="h-[30px] bg-[var(--surface)] text-xs"
                     disabled={busy}
                     onClick={() =>
                       void withToast(
@@ -277,6 +278,7 @@ export function EditPersonSlideOver({
                   <Button
                     variant="dark"
                     size="sm"
+                    className="h-[30px] text-xs"
                     disabled={busy}
                     onClick={() => void handleActivate()}
                   >
