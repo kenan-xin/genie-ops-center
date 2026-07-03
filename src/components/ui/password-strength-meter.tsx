@@ -23,8 +23,8 @@ export function PasswordStrengthMeter({ value }: { value: string }) {
   const { label, tone } = strengthMeta(score);
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <div className="flex gap-1" aria-hidden>
+    <div className="mt-[3px] flex flex-col gap-[5px]">
+      <div className="flex gap-[5px]" aria-hidden>
         {[1, 2, 3, 4].map((seg) => (
           <span
             key={seg}

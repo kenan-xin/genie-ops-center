@@ -13,7 +13,7 @@ export default async function SetPasswordPage({
   return (
     <div className="flex flex-col gap-8">
       <AuthHeader
-        title="Set your password"
+        title="Set a new password"
         description="Choose a strong password to activate your account."
       />
       <SetNewPasswordForm token={token} variant="activate" linkError={Boolean(error)} />
