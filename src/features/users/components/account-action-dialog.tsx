@@ -4,7 +4,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogClose, DialogContent, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
@@ -107,9 +113,9 @@ export function AccountActionDialog({
             <div className="font-mono text-mono-sm font-semibold tracking-[0.08em] text-[var(--brandink)] uppercase">
               Account action
             </div>
-            <div className="mt-[3px] font-heading text-title font-extrabold text-foreground">
+            <DialogTitle className="mt-[3px] font-heading text-title font-extrabold tracking-normal text-foreground">
               Reset password
-            </div>
+            </DialogTitle>
             <div className="mt-px truncate text-small text-[var(--ink3)]">
               {person.name} · {person.email}
             </div>

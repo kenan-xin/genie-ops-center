@@ -327,7 +327,8 @@ export function EditPersonSlideOver({
                 <Button
                   variant="ghost"
                   size="sm"
-                  disabled={busy}
+                  disabled={busy || isSelf}
+                  title={isSelf ? "You can't reset your own password from here." : undefined}
                   onClick={() => setAccountActionOpen(true)}
                 >
                   Reset password
