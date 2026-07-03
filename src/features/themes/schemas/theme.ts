@@ -11,15 +11,15 @@ import { z } from "zod";
 
 const hexColor = z.string().regex(/^#[0-9a-f]{6}$/i, "Enter a hex colour, e.g. #2360c4");
 
+// value ids are kept stable for back-compat with stored themes; labels + stacks
+// now reflect the app's real fonts (prototype .dc.html:1782). The admin preview
+// iframe (sandbox="", no next/font) falls back to system for Hanken/Archivo;
+// the real chat surface renders them.
 export const FONT_OPTIONS = [
-  {
-    value: "system",
-    label: "System sans",
-    stack: "system-ui, -apple-system, 'Segoe UI', sans-serif",
-  },
-  { value: "serif", label: "Serif", stack: "Georgia, 'Times New Roman', serif" },
-  { value: "mono", label: "Monospace", stack: "ui-monospace, 'SFMono-Regular', Menlo, monospace" },
-  { value: "rounded", label: "Rounded", stack: "ui-rounded, 'Segoe UI', system-ui, sans-serif" },
+  { value: "system", label: "Hanken", stack: "'Hanken Grotesk', system-ui, sans-serif" },
+  { value: "rounded", label: "Archivo", stack: "'Archivo', system-ui, sans-serif" },
+  { value: "mono", label: "Mono", stack: "'IBM Plex Mono', ui-monospace, monospace" },
+  { value: "serif", label: "Serif", stack: "Georgia, serif" },
 ] as const;
 
 const FONT_VALUES = FONT_OPTIONS.map((f) => f.value) as [string, ...string[]];
@@ -61,8 +61,8 @@ export const BUBBLE_SWATCHES = [
 
 /** Curated corner-radius presets (segmented control, replaces the raw range input). */
 export const RADIUS_PRESETS = [
-  { value: 0, label: "Sharp" },
-  { value: 10, label: "Soft" },
+  { value: 4, label: "Sharp" },
+  { value: 12, label: "Soft" },
   { value: 20, label: "Round" },
 ] as const;
 
