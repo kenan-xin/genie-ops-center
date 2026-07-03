@@ -237,11 +237,11 @@ export function PeopleDirectory() {
         </p>
       </header>
 
-      <div className="flex items-center gap-2 border border-[var(--brand)]/25 bg-[var(--brandtint)] px-3.5 py-2.5">
+      <div className="flex items-center gap-2 border border-[#d7e3f6] bg-[var(--brandtint)] px-[13px] py-[9px]">
         <span className="font-mono text-mono-xs font-semibold whitespace-nowrap tracking-[0.08em] text-[var(--brandink)] uppercase">
           How access works
         </span>
-        <span className="text-small text-[var(--ink2)]">
+        <span className="text-small text-[#2a4d80]">
           Add a person to a group to grant solutions — there are no per-person permissions.
         </span>
       </div>
@@ -263,7 +263,14 @@ export function PeopleDirectory() {
             onValueChange={(value) => setSort(value as PersonSort)}
             className="w-[140px]"
           />
-          <Button onClick={() => setInviteOpen(true)}>+ Add person</Button>
+          <Button
+            variant="dark"
+            size="sm"
+            className="px-[14px]"
+            onClick={() => setInviteOpen(true)}
+          >
+            + Add person
+          </Button>
         </div>
       </div>
 
