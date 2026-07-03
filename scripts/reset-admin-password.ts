@@ -12,7 +12,7 @@
  * bypasses the admin session a real reset requires. Guarded by NODE_ENV.
  *
  * Usage (with the dev DB running — `pnpm db:dev`):
- *   pnpm reset-admin                                  # admin@example.com / Sup3rSecret!pw
+ *   pnpm reset-admin                                  # admin@example.com / .env ADMIN_PASSWORD (or Str0ng!Passw0rd)
  *   pnpm reset-admin you@example.com 'YourStr0ng!pw'  # custom target + password
  *
  * The `reset-admin` package.json script esbuild-bundles this file (with
@@ -20,14 +20,26 @@
  * with node — so `server-only` resolves to its no-op at bundle time and no
  * script-runner dependency (tsx/ts-node) is needed.
  *
- * Reads DATABASE_URL / ADMIN_EMAIL / ADMIN_PASSWORD from the environment if set;
- * otherwise falls back to the docker-compose.dev.yml / .env.example defaults.
+ * Loads `.env` (via Node's built-in `process.loadEnvFile`, since a bare node
+ * bundle — unlike Next — doesn't auto-load it), then reads DATABASE_URL /
+ * ADMIN_EMAIL / ADMIN_PASSWORD from the environment. Precedence: an explicit
+ * shell env var wins over `.env`, which wins over the built-in dev defaults.
  */
 
 async function main(): Promise<void> {
   if (process.env.NODE_ENV === "production") {
     console.error("✗ Refusing to run in production — this bypasses the admin-session reset flow.");
     process.exit(1);
+  }
+
+  // Load `.env` so a value set there (e.g. ADMIN_PASSWORD) is actually used —
+  // the esbuild'd node bundle doesn't auto-load it the way Next does.
+  // `loadEnvFile` fills gaps without overriding existing shell env, preserving
+  // "an explicit env var always wins". Tolerate a missing file (env-only setups).
+  try {
+    process.loadEnvFile();
+  } catch {
+    // No `.env` present — fall through to shell env + built-in defaults.
   }
 
   // Dev fallbacks set BEFORE importing @/server/* — the db client throws when
@@ -37,7 +49,7 @@ async function main(): Promise<void> {
   process.env.BETTER_AUTH_SECRET ??= "dev-only-secret-change-me";
 
   const email = process.argv[2] ?? process.env.ADMIN_EMAIL ?? "admin@example.com";
-  const password = process.argv[3] ?? process.env.ADMIN_PASSWORD ?? "Sup3rSecret!pw";
+  const password = process.argv[3] ?? process.env.ADMIN_PASSWORD ?? "Str0ng!Passw0rd";
 
   const { auth } = await import("@/server/auth");
   const { db } = await import("@/server/db");
