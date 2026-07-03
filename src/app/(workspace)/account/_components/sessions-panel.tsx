@@ -168,8 +168,13 @@ export function SessionsPanel() {
                       ) : null}
                     </div>
                     <span className="text-mono-sm text-[var(--ink3)]">
-                      {s.ipAddress ? `${s.ipAddress} · ` : ""}
-                      Last active {relativeTime(s.updatedAt)}
+                      {[
+                        browserName(s.userAgent),
+                        s.ipAddress,
+                        `Last active ${relativeTime(s.updatedAt)}`,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </span>
                   </div>
                   {isCurrent ? null : (
@@ -195,21 +200,28 @@ export function SessionsPanel() {
 }
 
 /**
+ * Browser token parsed from the user agent ("Chrome", "Safari", …), or null
+ * when unrecognized. Shared by `deviceLabel()` and the session sub-line
+ * (browser · IP · when — the prototype's "location" segment is dropped since
+ * this app has no geolocation, only userAgent + ipAddress). Order matters:
+ * Edge/Chrome UAs also contain "Safari", so check the most specific token
+ * first.
+ */
+function browserName(ua: string | null | undefined): string | null {
+  if (!ua) return null;
+  if (/Edg\//.test(ua)) return "Edge";
+  if (/Chrome\//.test(ua)) return "Chrome";
+  if (/Firefox\//.test(ua)) return "Firefox";
+  if (/Safari\//.test(ua)) return "Safari";
+  return null;
+}
+
+/**
  * Light user-agent label ("Chrome on macOS") — no UA-parsing dependency.
- * Order matters: Edge/Chrome UAs also contain "Safari", Chrome UAs contain
- * "Safari" too, so check the most specific token first.
  */
 function deviceLabel(ua: string | null | undefined): string {
   if (!ua) return "Unknown device";
-  const browser = /Edg\//.test(ua)
-    ? "Edge"
-    : /Chrome\//.test(ua)
-      ? "Chrome"
-      : /Firefox\//.test(ua)
-        ? "Firefox"
-        : /Safari\//.test(ua)
-          ? "Safari"
-          : null;
+  const browser = browserName(ua);
   const os = /Windows/.test(ua)
     ? "Windows"
     : /Mac OS X|Macintosh/.test(ua)
