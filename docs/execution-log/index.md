@@ -195,3 +195,14 @@ Accepted deviations / notes:
 Notable review coverage: the P0 (AT-00) was checked specifically to confirm the CSS editor was NOT regressed to a read-only mock (it stays a functional `register`-bound textarea); the new user-authored theme `name` interpolated into the preview `srcDoc` was confirmed HTML-escaped (`escapeHtml`) — no injection, with `sandbox=""` as defense-in-depth.
 
 Verification: `tsc`/`oxlint` clean; per-task spec+quality reviews passed; the P0 got focused review. Per-task `verdict` visual checks ran against the restored local admin login. A consolidated authenticated sweep at 920/1180/1440 is recommended for human QA. **The design-drift spec (`docs/superpowers/specs/2026-07-02-design-drift-remediation-design.md`) is now fully implemented across Waves A / B / C1 / C2 / C3 / C4.**
+
+## Post-spec follow-up · Theme Builder CSS editor → CodeMirror
+
+At the owner's request, the Theme Builder's Custom-CSS field (AT-00) was upgraded from the dark-styled `<textarea>` to a real **CodeMirror** editor (`@uiw/react-codemirror` + `@codemirror/lang-css`) — syntax-highlighted CSS on the same `#0f1319` dark surface, bound to react-hook-form via a `Controller` on `config.customCss` (stays fully functional: edits flow to the live preview + enable Save). Notes: `theme="dark"` layers CodeMirror's `oneDark` chrome *after* caller extensions, so the custom `#0f1319` theme is wrapped in `Prec.highest(...)` to win the cascade; and since CodeMirror isn't a native input, screen-reader labelling is done via `EditorView.contentAttributes.of({ "aria-label": "Custom CSS" })` (the old `<Label htmlFor>` no longer associates). No `dynamic(ssr:false)` boundary was needed (verified: no hydration/console errors). Merged + pushed.
+
+## Accepted non-issues (owner decision — no action)
+
+The following were flagged during the design-drift work and **explicitly dismissed by the owner as non-issues**; they are intentionally NOT tracked as tickets or follow-ups. Recorded here so they aren't re-raised:
+
+- **No app-wide tRPC request timeout.** The account-action dialog (Wave C1, `account-action-dialog.tsx`) correctly blocks close while a mutation is pending; a *truly hung* mutation could therefore trap the dialog until reload, because the tRPC client has no request-level `AbortSignal`/timeout. A systemic client timeout was proposed as a follow-up ticket — **dismissed; not ticketing.**
+- **Working-tree noise.** The repo working tree carries pre-existing, uncommitted drift — `drizzle/meta/0003_snapshot.json` + `drizzle/meta/_journal.json` (cosmetic migration-meta drift) and assorted `docs/tickets/*` edits (incl. `docs/tickets/09-admin-themes/index.md`) — that predate this remediation and were never staged by any wave. **Dismissed; leave untouched** (no wave will stage or "fix" them).
