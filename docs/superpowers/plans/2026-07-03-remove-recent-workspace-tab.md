@@ -6,7 +6,7 @@
 
 **Architecture:** Two edits. Task 1 deletes the `Recent` tab surface (nav item + route + header title mapping + two stale doc comments) — recents stay accessible via the hub's "RECENTLY OPENED" rail and recent-first default sort. Task 2 simplifies `SolutionListPage` (now only `/favorites` uses it) by dropping the dead `variant="recents"` branch.
 
-**Tech Stack:** Next.js (App Router) + React 19, TypeScript, tRPC + TanStack Query. No test runner in this repo.
+**Tech Stack:** Next.js (App Router) + React 19, TypeScript, tRPC + TanStack Query. Vitest (`pnpm test` → `vitest run`) — currently one suite: `src/features/solutions-hub/lib/reorder.test.ts` (pure favorite-reorder logic; baseline 6/6 passing). No test covers the nav, header, `SolutionListPage`, or the recent route, so this change is not exercised by the existing suite — but `pnpm test` must stay green (6/6) as a regression guard.
 
 **Spec:** `docs/superpowers/specs/2026-07-03-remove-recent-workspace-tab-design.md`
 
@@ -15,7 +15,7 @@
 - TypeScript; 2-space indent, semicolons, double quotes, trailing commas in multi-line literals.
 - NO database, Drizzle schema, migration, or tRPC changes. The recents backend (`solutionsHub.recents`, `useRecents`, open-recording via `s/[slug]`) stays untouched — the hub rail + recent-sort depend on it.
 - Do NOT touch the Solutions hub `RecentRail` ("RECENTLY OPENED" sidebar) or the hub's recent-first default sort (`solutionsHub.list({ sort: "recent" })`). These are explicitly preserved.
-- No test runner exists (no vitest/jest/test script) — do NOT add one. Verification per task: `pnpm typecheck` + `pnpm lint` pass, targeted `grep`, and a `verdict` browser check in light + dark (dev server at `http://localhost:3000`; if `/admin`/workspace 307-redirects to login, run `pnpm reset-admin` once and sign in). Toggle dark mode via the header theme toggle.
+- Verification per task: `pnpm typecheck` + `pnpm lint` + `pnpm test` (must stay 6/6 green — do NOT add or modify tests; this change has no unit-testable surface), a targeted `grep`, and a `verdict` browser check in light + dark (dev server at `http://localhost:3000`; if `/admin`/workspace 307-redirects to login, run `pnpm reset-admin` once and sign in). Toggle dark mode via the header theme toggle.
 - Branch `chore/remove-recent-tab` already exists (spec committed at `7e61abd`).
 
 ---
@@ -115,10 +115,10 @@ To:
  * unlike the workspace hub pages (which self-pad via `cs-hubpad`), the
 ```
 
-- [ ] **Step 5: Typecheck + lint + dead-reference grep**
+- [ ] **Step 5: Typecheck + lint + test + dead-reference grep**
 
-Run: `pnpm typecheck && pnpm lint`
-Expected: both pass (only the 5 pre-existing `scripts/` `no-await-in-loop` warnings).
+Run: `pnpm typecheck && pnpm lint && pnpm test`
+Expected: typecheck/lint pass (only the 5 pre-existing `scripts/` `no-await-in-loop` warnings); `pnpm test` → 6/6 passing (unchanged — nothing in this task is covered by the suite).
 
 Run: `grep -rn "/recent" src/ --include="*.tsx" --include="*.ts"`
 Expected: NO nav link, route, or title mapping to `/recent`. Remaining matches are backend/sort context only (e.g. `solutions-hub/api/hub.ts` `{ sort: "recent" }` and `recents` invalidations, `solutions-hub/server/router.ts` "favorite/recent cache" comment). Confirm none is a link/route to the deleted page.
@@ -245,10 +245,10 @@ To:
       />
 ```
 
-- [ ] **Step 4: Typecheck + lint**
+- [ ] **Step 4: Typecheck + lint + test**
 
-Run: `pnpm typecheck && pnpm lint`
-Expected: both pass, with NO "unused import `useRecents`" or "unused prop" errors, and no caller still passing `variant` (the favorites page was updated in Step 3; `/recent` was deleted in Task 1).
+Run: `pnpm typecheck && pnpm lint && pnpm test`
+Expected: typecheck/lint pass with NO "unused import `useRecents`" or "unused prop" errors, and no caller still passing `variant` (the favorites page was updated in Step 3; `/recent` was deleted in Task 1); `pnpm test` → 6/6 passing (the `reorder.test.ts` favorite-reorder suite is unaffected — it does not import `SolutionListPage`).
 
 - [ ] **Step 5: Browser verification (light + dark)**
 
