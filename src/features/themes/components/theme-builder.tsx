@@ -182,6 +182,7 @@ function ThemeBuilderEditor({ theme, allThemes }: { theme: ThemeRow; allThemes: 
   });
 
   const config = useWatch({ control, name: "config" });
+  const name = useWatch({ control, name: "name" });
 
   const onSubmit = handleSubmit(async (data) => {
     try {
@@ -379,7 +380,7 @@ function ThemeBuilderEditor({ theme, allThemes }: { theme: ThemeRow; allThemes: 
         </div>
 
         <div className="min-w-0 flex-1 basis-[360px]">
-          <ThemePreview config={config} />
+          <ThemePreview config={config} name={name} />
         </div>
       </div>
     </form>

@@ -8,7 +8,10 @@ import { fontStack, type ThemeConfig } from "../schemas/theme";
 
 type Device = "desktop" | "mobile";
 
-const DEVICE_WIDTH: Record<Device, number> = { desktop: 380, mobile: 300 };
+const DEVICE_WIDTH: Record<Device, number> = { desktop: 470, mobile: 320 };
+// PREVIEW_HEIGHT is fixed (not auto-sized) because the iframe is sandboxed
+// with `sandbox=""` — no scripts allowed — so there's no way to measure and
+// grow to content height. This is the app's deliberate CSS-scoping approach.
 const PREVIEW_HEIGHT = 560;
 
 /**
@@ -20,9 +23,9 @@ const PREVIEW_HEIGHT = 560;
  * it shrinks to fit a narrow container instead of overflowing it — pair with
  * `min-w-0` on the flex/grid cell that hosts this component.
  */
-export function ThemePreview({ config }: { config: ThemeConfig }) {
+export function ThemePreview({ config, name }: { config: ThemeConfig; name?: string }) {
   const [device, setDevice] = useState<Device>("desktop");
-  const srcDoc = useMemo(() => buildPreviewHtml(config), [config]);
+  const srcDoc = useMemo(() => buildPreviewHtml(config, name), [config, name]);
 
   return (
     <div className="flex w-full flex-col gap-3">
@@ -64,7 +67,7 @@ function escapeHtml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function buildPreviewHtml(config: ThemeConfig): string {
+function buildPreviewHtml(config: ThemeConfig, name?: string): string {
   const inputRadius = Math.min(config.radius, 18);
   // Custom CSS is user-authored — neutralize a stray `</style>` so it can't
   // break out of the style block; `sandbox=""` already blocks any script
@@ -79,9 +82,13 @@ function buildPreviewHtml(config: ThemeConfig): string {
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; font-family: ${fontStack(config.font)}; background: #f2f4f7; }
   .chat { display: flex; flex-direction: column; height: 100%; }
-  .header { background: ${config.headerColor}; color: #fff; padding: 14px 16px; font-weight: 700; font-size: 14px; }
+  .header { background: ${config.headerColor}; color: #fff; padding: 13px 15px; display: flex; align-items: center; gap: 10px; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+  .hmeta { min-width: 0; }
+  .hname { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hsub { font-size: 12px; opacity: 0.85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
-  .bubble { max-width: 78%; padding: 10px 14px; font-size: 14px; line-height: 1.4; border-radius: ${config.radius}px; }
+  .bubble { max-width: 82%; padding: 10px 14px; font-size: 14px; line-height: 1.4; border-radius: ${config.radius}px; }
   .bubble.assistant { align-self: flex-start; background: #fff; border: 1px solid #e2e5ea; color: #14161b; }
   .bubble.user { align-self: flex-end; background: ${config.bubbleColor}; color: #fff; }
   .composer { display: flex; gap: 8px; padding: 12px; border-top: 1px solid #e2e5ea; background: #fff; }
@@ -92,7 +99,13 @@ function buildPreviewHtml(config: ThemeConfig): string {
 </head>
 <body>
   <div class="chat">
-    <div class="header">Assistant</div>
+    <div class="header">
+      <div class="avatar">A</div>
+      <div class="hmeta">
+        <div class="hname">Sample Assistant</div>
+        <div class="hsub">${escapeHtml(name ? `Preview · ${name}` : "Preview")}</div>
+      </div>
+    </div>
     <div class="messages">
       <div class="bubble assistant">Hi! How can I help you today?</div>
       <div class="bubble user">I have a question about my order.</div>
