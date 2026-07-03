@@ -179,7 +179,7 @@ function buildColumns(openEdit: (person: Person) => void) {
         <Button
           variant="link"
           size="sm"
-          className="text-xs font-semibold text-[var(--brandink)]"
+          className="text-small font-semibold text-[var(--brandink)]"
           onClick={() => openEdit(info.row.original)}
         >
           Manage
