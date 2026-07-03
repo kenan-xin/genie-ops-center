@@ -1,6 +1,6 @@
 // Centered auth-card shell (prototype "AUTH" block, lines 112-118, 185) — a
-// G-tile + GENIE wordmark sit above every card, a SOC 2 caption below. The
-// card itself is sized by the Ledger --auth-w/--auth-pad tokens.
+// G-tile + GENIE wordmark sit above every card. The card itself is sized by
+// the Ledger --auth-w/--auth-pad tokens.
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div
@@ -48,16 +48,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         >
           {children}
         </div>
-        <footer
-          className="mt-6"
-          style={{
-            font: "600 var(--m-sm) var(--font-mono)",
-            letterSpacing: "0.12em",
-            color: "var(--ink3)",
-          }}
-        >
-          SOC 2 TYPE II
-        </footer>
       </div>
     </div>
   );
