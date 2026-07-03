@@ -15,6 +15,7 @@ import { SegmentedControl } from "@/components/ui/segmented";
 import {
   SlideOver,
   SlideOverBody,
+  SlideOverClose,
   SlideOverContent,
   SlideOverFooter,
   SlideOverHeader,
@@ -213,9 +214,15 @@ export function EditPersonSlideOver({
           else handleClose();
         }}
       >
-        <SlideOverContent>
-          <SlideOverHeader>
+        <SlideOverContent className="max-w-[440px]">
+          <SlideOverHeader className="flex-row items-center justify-between">
             <SlideOverTitle>Edit person</SlideOverTitle>
+            <SlideOverClose
+              aria-label="Close"
+              className="cursor-pointer text-title text-[var(--ink3)] outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              ✕
+            </SlideOverClose>
           </SlideOverHeader>
 
           <SlideOverBody className="flex flex-col gap-6">
