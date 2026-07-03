@@ -64,4 +64,7 @@ flowchart TD
 
 **Rework backlog (15–23):** [design-conformance + Phase-3 review rework](./rework-backlog/index.md) — admin shell, kit fixes, correctness, and per-screen drift, sequenced into three waves.
 
-**Deferred (not ticketed):** Native solution runtime, 2FA/MFA, chat transcript persistence, durable feedback, SSO-to-embedded, attachments.
+**Phase 5 — Native solutions**
+24. [Native solutions foundation](./24-native-solutions-foundation/index.md) — in-app Next.js routes per solution, code-owned registry + sync script, un-hide from catalogue, hub Native filter chip. Resolves ticket 11's Native gap.
+
+**Deferred (not ticketed):** 2FA/MFA, chat transcript persistence, durable feedback, SSO-to-embedded, attachments. *(Native solution runtime was deferred; ticket 24 delivers it.)*

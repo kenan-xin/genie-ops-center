@@ -1,7 +1,7 @@
 ---
 kind: story
 title: "Rework backlog — design conformance + Phase-3 review"
-status: 0
+status: 2
 ---
 
 # Rework backlog
@@ -50,3 +50,13 @@ flowchart TD
 - **Wave 3:** 20, 21, 22 (need shell + kit).
 
 All are rework of shipped code except 15 (admin shell = new build). Every ticket must build against the prototype (`docs/design-package/Genie Control Station.dc.html`) per AGENTS.md.
+
+## Audit (2026-07-02)
+
+Tickets **15–22:** fully shipped (Waves 1–3 merged to `main` and reviewed).
+
+Ticket **23 (Phase-3 fixes):** shipped — `status: 2`.
+
+- **DONE:** hamburger CSS now class/media-query owned (`workspace-header.tsx:44-63`); native exclusion single-sourced in `customerVisible` (`queries.ts:53-58`), intentionally NOT duplicated in `canSee` (`solution-access.ts:69-86`) so direct native visits still reach NotOpenable; favorite toggle invalidates lists + `router.refresh()` for the server-rendered PINNED rail (`hub.ts:36-48`).
+- **OPEN → RESOLVED (2026-07-02):** Down-status "View status page ↗" external link added (`status-notice.tsx`, brand CTA to `https://status.genie.ai`, down-branch only); recent-rail now shows last-opened timestamp via shared `relativeTime` (`solutions-hub.tsx` RecentRailRow). Seeded down/draft demo variants were a false positive — `scripts/seed-demo-solutions.ts` already seeds ready/maintenance/down/draft. The viewer-toolbar-in-header item stays a deliberate divergence.
+- **Ticket 23 → status 2 (complete).**

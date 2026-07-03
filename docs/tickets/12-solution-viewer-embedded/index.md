@@ -1,7 +1,7 @@
 ---
 kind: ticket
 title: "12 · Viewer shell + status + embedded"
-status: 0
+status: 2
 ---
 
 # 12 · Viewer shell + status + embedded

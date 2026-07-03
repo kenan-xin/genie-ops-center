@@ -1,7 +1,7 @@
 ---
 kind: ticket
 title: "13 · Chat streaming proxy"
-status: 0
+status: 2
 ---
 
 # 13 · Chat streaming proxy

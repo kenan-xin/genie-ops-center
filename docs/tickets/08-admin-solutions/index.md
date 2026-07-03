@@ -1,7 +1,7 @@
 ---
 kind: ticket
 title: "08 · Admin: Solutions"
-status: 0
+status: 2
 ---
 
 # 08 · Admin: Solutions

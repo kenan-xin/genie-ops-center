@@ -5,7 +5,7 @@ title: "Tech Plan — Platform Foundation"
 
 # Tech Plan — Platform Foundation
 
-Architecture for the Genie Workspace foundation. Decisions here are settled; downstream implementation should not need to re-invent the governing mechanisms. Sub-artifacts: [Data Model](./data-model/index.md) · [Chat](./chat/index.md) · [Account & Sessions](./account-sessions/index.md).
+Architecture for the Genie Workspace foundation. Decisions here are settled; downstream implementation should not need to re-invent the governing mechanisms. Sub-artifacts: [Data Model](./data-model/index.md) · [Chat](./chat/index.md) · [Account & Sessions](./account-sessions/index.md) · [Platform Identity](./platform-identity/index.md) · [Native Solutions](./native-solutions/index.md).
 
 **Locked stack:** Next.js 16 (app router) · shadcn-on-baseUI · **ai-sdk-ui (`useChat`) + AI Elements (ported to Base UI)** for chat · Postgres + Drizzle + drizzle-kit · tRPC + `@trpc/tanstack-react-query` · zod · **better-auth** (identity/sessions). Single configurable Docker image, **one deployment per customer**.
 

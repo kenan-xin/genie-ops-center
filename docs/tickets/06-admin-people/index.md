@@ -1,7 +1,7 @@
 ---
 kind: ticket
 title: "06 · Admin: People"
-status: 0
+status: 2
 ---
 
 # 06 · Admin: People

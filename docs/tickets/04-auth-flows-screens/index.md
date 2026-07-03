@@ -1,7 +1,7 @@
 ---
 kind: ticket
 title: "04 · Auth flows & screens"
-status: 0
+status: 2
 ---
 
 # 04 · Auth flows & screens

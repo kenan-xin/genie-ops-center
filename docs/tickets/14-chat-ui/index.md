@@ -1,7 +1,7 @@
 ---
 kind: ticket
 title: "14 · Chat UI (AI Elements → Base UI)"
-status: 0
+status: 2
 ---
 
 # 14 · Chat UI (AI Elements → Base UI)

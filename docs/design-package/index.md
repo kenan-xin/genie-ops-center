@@ -32,7 +32,7 @@ Support files that ship with the package but don't define product behavior — b
 | `uploads/unslop/` + `unslop-ui.skill`        | The **"unslop-ui" skill** the designer used to strip AI-generated visual tells (`SKILL.md`, `references/{choosing-a-look,tells}.md`, `scripts/devibe_scan.py`). Design-process tooling, not product requirements. |
 | `uploads/draw-*.png`, `uploads/pasted-*.png` | Designer scratch images pasted during the design session.                                                                                                                                                         |
 
-> **Sync note:** mirrored to the updated package (`Genie Control Station Design.zip`, 2026-06-30 17:29). The only content change vs. the prior package is that **5 exploration docs were dropped** (Access Redesign, Build Roadmap, Chrome Options, Look and Feel v5, Type Scale Re-tune) — non-binding scratch, recoverable from the prior zip if ever needed. All authoritative files (prototype, requirements spec, style guide, design-system tokens, `CLAUDE.md`) are **byte-identical** to before — the Epic Brief and chat-API contract are unaffected.
+> **Sync note:** verified against the updated package (`Genie Control Station Design.zip`, 2026-07-02 21:27) — all authoritative files tracked here (the three `.dc.html`, `design-system/` tokens) are **byte-identical** to the zip; no content change. (Prior sync 2026-06-30 17:29 dropped 5 non-binding exploration docs — Access Redesign, Build Roadmap, Chrome Options, Look and Feel v5, Type Scale Re-tune — recoverable from an earlier zip if ever needed.) The Epic Brief and chat-API contract are unaffected.
 
 ## Reading HTML docs
 
