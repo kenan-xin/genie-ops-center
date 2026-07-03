@@ -35,6 +35,7 @@ export function AccountActionDialog({
 
   const [step, setStep] = useState<1 | 2>(1);
   const [method, setMethod] = useState<ResetMethod>("link");
+  const [resultMethod, setResultMethod] = useState<ResetMethod | null>(null);
   const [requireChange, setRequireChange] = useState(true);
   const [tempPassword, setTempPasswordResult] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -46,20 +47,28 @@ export function AccountActionDialog({
   function resetState() {
     setStep(1);
     setMethod("link");
+    setResultMethod(null);
     setRequireChange(true);
     setTempPasswordResult(null);
     setCopied(false);
   }
 
   function handleOpenChange(next: boolean) {
+    // Never let a close (✕ / Escape / backdrop / Cancel) interrupt an
+    // in-flight mutation — resetState() below would otherwise race the
+    // mutation's resolution and strand step 2 on a stale method.
+    if (!next && pending) return;
     if (!next) resetState();
     onOpenChange(next);
   }
 
   async function handleContinue() {
     if (!person) return;
+    // Pin the invoked branch to this click so it's immune to the user
+    // flipping `method` while the mutation is in flight.
+    const chosen = method;
     try {
-      if (method === "link") {
+      if (chosen === "link") {
         await sendResetLink.mutateAsync({ id: person.id });
       } else {
         const result = await setTempPassword.mutateAsync({ id: person.id, requireChange });
@@ -76,6 +85,7 @@ export function AccountActionDialog({
     // (best-effort) list refresh works. Notably, resetting the signed-in
     // admin's own password invalidates their session, which makes the
     // refetch below 403; that must not strand step 2's real result.
+    setResultMethod(chosen);
     setStep(2);
     void queryClient.invalidateQueries({ queryKey: trpc.users.list.queryKey() }).catch(() => {});
   }
@@ -123,6 +133,7 @@ export function AccountActionDialog({
                   name="reset-method"
                   selected={method === "link"}
                   onSelect={() => setMethod("link")}
+                  disabled={pending}
                   label="Email a reset link"
                   tag="RECOMMENDED"
                   description="A secure link is sent to their email; they set their own password."
@@ -131,6 +142,7 @@ export function AccountActionDialog({
                   name="reset-method"
                   selected={method === "temp"}
                   onSelect={() => setMethod("temp")}
+                  disabled={pending}
                   label="Set a temporary password"
                   description="Generate a one-time password to share over a secure channel."
                 />
@@ -141,7 +153,11 @@ export function AccountActionDialog({
                   <span className="text-small text-foreground">
                     Require password change at next sign-in
                   </span>
-                  <Switch checked={requireChange} onCheckedChange={setRequireChange} />
+                  <Switch
+                    checked={requireChange}
+                    onCheckedChange={setRequireChange}
+                    disabled={pending}
+                  />
                 </div>
               ) : null}
             </>
@@ -153,7 +169,7 @@ export function AccountActionDialog({
               >
                 ✓
               </span>
-              {method === "link" ? (
+              {resultMethod === "link" ? (
                 <>
                   <div className="mt-2.5 font-heading text-title font-extrabold text-foreground">
                     Reset link sent
@@ -220,6 +236,7 @@ function RadioCard({
   name,
   selected,
   onSelect,
+  disabled,
   label,
   tag,
   description,
@@ -227,6 +244,7 @@ function RadioCard({
   name: string;
   selected: boolean;
   onSelect: () => void;
+  disabled?: boolean;
   label: string;
   tag?: string;
   description: string;
@@ -234,13 +252,21 @@ function RadioCard({
   return (
     <label
       className={cn(
-        "flex cursor-pointer items-start gap-2.5 border p-3 text-left transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring",
+        "flex items-start gap-2.5 border p-3 text-left transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring",
+        disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer",
         selected
           ? "border-[var(--brand)] bg-[var(--brandtint)]"
           : "border-[var(--line)] bg-transparent hover:bg-[var(--panel)]",
       )}
     >
-      <input type="radio" name={name} checked={selected} onChange={onSelect} className="sr-only" />
+      <input
+        type="radio"
+        name={name}
+        checked={selected}
+        onChange={onSelect}
+        disabled={disabled}
+        className="sr-only"
+      />
       <span
         aria-hidden
         className={cn(
