@@ -22,7 +22,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
  * the browser re-fetches without mutating history; the key also forces React to
  * remount the element, clearing any half-loaded state.
  */
-export function EmbeddedView({ iframeUrl }: { iframeUrl: string }) {
+export function EmbeddedView({
+  iframeUrl,
+  allowFullscreen,
+}: {
+  iframeUrl: string;
+  allowFullscreen?: boolean;
+}) {
   const [state, setState] = useState<"loading" | "loaded" | "error">("loading");
   const [reloadNonce, setReloadNonce] = useState(0);
   const loadTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -264,6 +270,7 @@ export function EmbeddedView({ iframeUrl }: { iframeUrl: string }) {
               // be able to window.open() into an unsandboxed top-level tab. No
               // allow-same-origin either (no token/SSO handoff). Scripts+forms only.
               sandbox="allow-scripts allow-forms"
+              allow={allowFullscreen ? "fullscreen" : undefined}
               referrerPolicy="no-referrer"
               style={{
                 position: "absolute",

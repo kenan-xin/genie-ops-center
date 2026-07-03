@@ -58,7 +58,7 @@ export default async function SolutionViewerPage({
         {surface.kind === "status-notice" ? (
           <StatusNotice status={surface.status} name={s.name} />
         ) : surface.kind === "embedded" ? (
-          <EmbeddedView iframeUrl={surface.iframeUrl} />
+          <EmbeddedView iframeUrl={surface.iframeUrl} allowFullscreen={surface.allowFullscreen} />
         ) : surface.kind === "chat-slot" ? (
           <ChatSlot
             accentColor={s.accentColor}

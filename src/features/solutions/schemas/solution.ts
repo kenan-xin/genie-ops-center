@@ -64,6 +64,10 @@ export const embeddedConfigSchema = z.object({
     // (ALLOWED_IFRAME_ORIGINS) is enforced server-side in the solutions
     // router; safeHttpsUrl is the client-safe baseline.
     .refine((v) => v === "" || safeHttpsUrl(v), "Must be a valid https URL"),
+  // ASol-07 (honest-hybrid, DEC-C3-B): wired end-to-end to the iframe's
+  // `allow="fullscreen"` attribute in the viewer. Optional so the existing
+  // draft seed `{ iframeUrl: "" }` still parses.
+  allowFullscreen: z.boolean().optional(),
 });
 export type EmbeddedConfig = z.infer<typeof embeddedConfigSchema>;
 

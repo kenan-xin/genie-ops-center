@@ -118,7 +118,7 @@ function EditSolutionForm({
             welcomeMessage: "",
             feedbackEnabled: true,
           }
-        : { iframeUrl: "" },
+        : { iframeUrl: "", allowFullscreen: false },
       { shouldDirty: true, shouldValidate: true },
     );
     if (next !== "chat") setValue("themeId", null, { shouldDirty: true });
@@ -221,7 +221,7 @@ function EditSolutionForm({
               onStartersChange={onStartersChange}
             />
           ) : (
-            <EmbeddedConfigFields register={register} errors={errors} />
+            <EmbeddedConfigFields register={register} control={control} errors={errors} />
           )}
 
           {type === "chat" ? (
@@ -369,9 +369,11 @@ function ChatConfigFields({
 
 function EmbeddedConfigFields({
   register,
+  control,
   errors,
 }: {
   register: FormRegister;
+  control: FormControl;
   errors: FormErrors;
 }) {
   return (
@@ -379,7 +381,7 @@ function EmbeddedConfigFields({
       <Label>Embedded configuration</Label>
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="embed-iframe">iframe URL</Label>
+        <Label htmlFor="embed-iframe">App URL</Label>
         <Input
           id="embed-iframe"
           placeholder="https://example.com/app"
@@ -391,6 +393,23 @@ function EmbeddedConfigFields({
         <p className="text-mono-xs text-[var(--ink3)]">
           Must be HTTPS. Allowed origins are controlled by ALLOWED_IFRAME_ORIGINS.
         </p>
+      </div>
+
+      <div className="flex items-center justify-between gap-4">
+        <Label htmlFor="embed-fullscreen">Allow fullscreen</Label>
+        <Controller
+          control={control}
+          name="config.allowFullscreen"
+          render={({ field }) => (
+            <Switch
+              id="embed-fullscreen"
+              name={field.name}
+              checked={Boolean(field.value)}
+              onCheckedChange={field.onChange}
+              onBlur={field.onBlur}
+            />
+          )}
+        />
       </div>
     </section>
   );
@@ -412,7 +431,10 @@ function toFormValues(s: Solution): EditSolutionValues {
             starterPrompts: (s.config as { starterPrompts?: string[] }).starterPrompts,
             feedbackEnabled: (s.config as { feedbackEnabled?: boolean }).feedbackEnabled ?? false,
           }
-        : { iframeUrl: (s.config as { iframeUrl?: string }).iframeUrl ?? "" },
+        : {
+            iframeUrl: (s.config as { iframeUrl?: string }).iframeUrl ?? "",
+            allowFullscreen: (s.config as { allowFullscreen?: boolean }).allowFullscreen ?? false,
+          },
     themeId: s.themeId,
   };
 }

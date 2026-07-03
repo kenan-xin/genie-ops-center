@@ -34,7 +34,12 @@ import { isAllowedEndpoint } from "@/lib/url-guard";
 
 export type ViewerSurface =
   | { kind: "status-notice"; status: "maintenance" | "down"; solution: ViewerSolutionMeta }
-  | { kind: "embedded"; solution: ViewerSolutionMeta; iframeUrl: string }
+  | {
+      kind: "embedded";
+      solution: ViewerSolutionMeta;
+      iframeUrl: string;
+      allowFullscreen?: boolean;
+    }
   | {
       kind: "chat-slot";
       solution: ViewerSolutionMeta;
@@ -125,7 +130,12 @@ export async function resolveViewerSurface(user: AuthUser, slug: string): Promis
     if (!isAllowedEndpoint(cfg.iframeUrl, allowedIframeOrigins())) {
       return { kind: "not-openable", solution: meta };
     }
-    return { kind: "embedded", solution: meta, iframeUrl: cfg.iframeUrl };
+    return {
+      kind: "embedded",
+      solution: meta,
+      iframeUrl: cfg.iframeUrl,
+      allowFullscreen: cfg.allowFullscreen,
+    };
   }
 
   // chat — only the client-safe display fields ride along; apiEndpoint/botUuid
