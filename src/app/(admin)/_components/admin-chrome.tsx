@@ -26,7 +26,7 @@ import { useAdminChromeStore } from "../_lib/admin-chrome-store";
  * navigation never strands it open.
  *
  * `<main>` keeps the padded/max-width wrapper the old top-bar shell had:
- * unlike the workspace hub/recent pages (which self-pad via `cs-hubpad`), the
+ * unlike the workspace hub pages (which self-pad via `cs-hubpad`), the
  * admin feature pages (people/groups/solutions/themes directories) render
  * unpadded and rely on the shell for it — dropping this would leave them
  * flush against the chrome edges.

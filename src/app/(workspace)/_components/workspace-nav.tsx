@@ -15,7 +15,6 @@ import type { CSSProperties } from "react";
  */
 const ITEMS = [
   { href: "/", label: "Solutions", exact: true },
-  { href: "/recent", label: "Recent", exact: false },
   { href: "/favorites", label: "Favorites", exact: false },
   { href: "/account", label: "Account", exact: false },
 ] as const;

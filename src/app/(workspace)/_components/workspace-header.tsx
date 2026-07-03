@@ -14,7 +14,6 @@ import { useWorkspaceChromeStore } from "../_lib/chrome-store";
  */
 function titleFor(pathname: string): string {
   if (pathname === "/") return "Solutions";
-  if (pathname.startsWith("/recent")) return "Recent";
   if (pathname.startsWith("/favorites")) return "Favorites";
   if (pathname.startsWith("/account")) return "Account";
   if (pathname.startsWith("/s/")) return "Solution";

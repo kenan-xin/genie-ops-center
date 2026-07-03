@@ -19,7 +19,7 @@ import { useWorkspaceChromeStore } from "../_lib/chrome-store";
  *
  * Layout (prototype "APP" block, lines 192–250):
  *  - 212px sidebar ≥920px; off-canvas 250px/max-84vw drawer + backdrop <920px.
- *  - Sidebar: G-tile + GENIE wordmark, primary nav (Solutions/Recent/Favorites/
+ *  - Sidebar: G-tile + GENIE wordmark, primary nav (Solutions/Favorites/
  *    Account), PINNED favorites rail, bottom user footer.
  *  - 54px route-aware header with the hamburger inside it (mobile only).
  *
