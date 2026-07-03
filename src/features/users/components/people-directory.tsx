@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-table";
 import { useCallback, useMemo, useState } from "react";
 
+import { AdminSearchInput } from "@/components/ui/admin-search-input";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -35,7 +36,6 @@ import {
   type PersonSort,
   type PersonStatus,
 } from "../schemas/person";
-import { AdminSearchInput } from "./admin-search-input";
 import { EditPersonSlideOver } from "./edit-person-slide-over";
 import { InvitePersonDialog } from "./invite-person-dialog";
 

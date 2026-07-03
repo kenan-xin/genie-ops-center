@@ -8,8 +8,7 @@ type AdminSearchInputProps = {
 /**
  * 32px bordered search composite (AP-02) — hairline border, 11×11
  * circle-outline glyph, borderless inner input. Prototype `.dc.html:652`.
- * Consumed by the People directory (C1) global filter; reused by
- * Groups/Access (C2/C3) search inputs.
+ * Consumed by the People/Groups/Solutions admin toolbars.
  */
 export function AdminSearchInput({
   value,

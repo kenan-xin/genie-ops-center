@@ -1,10 +1,17 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 
+import { AdminSearchInput } from "@/components/ui/admin-search-input";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -31,10 +38,62 @@ import {
 import { useToast } from "@/components/ui/toast";
 
 import { useCreateGroup, useGroupsQuery } from "../api/groups";
-import { createGroupSchema, type CreateGroupValues } from "../schemas/group";
+import { createGroupSchema, type CreateGroupValues, type GroupSummary } from "../schemas/group";
 import { GroupInspector } from "./group-inspector";
 
 const SKELETON_ROWS = [0, 1, 2, 3, 4];
+
+// Prototype row grid `2.6fr .9fr 40px` (.dc.html:734): a fixed 40px chevron
+// column; the two flexible columns split the remainder 2.6 : 0.9 (= 26 : 9 of
+// 35). `table-fixed` honors calc() <col> widths, so the chevron stays 40px at
+// any table width while GROUP/MEMBERS keep the ratio.
+const COLUMN_WIDTHS: Record<string, string> = {
+  group: "calc((100% - 40px) * 26 / 35)",
+  members: "calc((100% - 40px) * 9 / 35)",
+  chevron: "40px",
+};
+
+const columnHelper = createColumnHelper<GroupSummary>();
+
+// Module-level column factory (not inline in the component) so oxlint's
+// no-unstable-nested-components doesn't flag the `cell` render fns.
+function buildColumns() {
+  return [
+    columnHelper.accessor("name", {
+      id: "group",
+      header: "Group",
+      cell: (info) => {
+        const g = info.row.original;
+        return (
+          <span className="flex min-w-0 flex-col">
+            <span className="truncate text-body font-bold text-[var(--ink)]">{g.name}</span>
+            {g.description ? (
+              <span className="truncate text-small text-[var(--ink3)]">{g.description}</span>
+            ) : null}
+          </span>
+        );
+      },
+    }),
+    columnHelper.accessor("memberCount", {
+      id: "members",
+      header: "Members",
+      cell: (info) => (
+        <span className="font-mono text-mono-md font-semibold text-[var(--ink2)]">
+          {info.getValue()}
+        </span>
+      ),
+    }),
+    columnHelper.display({
+      id: "chevron",
+      header: "",
+      cell: () => (
+        <span aria-hidden className="block text-right text-title text-[var(--line)]">
+          ›
+        </span>
+      ),
+    }),
+  ];
+}
 
 /**
  * Groups directory (FR-ADM-G-01/02): search, create, select → inspector
@@ -52,6 +111,13 @@ export function GroupsDirectory({ initialGroupId }: { initialGroupId?: string } 
   const { data: groups, isPending, isError, error } = useGroupsQuery(search);
 
   const term = search.trim();
+
+  const columns = useMemo(() => buildColumns(), []);
+  const table = useReactTable({
+    data: groups ?? [],
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
 
   function closeInspector() {
     setOpenId(null);
@@ -79,14 +145,16 @@ export function GroupsDirectory({ initialGroupId }: { initialGroupId?: string } 
         </span>
       </div>
 
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <Input
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <AdminSearchInput
           value={search}
-          onChange={(event) => setSearch(event.target.value)}
+          onChange={setSearch}
           placeholder="Search groups…"
-          className="max-w-[320px]"
+          aria-label="Search groups"
         />
-        <Button onClick={() => setCreateOpen(true)}>New group</Button>
+        <Button variant="dark" size="sm" className="px-[14px]" onClick={() => setCreateOpen(true)}>
+          + New group
+        </Button>
       </div>
 
       {isPending ? (
@@ -101,10 +169,10 @@ export function GroupsDirectory({ initialGroupId }: { initialGroupId?: string } 
         </p>
       ) : groups.length === 0 ? (
         <EmptyState
-          title={term ? "No matches" : "No groups yet"}
+          title={term ? "No groups match your search" : "No groups yet"}
           description={
             term
-              ? "Try a different search term."
+              ? "Try a different group name."
               : "Create a group, add people, and grant it solutions to manage access."
           }
           action={
@@ -113,29 +181,35 @@ export function GroupsDirectory({ initialGroupId }: { initialGroupId?: string } 
         />
       ) : (
         <TableScroll>
-          <Table className="min-w-[480px]">
+          <Table className="min-w-[480px] table-fixed">
+            <colgroup>
+              {table.getAllLeafColumns().map((column) => (
+                <col key={column.id} style={{ width: COLUMN_WIDTHS[column.id] }} />
+              ))}
+            </colgroup>
             <TableHeader>
-              <TableRow>
-                <TableHead>Group</TableHead>
-                <TableHead>Members</TableHead>
-                <TableHead>Solutions</TableHead>
-                <TableHead />
-              </TableRow>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
             </TableHeader>
             <TableBody>
-              {groups.map((g) => (
-                <TableRow key={g.id} className="cursor-pointer" onClick={() => setOpenId(g.id)}>
-                  <TableCell>
-                    <span className="flex flex-col">
-                      <span className="font-semibold text-foreground">{g.name}</span>
-                      {g.description ? (
-                        <span className="text-mono-xs text-[var(--ink3)]">{g.description}</span>
-                      ) : null}
-                    </span>
-                  </TableCell>
-                  <TableCell className="font-mono text-[var(--ink2)]">{g.memberCount}</TableCell>
-                  <TableCell className="font-mono text-[var(--ink2)]">{g.solutionCount}</TableCell>
-                  <TableCell className="text-right text-[var(--line)]">›</TableCell>
+              {table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  className="cursor-pointer"
+                  onClick={() => setOpenId(row.original.id)}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
                 </TableRow>
               ))}
             </TableBody>
