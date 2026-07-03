@@ -1,5 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { eq, sql } from "drizzle-orm";
+import { z } from "zod";
 
 import { db } from "@/server/db";
 import { group, groupMember, session, user } from "@/server/db/schema";
@@ -71,9 +72,13 @@ export const usersRouter = createTRPCRouter({
     await userService.sendPasswordReset(row.email, row.status === "pending" ? "activate" : "reset");
   }),
 
-  setTempPassword: adminProcedure.input(personIdSchema).mutation(async ({ ctx, input }) => {
-    return userService.adminSetTempPassword(input.id, ctx.headers);
-  }),
+  setTempPassword: adminProcedure
+    .input(personIdSchema.extend({ requireChange: z.boolean().default(true) }))
+    .mutation(async ({ ctx, input }) => {
+      return userService.adminSetTempPassword(input.id, ctx.headers, {
+        requireChange: input.requireChange,
+      });
+    }),
 
   /** "Activate now" for a still-pending person (FR-ADM-P-04) — bypasses the reset-link email. */
   activate: adminProcedure.input(personIdSchema).mutation(async ({ ctx, input }) => {

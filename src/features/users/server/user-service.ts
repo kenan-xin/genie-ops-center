@@ -124,7 +124,8 @@ export async function clearAdmin(userId: string, headers: Headers): Promise<void
 
 /**
  * Set a user's password directly (admin-set) — the invite-token fallback if the
- * reset-link path ever can't activate an account. Requires an admin session.
+ * reset-link path ever can't activate an account, and the `requireChange: false`
+ * branch of {@link adminSetTempPassword}. Requires an admin session.
  */
 export async function adminSetPassword(
   userId: string,
@@ -140,28 +141,44 @@ export async function adminSetPassword(
 }
 
 /**
- * Admin-generated temporary password (FR-ADM-P-05) — the person must change it
- * on next sign-in. Unlike {@link adminSetPassword} this sets, not clears,
- * `mustChangePassword`. The fixed prefix guarantees every strength class
+ * Admin-generated temporary password (FR-ADM-P-05). By default
+ * (`requireChange: true`, the historical behavior) the person must change it
+ * on next sign-in, and the fixed prefix guarantees every strength class
  * (upper/lower/digit/symbol) regardless of the random suffix, so it always
- * clears the shared password schema. `activate: true` additionally flips a
- * still-pending person straight to `active` (FR-ADM-P-04's "activate" action —
- * for when the reset-link email isn't a viable channel), since a raw admin
- * password write doesn't go through the reset flow that normally does this.
- * The plaintext is returned once for the admin to hand off out of band; it is
- * never logged or stored.
+ * clears the shared password schema. `requireChange: false` still generates
+ * and sets a temp password but clears `mustChangePassword` instead, by
+ * delegating to {@link adminSetPassword} — for an admin who wants to hand the
+ * person a working password without forcing an extra change step. `activate:
+ * true` additionally flips a still-pending person straight to `active`
+ * (FR-ADM-P-04's "activate" action — for when the reset-link email isn't a
+ * viable channel), since a raw admin password write doesn't go through the
+ * reset flow that normally does this; the `activate` procedure never passes
+ * `requireChange`, so it keeps defaulting to `true` (a newly activated person
+ * must still set their own password). The plaintext is returned once for the
+ * admin to hand off out of band; it is never logged or stored.
  */
 export async function adminSetTempPassword(
   userId: string,
   headers: Headers,
-  opts?: { activate?: boolean },
+  opts?: { activate?: boolean; requireChange?: boolean },
 ): Promise<{ tempPassword: string }> {
+  const requireChange = opts?.requireChange ?? true;
   const tempPassword = `Tmp1!${crypto.randomUUID().replace(/-/g, "")}`;
-  await auth.api.setUserPassword({ body: { userId, newPassword: tempPassword }, headers });
-  await db
-    .update(user)
-    .set({ mustChangePassword: true, ...(opts?.activate ? { status: "active" as const } : {}) })
-    .where(eq(user.id, userId));
+  if (requireChange) {
+    await auth.api.setUserPassword({ body: { userId, newPassword: tempPassword }, headers });
+    await db
+      .update(user)
+      .set({ mustChangePassword: true, ...(opts?.activate ? { status: "active" as const } : {}) })
+      .where(eq(user.id, userId));
+  } else {
+    await adminSetPassword(userId, tempPassword, headers);
+    if (opts?.activate) {
+      await db
+        .update(user)
+        .set({ status: "active" as const })
+        .where(eq(user.id, userId));
+    }
+  }
   return { tempPassword };
 }
 
