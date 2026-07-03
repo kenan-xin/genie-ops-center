@@ -30,7 +30,7 @@ function TabsTab({ className, ...props }: TabsPrimitive.Tab.Props) {
     <TabsPrimitive.Tab
       data-slot="tabs-tab"
       className={cn(
-        "cursor-pointer px-4 py-2 text-[var(--ink2)] outline-none transition-colors duration-150 hover:bg-[var(--panel)] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-[selected]:bg-[var(--ink)] data-[selected]:text-[var(--on-ink)]",
+        "cursor-pointer px-4 py-2 text-[var(--ink2)] outline-none transition-colors duration-150 hover:bg-[var(--panel)] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset aria-selected:bg-[var(--ink)] aria-selected:text-[var(--on-ink)] aria-selected:hover:bg-[var(--ink)]",
         className,
       )}
       {...props}
