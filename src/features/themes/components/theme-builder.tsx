@@ -288,7 +288,7 @@ function ThemeBuilderEditor({ theme, allThemes }: { theme: ThemeRow; allThemes: 
                       key={preset.id}
                       type="button"
                       onClick={() => applyPreset(preset)}
-                      className="flex flex-1 min-w-[118px] flex-col items-start gap-2 border border-[var(--line)] p-3 text-left outline-none transition-colors hover:bg-[var(--panel)] focus-visible:ring-2 focus-visible:ring-ring data-[active=true]:border-[var(--brand)] data-[active=true]:ring-1 data-[active=true]:ring-[var(--brand)]"
+                      className="flex flex-1 min-w-[118px] flex-col items-start gap-2 border border-[var(--line)] bg-[var(--surface)] p-3 text-left outline-none transition-colors hover:bg-[var(--panel)] focus-visible:ring-2 focus-visible:ring-ring data-[active=true]:border-[var(--brand)] data-[active=true]:bg-[var(--brandtint)] data-[active=true]:hover:bg-[var(--brandtint)]"
                       data-active={config.preset === preset.id}
                     >
                       <span
