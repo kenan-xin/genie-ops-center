@@ -376,6 +376,7 @@ export function EditPersonSlideOver({
                 <Button
                   variant="destructive"
                   size="sm"
+                  className="border-[var(--error)]"
                   disabled={busy || isSelf}
                   title={isSelf ? "You can't remove your own account." : undefined}
                   onClick={() => void handleRemove()}
