@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import { Chip } from "@/components/ui/chip";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Select } from "@/components/ui/select";
 import { SegmentedControl } from "@/components/ui/segmented";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatusBadge } from "@/components/ui/status-badge";
 
 import { useOverviewByPerson, useOverviewBySolution } from "../api/groups";
 
@@ -38,12 +38,11 @@ export function AccessOverview() {
   );
 }
 
-const STATUS_TONE = {
-  ready: "success",
-  maintenance: "warn",
-  down: "error",
-  draft: "neutral",
-} as const;
+const SOLUTION_TYPE_LABEL: Record<"chat" | "native" | "embedded", string> = {
+  chat: "CHAT",
+  native: "NATIVE",
+  embedded: "EMBED",
+};
 
 function ExplorerColumn({
   heading,
@@ -118,13 +117,9 @@ function BySolution() {
           </span>{" "}
           via <span className="text-[var(--brandink)]">{selected.groups.length} groups</span>
         </p>
-        {selected.solution.archived ? (
-          <StatusBadge tone="neutral">Archived</StatusBadge>
-        ) : (
-          <StatusBadge tone={STATUS_TONE[selected.solution.status]} dot>
-            {selected.solution.status}
-          </StatusBadge>
-        )}
+        <span className="bg-[var(--brandtint)] px-[10px] py-[5px] font-mono text-mono-sm font-semibold uppercase text-[var(--brandink)]">
+          {SOLUTION_TYPE_LABEL[selected.solution.type]}
+        </span>
       </div>
 
       {selected.groups.length === 0 ? (
@@ -161,11 +156,11 @@ function BySolution() {
             {selected.people.length === 0 ? (
               <p className="px-4 py-3 text-small text-[var(--ink3)]">No one reaches it yet.</p>
             ) : (
-              <div className="flex flex-wrap gap-1.5 p-4">
+              <div className="flex flex-wrap gap-1.5 px-4 py-3.5">
                 {selected.people.map((p) => (
-                  <StatusBadge key={p.id} tone="neutral">
+                  <Chip key={p.id} truncate className="max-w-[180px] px-[10px] py-1 font-semibold">
                     {p.name}
-                  </StatusBadge>
+                  </Chip>
                 ))}
               </div>
             )}

@@ -197,7 +197,7 @@ export async function setSolutions(groupId: string, desiredSolutionIds: string[]
 // predicates against (the single source of truth), minus archived solutions.
 
 export type SolutionReach = {
-  solution: SolutionOption;
+  solution: SolutionOption & { type: "chat" | "native" | "embedded" };
   groups: { id: string; name: string; memberCount: number }[];
   people: { id: string; name: string; email: string }[];
 };
@@ -219,6 +219,7 @@ export async function overviewBySolution(): Promise<SolutionReach[]> {
         accentColorInvert: solution.accentColorInvert,
         status: solution.status,
         archived: solution.archived,
+        type: solution.type,
       })
       .from(solution)
       .where(eq(solution.archived, false))
@@ -265,6 +266,7 @@ export async function overviewBySolution(): Promise<SolutionReach[]> {
         accentColorInvert: s.accentColorInvert,
         status: s.status,
         archived: s.archived,
+        type: s.type,
       },
       groups: grantGroups
         .map((g) => ({ ...g, memberCount: peopleByGroup.get(g.id)?.length ?? 0 }))
