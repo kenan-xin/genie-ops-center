@@ -32,8 +32,6 @@ import {
 } from "../api/solutions";
 import {
   STATUS_LABEL,
-  statusTone,
-  TYPE_LABEL,
   type Solution,
   type SolutionSort,
   type SolutionStatus,
@@ -60,6 +58,15 @@ const STATUS_ITEMS: { value: SolutionStatus; label: string }[] = [
   { value: "maintenance", label: "Maintenance" },
   { value: "down", label: "Down" },
 ];
+
+const TYPE_LABEL_UPPER: Record<SolutionType, string> = { chat: "CHAT", embedded: "EMBED" };
+
+const STATUS_SELECT_CLASS: Record<SolutionStatus, string> = {
+  ready: "border-[var(--success)] bg-[var(--successtint)] text-[var(--success)]",
+  draft: "border-[var(--ink3)] bg-[var(--panel)] text-[var(--ink3)]",
+  maintenance: "border-[var(--warn)] bg-[var(--warntint)] text-[var(--warn)]",
+  down: "border-[var(--error)] bg-[var(--errortint)] text-[var(--error)]",
+};
 
 const SKELETON_ROWS = [0, 1, 2, 3, 4];
 
@@ -97,9 +104,6 @@ export function SolutionsDirectory() {
       <header className="flex items-center justify-between gap-4">
         <div className="flex flex-col gap-1">
           <h1 className="font-sans text-title font-extrabold tracking-[-0.02em]">Solutions</h1>
-          <p className="text-small text-[var(--ink2)]">
-            Register and configure the chat and embedded solutions available to your groups.
-          </p>
         </div>
         <Button onClick={() => setRegisterOpen(true)}>+ Add</Button>
       </header>
@@ -175,13 +179,19 @@ function SolutionsTable({
 }) {
   return (
     <TableScroll>
-      <Table className="min-w-[720px]">
+      <Table className="min-w-[880px] table-fixed">
+        <colgroup>
+          <col style={{ width: "33.333%" }} />
+          <col style={{ width: "11.111%" }} />
+          <col style={{ width: "20%" }} />
+          <col style={{ width: "35.556%" }} />
+        </colgroup>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[40%]">Solution</TableHead>
-            <TableHead className="w-[15%]">Type</TableHead>
-            <TableHead className="w-[20%]">Status</TableHead>
-            <TableHead className="w-[25%] text-right">Actions</TableHead>
+            <TableHead>Solution</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -285,10 +295,10 @@ function SolutionRow({ solution, onEdit }: { solution: Solution; onEdit: () => v
   return (
     <TableRow>
       <TableCell>
-        <button type="button" onClick={onEdit} className="flex items-center gap-3 text-left">
+        <button type="button" onClick={onEdit} className="flex items-center gap-[11px] text-left">
           <span
             aria-hidden
-            className="flex size-8 shrink-0 items-center justify-center border border-[var(--line)] font-mono text-mono-sm font-bold text-[var(--ink2)]"
+            className="flex size-[30px] shrink-0 items-center justify-center bg-[var(--panel)] text-[10px] font-heading font-extrabold text-[var(--ink)]"
           >
             {solution.monogram ?? "·"}
           </span>
@@ -312,27 +322,27 @@ function SolutionRow({ solution, onEdit }: { solution: Solution; onEdit: () => v
         </button>
       </TableCell>
       <TableCell>
-        <span className="font-mono text-mono-sm text-[var(--ink2)]">
-          {TYPE_LABEL[solution.type]}
+        <span className="font-mono text-mono-md font-semibold uppercase text-[var(--ink2)]">
+          {TYPE_LABEL_UPPER[solution.type]}
         </span>
       </TableCell>
       <TableCell>
         {solution.archived ? (
-          <span className="font-mono text-mono-sm text-[var(--ink3)]">Hidden from hub</span>
+          <span className="font-mono text-mono-md font-medium text-[var(--ink3)]">
+            Hidden from hub
+          </span>
         ) : (
-          <div className="flex items-center gap-2">
-            <StatusBadge tone={statusTone(solution.status)} dot>
-              {STATUS_LABEL[solution.status]}
-            </StatusBadge>
-            <Select
-              items={STATUS_ITEMS}
-              value={solution.status}
-              onValueChange={(v) => void handleStatusChange(v as SolutionStatus)}
-              disabled={busy}
-              className="w-[150px]"
-              aria-label={`Status for ${solution.name}`}
-            />
-          </div>
+          <Select
+            items={STATUS_ITEMS}
+            value={solution.status}
+            onValueChange={(v) => void handleStatusChange(v as SolutionStatus)}
+            disabled={busy}
+            aria-label={`Status for ${solution.name}`}
+            className={cn(
+              "h-auto w-auto gap-1.5 border px-2 py-1 font-mono text-mono-sm font-semibold tracking-[0.06em] uppercase",
+              STATUS_SELECT_CLASS[solution.status],
+            )}
+          />
         )}
       </TableCell>
       <TableCell>
