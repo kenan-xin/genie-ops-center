@@ -58,11 +58,11 @@ Severity: **P0** = missing feature / wrong surface / structurally broken. **P1**
 
 | ID | Sev | Finding | Prototype | Implementation |
 |----|-----|---------|-----------|----------------|
-| WS-01 | — | Favorites→sidebar pinning | sidebar PINNED rail (≤6), draggable, brand active | **fully implemented & wired** (`pinned-favorites.tsx`, `chrome-store.ts`, `hub.ts:36-51`) — no defect |
+| WS-01 | — | Favorites→sidebar pinning | sidebar PINNED rail (≤6), draggable, brand active | ~~**fully implemented & wired** — no defect~~ **CORRECTED 2026-07-03:** wired but had a *runtime* reactivity bug — the rail froze its favorites into `useState` on mount, so starring never updated it without a hard reload. Fixed (rail reads `useFavorites()` live) in [2026-07-03 spec](./2026-07-03-sidebar-favorites-live-and-persisted-design.md). |
 | WS-02 | P1 | Sidebar footer role label | "WORKSPACE OWNER" | "WORKSPACE MEMBER"/"ADMIN" (`user-footer.tsx:19-23`) |
 | WS-03 | P1 | Theme toggle size | 30×30 | `size-10` (40×40) (`theme-toggle.tsx:19-21`) |
 | WS-04 | P1 | Sidebar wordmark/eyebrow font | Archivo / IBM Plex Mono | Geist / Geist Mono (folds into XF-01) |
-| WS-05 | P2 | Drag-reorder persistence | local demo state in prototype too | local state only — parity, but persist in a follow-up |
+| WS-05 | P2 | Drag-reorder persistence | local demo state in prototype too | ~~local state only — persist in a follow-up~~ **RESOLVED 2026-07-03:** persisted via a `favorite.position` column + `reorderFavorites` mutation — see [2026-07-03 spec](./2026-07-03-sidebar-favorites-live-and-persisted-design.md). |
 
 ### 3.4 Solutions hub
 
