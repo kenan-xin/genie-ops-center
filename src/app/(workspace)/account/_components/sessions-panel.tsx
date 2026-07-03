@@ -23,10 +23,20 @@ const SESSIONS_KEY = ["account", "sessions"] as const;
  * admin force-sign-out (ticket 06) is a *separate* privileged server call, not
  * this path.
  *
- * The prototype's "Trusted devices & timeout" card (lines 385-395 — remembered
- * devices, session-timeout preview) has no backing data or mutation in this
- * app yet, so it's intentionally left out rather than shipped as inert UI.
+ * The prototype's "Trusted devices & timeout" card (lines 385-395) ships here
+ * as an honest hybrid rather than the earlier full omission (AC-01): remembered
+ * devices has no backing data (no "remember me" trust column, no better-auth
+ * config), so that row is informational-only with no button — a "Forget all"
+ * that no-oped would be worse than no card at all. Session timeout IS real
+ * (`IDLE_TIMEOUT_MINUTES` mirrors idle-timeout.tsx's SESSION_MS), so that row
+ * shows the true idle minutes. There's no "Preview" button because
+ * idle-timeout.tsx exposes no callable trigger — its warning state is private
+ * to the <IdleTimeout> instance mounted in workspace-chrome.tsx, with no
+ * context/store/export this panel could call into. Faking a trigger (e.g. a
+ * local look-alike dialog) would misrepresent the real 15-minute mechanism, so
+ * it's omitted rather than simulated.
  */
+const IDLE_TIMEOUT_MINUTES = 15; // keep in sync with SESSION_MS in idle-timeout.tsx
 export function SessionsPanel() {
   const { toast } = useToast();
   const confirm = useConfirm();
@@ -109,93 +119,135 @@ export function SessionsPanel() {
   }
 
   return (
-    <AccountPanel>
-      <AccountPanelHeading
-        title="Active sessions"
-        description="Devices currently signed in to your account."
-        action={
-          otherCount > 0 ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="text-[var(--error)] hover:bg-[var(--errortint)]"
-              disabled={busy}
-              onClick={() => void signOutOthers()}
-            >
-              {revokeOthers.isPending ? "Signing out…" : "Sign out others"}
-            </Button>
-          ) : null
-        }
-      />
-
-      <div className="mt-[14px] border border-[var(--line2)]">
-        {loading ? (
-          <ul className="flex flex-col">
-            {[0, 1].map((i) => (
-              <li
-                key={i}
-                className="flex flex-col gap-2 border-b border-[var(--line2)] px-[14px] py-[11px] last:border-b-0"
+    <>
+      <AccountPanel>
+        <AccountPanelHeading
+          title="Active sessions"
+          description="Devices currently signed in to your account."
+          action={
+            otherCount > 0 ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="text-[var(--error)] hover:bg-[var(--errortint)]"
+                disabled={busy}
+                onClick={() => void signOutOthers()}
               >
-                <Skeleton className="h-4 w-40" />
-                <Skeleton className="h-3 w-56" />
-              </li>
-            ))}
-          </ul>
-        ) : sessions.isError ? (
-          <p className="px-[14px] py-[11px] text-small text-[var(--error)]">
-            {(sessions.error as Error).message}
-          </p>
-        ) : (
-          <ul className="flex flex-col">
-            {rows.map((s) => {
-              const isCurrent = s.token === currentToken;
-              const label = deviceLabel(s.userAgent);
-              return (
+                {revokeOthers.isPending ? "Signing out…" : "Sign out others"}
+              </Button>
+            ) : null
+          }
+        />
+
+        <div className="mt-[14px] border border-[var(--line2)]">
+          {loading ? (
+            <ul className="flex flex-col">
+              {[0, 1].map((i) => (
                 <li
-                  key={s.token}
-                  className="flex items-center justify-between gap-3 border-b border-[var(--line2)] px-[14px] py-[11px] last:border-b-0"
+                  key={i}
+                  className="flex flex-col gap-2 border-b border-[var(--line2)] px-[14px] py-[11px] last:border-b-0"
                 >
-                  <div className="flex min-w-0 flex-col gap-0.5">
-                    <div className="flex items-center gap-2">
-                      <span className="truncate text-body font-semibold text-foreground">
-                        {label}
-                      </span>
-                      {isCurrent ? (
-                        <StatusBadge tone="success" variant="outline">
-                          This device
-                        </StatusBadge>
-                      ) : null}
-                    </div>
-                    <span className="text-mono-sm text-[var(--ink3)]">
-                      {[
-                        browserName(s.userAgent),
-                        s.ipAddress,
-                        `Last active ${relativeTime(s.updatedAt)}`,
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </span>
-                  </div>
-                  {isCurrent ? null : (
-                    <Button
-                      type="button"
-                      variant="link"
-                      size="sm"
-                      className="shrink-0 text-[var(--error)]"
-                      disabled={busy}
-                      onClick={() => void signOutDevice(s.token, label)}
-                    >
-                      Sign out
-                    </Button>
-                  )}
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-3 w-56" />
                 </li>
-              );
-            })}
-          </ul>
-        )}
+              ))}
+            </ul>
+          ) : sessions.isError ? (
+            <p className="px-[14px] py-[11px] text-small text-[var(--error)]">
+              {(sessions.error as Error).message}
+            </p>
+          ) : (
+            <ul className="flex flex-col">
+              {rows.map((s) => {
+                const isCurrent = s.token === currentToken;
+                const label = deviceLabel(s.userAgent);
+                return (
+                  <li
+                    key={s.token}
+                    className="flex items-center justify-between gap-3 border-b border-[var(--line2)] px-[14px] py-[11px] last:border-b-0"
+                  >
+                    <div className="flex min-w-0 flex-col gap-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate text-body font-semibold text-foreground">
+                          {label}
+                        </span>
+                        {isCurrent ? (
+                          <StatusBadge tone="success" variant="outline">
+                            This device
+                          </StatusBadge>
+                        ) : null}
+                      </div>
+                      <span className="text-mono-sm text-[var(--ink3)]">
+                        {[
+                          browserName(s.userAgent),
+                          s.ipAddress,
+                          `Last active ${relativeTime(s.updatedAt)}`,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </span>
+                    </div>
+                    {isCurrent ? null : (
+                      <Button
+                        type="button"
+                        variant="link"
+                        size="sm"
+                        className="shrink-0 text-[var(--error)]"
+                        disabled={busy}
+                        onClick={() => void signOutDevice(s.token, label)}
+                      >
+                        Sign out
+                      </Button>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </AccountPanel>
+
+      {/*
+        Prototype lines 385-395: a second, separate bordered card below the
+        sessions list (not nested inside AccountPanel's border) — honest
+        hybrid per AC-01. See the file doc comment above for what's real vs.
+        informational-only.
+      */}
+      <div
+        className="mt-4 border border-[var(--line)] bg-[var(--surface)]"
+        style={{ padding: "20px 22px" }}
+      >
+        <div className="font-heading text-title font-extrabold text-[var(--ink)]">
+          Trusted devices &amp; timeout
+        </div>
+
+        <div className="mt-[14px] flex items-center justify-between gap-3 border-b border-[var(--line2)] pb-[14px]">
+          <div className="min-w-0">
+            <div className="text-body text-[var(--ink)]">Remembered devices</div>
+            <div className="mt-0.5 text-mono-xs text-[var(--ink3)]">
+              Device trust isn&apos;t enabled yet — sessions end on sign-out.
+            </div>
+          </div>
+          {/* No "Forget all" button: there's nothing to forget — device trust
+              has no backend (no remember-me column, no better-auth config) —
+              so an enabled button here would no-op. */}
+        </div>
+
+        <div className="mt-[14px] flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="text-body text-[var(--ink)]">Session timeout</div>
+            <div className="mt-0.5 text-mono-xs text-[var(--ink3)]">
+              You&apos;re signed out automatically after {IDLE_TIMEOUT_MINUTES} minutes idle.
+            </div>
+          </div>
+          {/* No "Preview" button: idle-timeout.tsx exposes no callable trigger
+              for its warning modal (state is private to the <IdleTimeout>
+              instance in workspace-chrome.tsx) — faking one would misrepresent
+              the real mechanism. */}
+        </div>
       </div>
-    </AccountPanel>
+    </>
   );
 }
 
