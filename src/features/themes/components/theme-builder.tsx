@@ -146,15 +146,15 @@ function ThemeChip({
       onClick={onSelect}
       aria-pressed={active}
       className={cn(
-        "flex items-center gap-2 border px-2.5 py-1.5 font-sans text-small font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+        "flex items-center gap-[7px] border px-[11px] py-1.5 font-sans text-small font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
         active
-          ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--on-ink)]"
-          : "border-[var(--line)] bg-[var(--surface)] text-foreground hover:bg-[var(--panel)]",
+          ? "border-[var(--brand)] bg-[var(--brandtint)] text-[var(--ink)]"
+          : "border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] hover:bg-[var(--panel)]",
       )}
     >
       <span
         aria-hidden
-        className="size-2.5 shrink-0 rounded-full border border-[rgba(0,0,0,0.15)]"
+        className="size-3 shrink-0 rounded-full border border-[rgba(0,0,0,0.15)]"
         style={{ background: theme.config.headerColor }}
       />
       {theme.name}
@@ -242,21 +242,27 @@ function ThemeBuilderEditor({ theme, allThemes }: { theme: ThemeRow; allThemes: 
       <div className="flex flex-wrap items-start gap-8">
         <div className="min-w-[280px] flex-1 basis-[340px]">
           <Tabs defaultValue="presets">
-            <TabsList>
-              <TabsTab value="presets">Presets</TabsTab>
-              <TabsTab value="elements">Elements</TabsTab>
-              <TabsTab value="css">Custom CSS</TabsTab>
+            <TabsList className="flex w-full">
+              <TabsTab value="presets" className="flex-1 px-2.5 text-center">
+                Presets
+              </TabsTab>
+              <TabsTab value="elements" className="flex-1 px-2.5 text-center">
+                Elements
+              </TabsTab>
+              <TabsTab value="css" className="flex-1 px-2.5 text-center">
+                Custom CSS
+              </TabsTab>
             </TabsList>
 
             <div className="border border-[var(--line)] p-[18px]">
               <TabsPanel value="presets" className="flex flex-col gap-3">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-wrap gap-3">
                   {THEME_PRESETS.map((preset) => (
                     <button
                       key={preset.id}
                       type="button"
                       onClick={() => applyPreset(preset)}
-                      className="flex flex-col items-start gap-2 border border-[var(--line)] p-3 text-left outline-none transition-colors hover:bg-[var(--panel)] focus-visible:ring-2 focus-visible:ring-ring data-[active=true]:border-[var(--brand)] data-[active=true]:ring-1 data-[active=true]:ring-[var(--brand)]"
+                      className="flex flex-1 min-w-[118px] flex-col items-start gap-2 border border-[var(--line)] p-3 text-left outline-none transition-colors hover:bg-[var(--panel)] focus-visible:ring-2 focus-visible:ring-ring data-[active=true]:border-[var(--brand)] data-[active=true]:ring-1 data-[active=true]:ring-[var(--brand)]"
                       data-active={config.preset === preset.id}
                     >
                       <span
@@ -266,9 +272,7 @@ function ThemeBuilderEditor({ theme, allThemes }: { theme: ThemeRow; allThemes: 
                           background: `linear-gradient(90deg, ${preset.config.headerColor} 50%, ${preset.config.bubbleColor} 50%)`,
                         }}
                       />
-                      <span className="text-small font-semibold text-foreground">
-                        {preset.label}
-                      </span>
+                      <span className="text-small font-bold text-foreground">{preset.label}</span>
                       <span className="text-mono-xs text-[var(--ink3)]">{preset.description}</span>
                     </button>
                   ))}
@@ -361,7 +365,7 @@ function ThemeBuilderEditor({ theme, allThemes }: { theme: ThemeRow; allThemes: 
                   rows={12}
                   spellCheck={false}
                   placeholder=".bubble.user { ... }"
-                  className="font-mono text-mono-sm"
+                  className="border-[var(--line)] bg-[#0f1319] font-mono text-mono-sm leading-[1.7] text-[#cdd6e3] placeholder:text-[#4a5568]"
                   {...register("config.customCss")}
                 />
                 <p className="text-small text-[var(--ink2)]">
@@ -398,7 +402,7 @@ function SwatchField({
   return (
     <div className="flex flex-col gap-1.5">
       <Label>{label}</Label>
-      <div className="flex flex-wrap items-center gap-2.5">
+      <div className="flex flex-wrap items-center gap-3">
         {swatches.map((hex) => (
           <button
             key={hex}
@@ -406,13 +410,14 @@ function SwatchField({
             aria-label={hex}
             aria-pressed={value === hex}
             onClick={() => onChange(hex)}
-            className={cn(
-              "size-8 shrink-0 rounded-full border-2 outline-none transition-transform focus-visible:ring-2 focus-visible:ring-ring",
-              value === hex
-                ? "scale-110 border-[var(--brand)]"
-                : "border-transparent hover:scale-105",
-            )}
-            style={{ background: hex }}
+            className="size-[26px] shrink-0 rounded-full outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-ring"
+            style={{
+              background: hex,
+              boxShadow:
+                value === hex
+                  ? "0 0 0 2px var(--surface), 0 0 0 4px var(--ink)"
+                  : "0 0 0 2px var(--surface), 0 0 0 3px var(--line)",
+            }}
           />
         ))}
         <span className="font-mono text-mono-sm text-[var(--ink2)]">{value}</span>
