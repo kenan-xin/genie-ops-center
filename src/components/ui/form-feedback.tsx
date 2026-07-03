@@ -14,9 +14,12 @@ export function FormError({ message }: { message?: string | null }) {
   return (
     <div
       role="alert"
-      className="border border-[var(--error)] bg-[var(--errortint)] px-3 py-2 text-small text-[var(--error)]"
+      className="flex items-center gap-[7px] border border-[var(--error)] bg-[var(--errortint)] px-[10px] py-2 text-small text-[var(--error)]"
     >
-      {message}
+      <span aria-hidden className="font-heading font-extrabold leading-none">
+        !
+      </span>
+      <span>{message}</span>
     </div>
   );
 }
@@ -25,8 +28,11 @@ export function FormError({ message }: { message?: string | null }) {
 export function NoticeBanner({ message }: { message?: string | null }) {
   if (!message) return null;
   return (
-    <div className="border border-[var(--success)] bg-[var(--successtint)] px-3 py-2 text-small text-[var(--success)]">
-      {message}
+    <div className="flex items-start gap-2 border border-[var(--success)] bg-[var(--successtint)] px-[11px] py-[9px] text-small text-[var(--success)]">
+      <span aria-hidden className="font-heading font-extrabold leading-none">
+        ✓
+      </span>
+      <span>{message}</span>
     </div>
   );
 }
