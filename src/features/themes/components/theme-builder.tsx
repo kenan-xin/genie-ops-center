@@ -1,6 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { css } from "@codemirror/lang-css";
+import CodeMirror, { EditorView, Prec } from "@uiw/react-codemirror";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
@@ -15,7 +17,6 @@ import { Label } from "@/components/ui/label";
 import { SegmentedControl } from "@/components/ui/segmented";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
@@ -36,6 +37,30 @@ const editorSchema = z.object({
   config: themeConfigSchema,
 });
 type EditorValues = z.infer<typeof editorSchema>;
+
+// Dark theme for the Custom CSS editor, matching the prototype's plain dark
+// block (#0f1319 bg, IBM Plex Mono) — chrome only; token colors come from the
+// `theme="dark"` base passed to <CodeMirror>. Must be applied via
+// `Prec.highest` at the call site: @uiw/react-codemirror mounts the built-in
+// oneDark stylesheet (from `theme="dark"`) AFTER extensions passed in the
+// `extensions` prop, so on the equal-specificity `&` selector oneDark's
+// #282c34 background wins the cascade unless this is given higher precedence.
+const cssEditorTheme = EditorView.theme(
+  {
+    "&": {
+      backgroundColor: "#0f1319",
+      color: "#cdd6e3",
+      fontSize: "13px",
+      border: "1px solid var(--line)",
+    },
+    ".cm-content": { fontFamily: "'IBM Plex Mono', ui-monospace, monospace", padding: "10px 0" },
+    ".cm-gutters": { backgroundColor: "#0f1319", color: "#4a5568", border: "none" },
+    "&.cm-focused": { outline: "2px solid var(--brand)", outlineOffset: "-1px" },
+    ".cm-cursor": { borderLeftColor: "#cdd6e3" },
+    ".cm-activeLine, .cm-activeLineGutter": { backgroundColor: "transparent" },
+  },
+  { dark: true },
+);
 
 const FONT_ITEMS = FONT_OPTIONS.map((f) => ({ value: f.value, label: f.label }));
 const RADIUS_ITEMS = RADIUS_PRESETS.map((r) => ({ value: String(r.value), label: r.label }));
@@ -360,14 +385,27 @@ function ThemeBuilderEditor({ theme, allThemes }: { theme: ThemeRow; allThemes: 
               </TabsPanel>
 
               <TabsPanel value="css" className="flex flex-col gap-1.5">
-                <Label htmlFor="customCss">Custom CSS</Label>
-                <Textarea
-                  id="customCss"
-                  rows={12}
-                  spellCheck={false}
-                  placeholder=".bubble.user { ... }"
-                  className="border-[var(--line)] bg-[#0f1319] font-mono text-mono-sm leading-[1.7] text-[#cdd6e3] placeholder:text-[#4a5568]"
-                  {...register("config.customCss")}
+                <Label>Custom CSS</Label>
+                <Controller
+                  control={control}
+                  name="config.customCss"
+                  render={({ field }) => (
+                    <CodeMirror
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      height="220px"
+                      theme="dark"
+                      placeholder=".bubble.user { ... }"
+                      extensions={[css(), Prec.highest(cssEditorTheme)]}
+                      basicSetup={{
+                        lineNumbers: false,
+                        foldGutter: false,
+                        highlightActiveLine: false,
+                        highlightActiveLineGutter: false,
+                      }}
+                    />
+                  )}
                 />
                 <p className="text-small text-[var(--ink2)]">
                   Scoped to the chat preview and surface only — never applies to the admin or
