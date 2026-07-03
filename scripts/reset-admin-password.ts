@@ -15,9 +15,10 @@
  *   pnpm reset-admin                                  # admin@example.com / Sup3rSecret!pw
  *   pnpm reset-admin you@example.com 'YourStr0ng!pw'  # custom target + password
  *
- * The `--conditions=react-server` flag (see the `reset-admin` package.json
- * script) is required so `server-only` resolves to its no-op, the same way the
- * container entrypoint builds server code.
+ * The `reset-admin` package.json script esbuild-bundles this file (with
+ * `--conditions=react-server`, mirroring `build:entrypoint`) and runs the bundle
+ * with node — so `server-only` resolves to its no-op at bundle time and no
+ * script-runner dependency (tsx/ts-node) is needed.
  *
  * Reads DATABASE_URL / ADMIN_EMAIL / ADMIN_PASSWORD from the environment if set;
  * otherwise falls back to the docker-compose.dev.yml / .env.example defaults.
