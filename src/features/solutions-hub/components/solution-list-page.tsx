@@ -4,29 +4,26 @@ import Link from "next/link";
 
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { useFavorites, useRecents } from "../api/hub";
+import { useFavorites } from "../api/hub";
 import type { HubSolution } from "../server/queries";
 import { SolutionListRow } from "./solution-list-row";
 
 /**
- * Shared Recent/Favorites list surface (FR-HUB-09). Both pages are the same
- * shape: a title + subtitle, then either a bordered list of rows or an empty
- * state with a "Browse solutions" link back to the hub. Rows reuse the hub row
- * (monogram, status badge, favorite star) and gate access server-side via the
- * same predicate the hub uses.
+ * Favorites list surface (FR-HUB-09): a title + subtitle, then either a
+ * bordered list of rows or an empty state with a "Browse solutions" link back
+ * to the hub. Rows reuse the hub row (monogram, status badge, favorite star)
+ * and gate access server-side via the same predicate the hub uses.
  */
 export function SolutionListPage({
-  variant,
   title,
   subtitle,
   empty,
 }: {
-  variant: "recents" | "favorites";
   title: string;
   subtitle: string;
   empty: { icon: string; heading: string; body: string };
 }) {
-  const query = variant === "recents" ? useRecents() : useFavorites();
+  const query = useFavorites();
   const solutions = query.data;
   const has = (solutions?.length ?? 0) > 0;
 

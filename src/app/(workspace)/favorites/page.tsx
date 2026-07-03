@@ -12,7 +12,6 @@ export default function FavoritesPage() {
   return (
     <HydrateClient>
       <SolutionListPage
-        variant="favorites"
         title="Favorites"
         subtitle="Solutions you've starred for quick access."
         empty={{
