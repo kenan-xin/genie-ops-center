@@ -11,6 +11,7 @@ import { useHubSolutions, useRecents } from "../api/hub";
 import type { HubSolution } from "../server/queries";
 import type { HubSort, HubTypeFilter } from "../schemas/hub";
 import { SolutionListRow } from "./solution-list-row";
+import { typeLabel } from "./solution-row";
 
 /**
  * Customer Solutions hub (FR-HUB-01..09), lifted from the prototype's "DEMO
@@ -298,26 +299,34 @@ function SortSelect({ value, onChange }: { value: HubSort; onChange: (v: HubSort
 function RecentRail() {
   const { data } = useRecents();
   const recents = (data ?? []).slice(0, 4);
-  if (recents.length === 0) return null;
 
   return (
     <aside style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ border: "1px solid var(--line)", background: "var(--surface)" }}>
-        <div
-          style={{
-            padding: "9px 14px",
-            borderBottom: "1px solid var(--line)",
-            background: "var(--panel)",
-            font: "600 var(--m-xs) var(--font-mono)",
-            letterSpacing: "0.08em",
-            color: "var(--ink2)",
-          }}
-        >
-          RECENTLY OPENED
+      {recents.length > 0 ? (
+        <div style={{ border: "1px solid var(--line)", background: "var(--surface)" }}>
+          <div
+            style={{
+              padding: "9px 14px",
+              borderBottom: "1px solid var(--line)",
+              background: "var(--panel)",
+              font: "600 var(--m-xs) var(--font-mono)",
+              letterSpacing: "0.08em",
+              color: "var(--ink2)",
+            }}
+          >
+            RECENTLY OPENED
+          </div>
+          {recents.map((r) => (
+            <RecentRailRow key={r.id} solution={r} />
+          ))}
         </div>
-        {recents.map((r) => (
-          <RecentRailRow key={r.id} solution={r} />
-        ))}
+      ) : null}
+
+      <div style={{ border: "1px solid var(--line)", padding: "13px 14px" }}>
+        <div className="text-small leading-[1.55] text-[var(--ink2)]">
+          Use <b className="text-foreground">Fullscreen</b> on any solution to hide all Genie chrome
+          and view it edge-to-edge.
+        </div>
       </div>
     </aside>
   );
@@ -369,7 +378,8 @@ function RecentRailRow({ solution }: { solution: HubSolution }) {
           {solution.name}
         </div>
         <div style={{ font: "500 var(--m-xs) var(--font-mono)", color: "var(--ink3)" }}>
-          {solution.lastOpenedAt ? relativeTime(solution.lastOpenedAt) : ""}
+          {typeLabel(solution.type)}
+          {solution.lastOpenedAt ? ` · ${relativeTime(solution.lastOpenedAt)}` : ""}
         </div>
       </div>
     </Link>
