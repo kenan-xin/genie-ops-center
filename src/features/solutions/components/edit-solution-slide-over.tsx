@@ -162,7 +162,7 @@ function EditSolutionForm({
         </div>
         <DialogClose
           aria-label="Close"
-          className="shrink-0 text-title text-[var(--ink3)] outline-none transition-colors hover:text-[var(--ink)]"
+          className="shrink-0 text-title text-[var(--ink3)] outline-none transition-colors hover:text-[var(--ink)] focus-visible:ring-2 focus-visible:ring-ring"
         >
           ✕
         </DialogClose>
