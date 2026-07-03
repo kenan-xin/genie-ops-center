@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { getServerAuth } from "@/server/authz";
-import { caller } from "@/server/trpc/caller";
+import { HydrateClient, prefetch, trpc } from "@/trpc/server";
 
 import { WorkspaceChrome } from "./_components/workspace-chrome";
 
@@ -19,19 +19,16 @@ export default async function WorkspaceLayout({ children }: { children: React.Re
   if (auth.status === "unauthenticated") redirect("/login");
   if (auth.status === "password-change-required") redirect("/change-password");
 
-  // PINNED favorites rail. `favorites` is access-gated by the same predicate as
-  // the hub (granted + unarchived + customer-visible), so a revoked/archived/
-  // drafted favorite never renders in the rail. The first 6 drive the sidebar;
-  // the rest are reachable from /favorites.
-  const favorites = (await caller.solutionsHub.favorites()).slice(0, 6).map((s) => ({
-    id: s.id,
-    slug: s.slug,
-    name: s.name,
-  }));
+  // PINNED favorites rail self-fetches via useFavorites() (pinned-favorites.tsx);
+  // prefetch here so it hydrates with no flash and no waterfall, same pattern
+  // as favorites/page.tsx.
+  prefetch(trpc.solutionsHub.favorites.queryOptions());
 
   return (
-    <WorkspaceChrome userName={auth.user.name} userRole={auth.user.role} favorites={favorites}>
-      {children}
-    </WorkspaceChrome>
+    <HydrateClient>
+      <WorkspaceChrome userName={auth.user.name} userRole={auth.user.role}>
+        {children}
+      </WorkspaceChrome>
+    </HydrateClient>
   );
 }

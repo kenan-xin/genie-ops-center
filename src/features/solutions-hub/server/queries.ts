@@ -239,10 +239,15 @@ export async function listRecentSolutions(user: AuthUser): Promise<HubSolution[]
   return rows.map((r) => toHubSolution(r, favorites.has(r.id), r.openedAt));
 }
 
-/** The user's favorites, access-gated. */
+/**
+ * The user's favorites, access-gated, ordered by the user's arrangement
+ * (`position` ASC) then the existing recency tiebreak. Legacy rows default to
+ * `position = 0` and tie at the top, falling back to recency until the user
+ * first drags — no data migration needed (design spec §5.1).
+ */
 export async function listFavoriteSolutions(user: AuthUser): Promise<HubSolution[]> {
   const rows = await db
-    .select(VIEW)
+    .select({ ...VIEW, position: favorite.position })
     .from(favorite)
     .innerJoin(solution, eq(favorite.solutionId, solution.id))
     .where(and(eq(favorite.userId, user.id), customerVisible(user.id)));
@@ -251,7 +256,16 @@ export async function listFavoriteSolutions(user: AuthUser): Promise<HubSolution
     user,
     rows.map((r) => r.id),
   );
-  const items = rows.map((r) => toHubSolution(r, true, lastOpened.get(r.id) ?? null));
-  // Favorites default to the same recency order as the hub.
-  return sortRows(items, "recent");
+  const pairs = rows.map((r) => ({
+    item: toHubSolution(r, true, lastOpened.get(r.id) ?? null),
+    position: r.position,
+  }));
+  pairs.sort(
+    (a, b) =>
+      a.position - b.position ||
+      (b.item.lastOpenedAt ?? b.item.updatedAt).localeCompare(
+        a.item.lastOpenedAt ?? a.item.updatedAt,
+      ),
+  );
+  return pairs.map((p) => p.item);
 }

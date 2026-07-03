@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { IdleTimeout } from "@/components/idle-timeout";
 
 import { OfflineIndicator } from "./offline-indicator";
-import { PinnedFavorites, type PinnedFavorite } from "./pinned-favorites";
+import { PinnedFavorites } from "./pinned-favorites";
 import { UserFooter } from "./user-footer";
 import { WorkspaceHeader } from "./workspace-header";
 import { WorkspaceNav } from "./workspace-nav";
@@ -31,12 +31,10 @@ import { useWorkspaceChromeStore } from "../_lib/chrome-store";
 export function WorkspaceChrome({
   userName,
   userRole,
-  favorites,
   children,
 }: {
   userName: string;
   userRole: string;
-  favorites: PinnedFavorite[];
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -109,7 +107,7 @@ export function WorkspaceChrome({
           WORKSPACE
         </div>
         <WorkspaceNav />
-        <PinnedFavorites favorites={favorites} />
+        <PinnedFavorites />
       </div>
       <UserFooter name={userName} role={userRole} />
     </>

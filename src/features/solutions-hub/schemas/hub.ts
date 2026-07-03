@@ -23,3 +23,16 @@ export type ToggleFavoriteInput = z.infer<typeof toggleFavoriteSchema>;
 
 export const recordRecentSchema = z.object({ solutionId: z.uuid() });
 export type RecordRecentInput = z.infer<typeof recordRecentSchema>;
+
+/** PINNED rail drag-reorder payload — the (≤6) visible ids in their new order. */
+export const reorderFavoritesSchema = z.object({
+  orderedSolutionIds: z
+    .array(z.uuid())
+    .min(1)
+    .max(50)
+    .refine(
+      (ids) => new Set(ids).size === ids.length,
+      "orderedSolutionIds must not contain duplicates",
+    ),
+});
+export type ReorderFavoritesInput = z.infer<typeof reorderFavoritesSchema>;

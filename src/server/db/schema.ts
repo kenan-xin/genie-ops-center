@@ -122,6 +122,10 @@ export const favorite = pgTable(
     solutionId: uuid("solution_id")
       .notNull()
       .references(() => solution.id, { onDelete: "cascade" }),
+    // Explicit rail order (ascending), user-arranged via drag-reorder. New
+    // favorites append (toggleFavorite sets MAX(position)+1); legacy rows
+    // default to 0 and tie-break on recency until first arranged.
+    position: integer("position").notNull().default(0),
   },
   (t) => [primaryKey({ columns: [t.userId, t.solutionId] })],
 );

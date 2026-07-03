@@ -1,11 +1,11 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 
 import { useTRPC } from "@/trpc/provider";
 
-import type { ListHubInput } from "../schemas/hub";
+import type { HubSolution } from "../server/queries";
+import type { ListHubInput, ReorderFavoritesInput } from "../schemas/hub";
 
 // Feature query/mutation wrappers — AGENTS.md folder contract, features/<domain>/api/.
 
@@ -36,15 +36,51 @@ export function useFavorites() {
 export function useToggleFavorite() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const router = useRouter();
   return useMutation(
     trpc.solutionsHub.toggleFavorite.mutationOptions({
       onSuccess: () => {
+        // The PINNED rail now reads live via useFavorites(), so invalidating
+        // the three list views is enough to keep it in sync — no
+        // router.refresh() needed.
         invalidateListViews(trpc, queryClient);
-        // The PINNED rail is rendered by the server (workspace) layout from a
-        // server-caller fetch, so client query invalidation alone leaves it
-        // stale until navigation. Re-run the server components (Phase-3 review).
-        router.refresh();
+      },
+    }),
+  );
+}
+
+/**
+ * Persist the rail's drag-reordered arrangement, optimistically. `onMutate`
+ * writes the reordered list straight into the favorites query cache so the
+ * rail reflects the drop instantly; `onError` rolls back; `onSettled`
+ * reconciles with the server (also refreshes list/recents, which share the
+ * favorite flag).
+ */
+export function useReorderFavorites() {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const favoritesKey = trpc.solutionsHub.favorites.queryKey();
+  return useMutation(
+    trpc.solutionsHub.reorderFavorites.mutationOptions({
+      onMutate: async (input: ReorderFavoritesInput) => {
+        await queryClient.cancelQueries({ queryKey: favoritesKey });
+        const previous = queryClient.getQueryData<HubSolution[]>(favoritesKey);
+        if (previous) {
+          const byId = new Map(previous.map((f) => [f.id, f]));
+          const reordered = input.orderedSolutionIds
+            .map((id) => byId.get(id))
+            .filter((f): f is HubSolution => f != null);
+          const rest = previous.filter((f) => !input.orderedSolutionIds.includes(f.id));
+          queryClient.setQueryData<HubSolution[]>(favoritesKey, [...reordered, ...rest]);
+        }
+        return { previous };
+      },
+      onError: (_err, _input, context) => {
+        if (context?.previous) {
+          queryClient.setQueryData<HubSolution[]>(favoritesKey, context.previous);
+        }
+      },
+      onSettled: () => {
+        invalidateListViews(trpc, queryClient);
       },
     }),
   );

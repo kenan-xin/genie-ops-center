@@ -6,24 +6,20 @@ import { useState } from "react";
 
 import type { CSSProperties } from "react";
 
+import { useFavorites, useReorderFavorites } from "@/features/solutions-hub/api/hub";
+
 /**
  * The "PINNED" favorites rail between the primary nav and the user footer
- * (prototype line 209–214): up to ~6 favorites, drag-to-reorder, click to open.
+ * (prototype line 209–214): up to 6 favorites, drag-to-reorder, click to open.
  *
- * Rendered only when there are favorites — the server layout passes the granted
- * favorites (the favorites cache, already filtered by the access predicate per
- * tech-plan). Drag-reorder mutates local order optimistically; persistence of
- * the new order lands with the favorites feature ticket, so `onReorder` is a
- * seam the data ticket will wire to a mutation. The active item carries the same
- * brand rule/tint styling as the primary nav, so a pinned solution reads as
- * current while it's open in the viewer.
+ * Self-fetches via `useFavorites()` (seeded by the workspace layout's
+ * `prefetch` + `HydrateClient`) so starring/unstarring anywhere updates the
+ * rail reactively — no server prop-threading, no `router.refresh()`. Drag-
+ * reorder is optimistic (`useReorderFavorites`); only transient drag UI state
+ * (`dragId`/`overId`) is local. The active item carries the same brand rule/
+ * tint styling as the primary nav, so a pinned solution reads as current
+ * while it's open in the viewer.
  */
-export type PinnedFavorite = {
-  id: string;
-  slug: string;
-  name: string;
-};
-
 const baseStyle: CSSProperties = {
   display: "flex",
   alignItems: "center",
@@ -54,15 +50,16 @@ function itemStyle(active: boolean, draggingOver: boolean, dragging: boolean): C
   };
 }
 
-export function PinnedFavorites({ favorites }: { favorites: PinnedFavorite[] }) {
+export function PinnedFavorites() {
   const pathname = usePathname();
-  const [order, setOrder] = useState(favorites);
+  const { data } = useFavorites();
+  const { mutate: reorderFavorites } = useReorderFavorites();
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
 
-  if (order.length === 0) return null;
+  const pinned = (data ?? []).slice(0, 6);
 
-  const pinned = order.slice(0, 6);
+  if (pinned.length === 0) return null;
 
   const handleDrop = (targetId: string) => {
     if (!dragId || dragId === targetId) {
@@ -70,15 +67,14 @@ export function PinnedFavorites({ favorites }: { favorites: PinnedFavorite[] }) 
       setOverId(null);
       return;
     }
-    setOrder((prev) => {
-      const from = prev.findIndex((f) => f.id === dragId);
-      const to = prev.findIndex((f) => f.id === targetId);
-      if (from === -1 || to === -1) return prev;
-      const next = prev.slice();
+    const from = pinned.findIndex((f) => f.id === dragId);
+    const to = pinned.findIndex((f) => f.id === targetId);
+    if (from !== -1 && to !== -1) {
+      const next = pinned.slice();
       const [moved] = next.splice(from, 1);
       next.splice(to, 0, moved);
-      return next;
-    });
+      reorderFavorites({ orderedSolutionIds: next.map((f) => f.id) });
+    }
     setDragId(null);
     setOverId(null);
   };
