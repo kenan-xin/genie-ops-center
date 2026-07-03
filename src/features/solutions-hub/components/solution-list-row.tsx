@@ -19,7 +19,7 @@ import {
 } from "./solution-row";
 
 /**
- * A solution row shared by the hub, recents, and favorites lists (prototype
+ * A solution row shared by the hub and favorites lists (prototype
  * `_demoRow`). Grid layout (≥920px): 2.4fr name · .8fr type · .8fr status ·
  * .6fr updated · 40px star; collapses to a stacked flex row below that.
  *

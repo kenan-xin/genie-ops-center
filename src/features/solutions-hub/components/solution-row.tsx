@@ -6,8 +6,8 @@ import type { HubSolution } from "../server/queries";
 import type { HubSort } from "../schemas/hub";
 
 /**
- * Presentation helpers shared by the hub, recents, and favorites rows — all
- * three render the same solution shape (lifted from the prototype's `_demoRow` /
+ * Presentation helpers shared by the hub and favorites rows — both
+ * render the same solution shape (lifted from the prototype's `_demoRow` /
  * `statusMeta` / `iconColors`). The monogram tile is ink-on-panel (the
  * prototype's `iconColors`), status leads with a ● dot on its semantic tint,
  * and the favorite star toggles without opening the row.
