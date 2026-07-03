@@ -48,6 +48,7 @@ export function SetNewPasswordForm({
 }) {
   const router = useRouter();
   const [formError, setFormError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const {
     register,
     handleSubmit,
@@ -89,10 +90,19 @@ export function SetNewPasswordForm({
       <FormError message={formError} />
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="newPassword">New password</Label>
+          <div className="flex items-baseline justify-between">
+            <Label htmlFor="newPassword">New password</Label>
+            <button
+              type="button"
+              onClick={() => setShowPassword((s) => !s)}
+              className="text-small text-[var(--brandink)] underline-offset-4 hover:underline"
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </div>
           <Input
             id="newPassword"
-            type="password"
+            type={showPassword ? "text" : "password"}
             inputSize="auth"
             autoComplete="new-password"
             {...register("newPassword")}
@@ -104,7 +114,7 @@ export function SetNewPasswordForm({
           <Label htmlFor="confirm">Confirm password</Label>
           <Input
             id="confirm"
-            type="password"
+            type={showPassword ? "text" : "password"}
             inputSize="auth"
             autoComplete="new-password"
             {...register("confirm")}
