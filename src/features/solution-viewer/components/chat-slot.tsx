@@ -98,6 +98,8 @@ export function ChatSlot({
           </div>
         </div>
         <ChatConversation
+          accentColor={accentColor}
+          accentColorInvert={accentColorInvert}
           feedbackEnabled={feedbackEnabled}
           monogram={monogram}
           solutionId={solutionId}

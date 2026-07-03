@@ -49,16 +49,30 @@ export const PromptInputField = ({ className, onKeyDown, ...props }: PromptInput
 
 export type PromptInputSubmitProps = ComponentProps<typeof Button> & {
   status?: ChatStatus;
+  accentColor?: string | null;
+  accentColorInvert?: string | null;
 };
 
 const isBusy = (status: ChatStatus | undefined) => status === "streaming" || status === "submitted";
 
 /** Cancel-in-flight isn't in scope — busy is a disabled, non-interactive state. */
-export const PromptInputSubmit = ({ className, status, ...props }: PromptInputSubmitProps) => (
+export const PromptInputSubmit = ({
+  className,
+  status,
+  accentColor,
+  accentColorInvert,
+  style,
+  ...props
+}: PromptInputSubmitProps) => (
   <Button
     aria-label="Send"
     className={cn("size-9 shrink-0 p-0", className)}
     size="icon"
+    style={
+      accentColor
+        ? { background: accentColor, color: accentColorInvert ?? "var(--onbrand)", ...style }
+        : style
+    }
     type="submit"
     variant="primary"
     {...props}

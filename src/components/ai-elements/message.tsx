@@ -29,9 +29,18 @@ export const Message = ({ className, from, ...props }: MessageProps) => (
 
 export type MessageContentProps = HTMLAttributes<HTMLDivElement> & {
   from: UIMessage["role"];
+  accentColor?: string | null;
+  accentColorInvert?: string | null;
 };
 
-export const MessageContent = ({ className, from, ...props }: MessageContentProps) => (
+export const MessageContent = ({
+  className,
+  from,
+  accentColor,
+  accentColorInvert,
+  style,
+  ...props
+}: MessageContentProps) => (
   <div
     className={cn(
       "max-w-[80%] rounded-[3px] px-[13px] py-[10px] text-body leading-normal",
@@ -40,20 +49,39 @@ export const MessageContent = ({ className, from, ...props }: MessageContentProp
         : "bg-[var(--panel)] text-foreground",
       className,
     )}
+    style={
+      from === "user" && accentColor
+        ? { background: accentColor, color: accentColorInvert ?? "var(--onbrand)", ...style }
+        : style
+    }
     {...props}
   />
 );
 
 export type MessageAvatarProps = ComponentProps<"div"> & {
   monogram: string;
+  accentColor?: string | null;
+  accentColorInvert?: string | null;
 };
 
-export const MessageAvatar = ({ monogram, className, ...props }: MessageAvatarProps) => (
+export const MessageAvatar = ({
+  monogram,
+  className,
+  accentColor,
+  accentColorInvert,
+  style,
+  ...props
+}: MessageAvatarProps) => (
   <div
     className={cn(
       "flex size-[26px] shrink-0 items-center justify-center bg-primary font-sans text-[10px] font-extrabold text-primary-foreground",
       className,
     )}
+    style={
+      accentColor
+        ? { background: accentColor, color: accentColorInvert ?? "var(--onbrand)", ...style }
+        : style
+    }
     {...props}
   >
     {monogram}

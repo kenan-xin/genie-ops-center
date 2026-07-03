@@ -30,6 +30,8 @@ type ChatConversationProps = {
   welcomeMessage?: string;
   starterPrompts?: string[];
   feedbackEnabled: boolean;
+  accentColor?: string | null;
+  accentColorInvert?: string | null;
 };
 
 function lastTextPart(message: ChatUIMessage | undefined): string {
@@ -52,6 +54,8 @@ export function ChatConversation({
   welcomeMessage,
   starterPrompts,
   feedbackEnabled,
+  accentColor,
+  accentColorInvert,
 }: ChatConversationProps) {
   const [input, setInput] = useState("");
   const newChat = useNewChat();
@@ -109,7 +113,11 @@ export function ChatConversation({
 
           {welcomeMessage?.trim() ? (
             <Message from="assistant">
-              <MessageAvatar monogram={botMonogram} />
+              <MessageAvatar
+                accentColor={accentColor}
+                accentColorInvert={accentColorInvert}
+                monogram={botMonogram}
+              />
               <MessageContent from="assistant">{welcomeMessage}</MessageContent>
             </Message>
           ) : null}
@@ -118,7 +126,13 @@ export function ChatConversation({
             if (message.role === "user") {
               return (
                 <Message from="user" key={message.id}>
-                  <MessageContent from="user">{lastTextPart(message)}</MessageContent>
+                  <MessageContent
+                    accentColor={accentColor}
+                    accentColorInvert={accentColorInvert}
+                    from="user"
+                  >
+                    {lastTextPart(message)}
+                  </MessageContent>
                 </Message>
               );
             }
@@ -135,7 +149,11 @@ export function ChatConversation({
             return (
               <div className="flex flex-col gap-[5px]" key={message.id}>
                 <Message from="assistant">
-                  <MessageAvatar monogram={botMonogram} />
+                  <MessageAvatar
+                    accentColor={accentColor}
+                    accentColorInvert={accentColorInvert}
+                    monogram={botMonogram}
+                  />
                   <div className="flex min-w-0 max-w-[80%] flex-col gap-2">
                     {reasoningPart ? (
                       <Reasoning isStreaming={reasoningPart.state === "streaming"}>
@@ -196,7 +214,12 @@ export function ChatConversation({
           onChange={(event) => setInput(event.target.value)}
           value={input}
         />
-        <PromptInputSubmit disabled={isBusy || !input.trim()} status={status} />
+        <PromptInputSubmit
+          accentColor={accentColor}
+          accentColorInvert={accentColorInvert}
+          disabled={isBusy || !input.trim()}
+          status={status}
+        />
       </PromptInput>
     </div>
   );
