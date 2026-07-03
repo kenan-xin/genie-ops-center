@@ -87,13 +87,14 @@ export function ForgotPasswordForm() {
             <Input
               id="email"
               type="email"
+              inputSize="auth"
               autoComplete="email"
               placeholder="you@company.com"
               {...register("email")}
             />
             <FieldError message={errors.email?.message} />
           </div>
-          <Button type="submit" disabled={isSubmitting} className="mt-1 w-full">
+          <Button type="submit" size="auth" disabled={isSubmitting} className="mt-1 w-full">
             {isSubmitting ? "Sending…" : "Send reset link"}
           </Button>
         </form>

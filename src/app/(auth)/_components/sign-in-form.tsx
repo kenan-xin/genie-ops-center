@@ -80,6 +80,7 @@ export function SignInForm({ mode, notice }: { mode: "workspace" | "admin"; noti
           <Input
             id="email"
             type="email"
+            inputSize="auth"
             autoComplete="email"
             placeholder={isAdmin ? "admin@genie.ai" : "you@company.com"}
             {...register("email")}
@@ -101,12 +102,13 @@ export function SignInForm({ mode, notice }: { mode: "workspace" | "admin"; noti
           <Input
             id="password"
             type="password"
+            inputSize="auth"
             autoComplete="current-password"
             {...register("password")}
           />
           <FieldError message={errors.password?.message} />
         </div>
-        <Button type="submit" disabled={isSubmitting} className="mt-1 w-full">
+        <Button type="submit" size="auth" disabled={isSubmitting} className="mt-1 w-full">
           {isSubmitting ? "Signing in…" : isAdmin ? "Sign in" : "Continue"}
         </Button>
       </form>

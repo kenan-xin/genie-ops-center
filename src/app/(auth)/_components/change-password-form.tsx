@@ -79,6 +79,7 @@ export function ChangePasswordForm() {
           <Input
             id="currentPassword"
             type="password"
+            inputSize="auth"
             autoComplete="current-password"
             {...register("currentPassword")}
           />
@@ -89,6 +90,7 @@ export function ChangePasswordForm() {
           <Input
             id="newPassword"
             type="password"
+            inputSize="auth"
             autoComplete="new-password"
             {...register("newPassword")}
           />
@@ -100,12 +102,13 @@ export function ChangePasswordForm() {
           <Input
             id="confirm"
             type="password"
+            inputSize="auth"
             autoComplete="new-password"
             {...register("confirm")}
           />
           <FieldError message={errors.confirm?.message} />
         </div>
-        <Button type="submit" disabled={isSubmitting} className="mt-1 w-full">
+        <Button type="submit" size="auth" disabled={isSubmitting} className="mt-1 w-full">
           {isSubmitting ? "Updating…" : "Update password"}
         </Button>
       </form>
