@@ -20,6 +20,7 @@
     "db:dev:stop": "docker compose -f docker-compose.dev.yml stop",
     "db:dev:down": "docker compose -f docker-compose.dev.yml down",
     "db:dev:reset": "docker compose -f docker-compose.dev.yml down -v",
+    "reset-admin": "NODE_OPTIONS='--conditions=react-server' pnpm dlx tsx scripts/reset-admin-password.ts",
     "prepare": "lefthook install || true"
   },
   "dependencies": {
