@@ -71,10 +71,10 @@ export default function AccountPage() {
                 aria-current={active ? "true" : undefined}
                 onClick={() => setSection(item.id)}
                 className={cn(
-                  "w-full border-l-[3px] px-[10px] py-2 text-left font-sans text-body transition-colors",
+                  "w-full border-l-[3px] px-3 py-[9px] text-left font-sans text-body transition-colors",
                   active
                     ? "border-[var(--brand)] bg-[var(--brandtint)] font-bold text-[var(--brandink)]"
-                    : "border-transparent text-[var(--ink2)] hover:bg-[var(--panel)]",
+                    : "border-transparent text-[var(--ink2)]",
                 )}
               >
                 {item.label}
