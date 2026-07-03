@@ -167,7 +167,7 @@ One JSONB column, validated by a discriminated union at the tRPC boundary (no pe
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `chat`     | `{ botUuid: string; apiEndpoint: string (https, SSRF-guarded); welcomeMessage?: string; starterPrompts?: string[]; feedbackEnabled?: boolean }` — `botUuid` is the external bot id; `apiEndpoint` is the per-solution streaming URL (FR-ADM-S-03); `themeId` binds the theme |
 | `embedded` | `{ iframeUrl: string (https) }` — _(FR lists welcome/starters/feedback as "configurable" for embedded too, but those don't render inside an iframe; foundation models only `iframeUrl`. Re-add if a real need appears.)_ |
-| `native`   | `{}` — deferred; row hidden from registration + hub filters                                                                                                                                                              |
+| `native`   | `{ routeKey: string }` — a first-party in-app module surfaced through the viewer (ticket 24); code-owned (not admin-created), `routeKey` resolves through the code registry. Its own tables live in a per-app `pgSchema("na_<app>")`, isolated from core. |
 
 ## Notes & invariants
 

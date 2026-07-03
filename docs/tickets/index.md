@@ -64,7 +64,9 @@ flowchart TD
 
 **Rework backlog (15–23):** [design-conformance + Phase-3 review rework](./rework-backlog/index.md) — admin shell, kit fixes, correctness, and per-screen drift, sequenced into three waves.
 
-**Phase 5 — Native solutions**
-24. [Native solutions foundation](./24-native-solutions-foundation/index.md) — in-app Next.js routes per solution, code-owned registry + sync script, un-hide from catalogue, hub Native filter chip. Resolves ticket 11's Native gap.
+**Phase 5 — Native solutions & platform identity**
+
+25. [Platform identity invariants](./25-platform-identity/index.md) — protected admin (un-deletable/-bannable/-demotable, editable email) + always-all-users Everyone group. **Prerequisite for native.**
+24. [Native solutions foundation](./24-native-solutions-foundation/index.md) — self-contained, removable in-app modules (own `pgSchema`), viewer runtime, sync + catalogue. Resolves ticket 11's Native gap. Split into [24a · module + DB isolation](./24-native-solutions-foundation/24a-module-db-isolation/index.md) → [24b · viewer runtime](./24-native-solutions-foundation/24b-viewer-runtime/index.md) → [24c · catalogue, sync & admin](./24-native-solutions-foundation/24c-catalogue-sync-admin/index.md). Depends on 25.
 
 **Deferred (not ticketed):** 2FA/MFA, chat transcript persistence, durable feedback, SSO-to-embedded, attachments. *(Native solution runtime was deferred; ticket 24 delivers it.)*
