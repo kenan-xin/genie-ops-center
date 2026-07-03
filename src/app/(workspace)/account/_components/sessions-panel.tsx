@@ -161,7 +161,11 @@ export function SessionsPanel() {
                       <span className="truncate text-body font-semibold text-foreground">
                         {label}
                       </span>
-                      {isCurrent ? <StatusBadge tone="success">This device</StatusBadge> : null}
+                      {isCurrent ? (
+                        <StatusBadge tone="success" variant="outline">
+                          This device
+                        </StatusBadge>
+                      ) : null}
                     </div>
                     <span className="text-mono-sm text-[var(--ink3)]">
                       {s.ipAddress ? `${s.ipAddress} · ` : ""}
