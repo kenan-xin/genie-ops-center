@@ -5,19 +5,17 @@ import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { FieldError, FormError } from "@/components/ui/form-feedback";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
-import {
-  SlideOver,
-  SlideOverBody,
-  SlideOverContent,
-  SlideOverFooter,
-  SlideOverHeader,
-  SlideOverTitle,
-} from "@/components/ui/slide-over";
-import { StatusBadge } from "@/components/ui/status-badge";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
@@ -29,8 +27,6 @@ import { useUpdateSolution } from "../api/solutions";
 import {
   DEFAULT_CHAT_API_ENDPOINT,
   editSolutionSchema,
-  statusTone,
-  STATUS_LABEL,
   TYPE_LABEL,
   type ChatConfig,
   type EditSolutionValues,
@@ -53,13 +49,13 @@ export function EditSolutionSlideOver({
   onOpenChange: (open: boolean) => void;
 }) {
   return (
-    <SlideOver open={open} onOpenChange={onOpenChange}>
-      <SlideOverContent>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[88vh] overflow-y-auto p-0">
         {solution ? (
           <EditSolutionForm key={solution.id} solution={solution} onOpenChange={onOpenChange} />
         ) : null}
-      </SlideOverContent>
-    </SlideOver>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -154,21 +150,31 @@ function EditSolutionForm({
 
   return (
     <>
-      <SlideOverHeader>
-        <div className="flex items-center gap-2">
-          <SlideOverTitle>{solution.name}</SlideOverTitle>
-          <StatusBadge tone={statusTone(solution.status)} dot>
-            {STATUS_LABEL[solution.status]}
-          </StatusBadge>
-          {solution.archived ? <StatusBadge tone="neutral">Archived</StatusBadge> : null}
+      <div className="flex items-start justify-between gap-3 border-b border-[var(--line)] p-5">
+        <div className="flex flex-col gap-[3px]">
+          <span className="font-mono text-mono-sm font-semibold tracking-[0.08em] text-[var(--brandink)]">
+            CONFIGURE · {TYPE_LABEL[solution.type]}
+          </span>
+          <DialogTitle className="font-heading text-title font-extrabold tracking-[-0.01em] text-[var(--ink)]">
+            {solution.name}
+          </DialogTitle>
+          <span className="text-small text-[var(--ink2)]">/s/{solution.slug}</span>
         </div>
-        <span className="text-small text-[var(--ink2)]">
-          {TYPE_LABEL[solution.type]} · /s/{solution.slug}
-        </span>
-      </SlideOverHeader>
+        <DialogClose
+          aria-label="Close"
+          className="shrink-0 text-title text-[var(--ink3)] outline-none transition-colors hover:text-[var(--ink)]"
+        >
+          ✕
+        </DialogClose>
+      </div>
 
-      <SlideOverBody className="flex flex-col gap-8">
-        <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
+      <div className="flex flex-col gap-6 p-5">
+        <form
+          id="edit-solution-form"
+          onSubmit={onSubmit}
+          className="flex flex-col gap-5"
+          noValidate
+        >
           <FormError message={errors.root?.message} />
 
           <div className="flex flex-col gap-1.5">
@@ -240,20 +246,22 @@ function EditSolutionForm({
               <ThemePreview config={selectedThemeConfig} />
             </div>
           ) : null}
-
-          <div className="flex">
-            <Button type="submit" size="sm" disabled={isSubmitting || !isDirty}>
-              {isSubmitting ? "Saving…" : "Save changes"}
-            </Button>
-          </div>
         </form>
-      </SlideOverBody>
+      </div>
 
-      <SlideOverFooter>
-        <Button variant="ghost" onClick={() => onOpenChange(false)}>
-          Close
+      <DialogFooter>
+        <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+          Cancel
         </Button>
-      </SlideOverFooter>
+        <Button
+          type="submit"
+          form="edit-solution-form"
+          size="sm"
+          disabled={isSubmitting || !isDirty}
+        >
+          {isSubmitting ? "Saving…" : "Save changes"}
+        </Button>
+      </DialogFooter>
     </>
   );
 }
