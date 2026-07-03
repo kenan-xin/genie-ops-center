@@ -258,10 +258,25 @@ function ThemeBuilderEditor({ theme, allThemes }: { theme: ThemeRow; allThemes: 
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5" noValidate>
-      <div className="flex items-center justify-end">
-        <Button type="submit" size="sm" disabled={isSubmitting || !isDirty}>
-          {isSubmitting ? "Saving…" : "Save changes"}
-        </Button>
+      <div className="flex flex-wrap items-start gap-3">
+        <div className="flex min-w-[220px] flex-1 flex-col gap-1.5">
+          <Input id="theme-name" {...register("name")} placeholder="Theme name" />
+          <FieldError message={errors.name?.message} />
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            onClick={() => void handleDelete()}
+            disabled={deleteTheme.isPending}
+          >
+            Delete
+          </Button>
+          <Button type="submit" size="sm" disabled={isSubmitting || !isDirty}>
+            {isSubmitting ? "Saving…" : "Save changes"}
+          </Button>
+        </div>
       </div>
       <FormError message={errors.root?.message} />
 
@@ -310,22 +325,6 @@ function ThemeBuilderEditor({ theme, allThemes }: { theme: ThemeRow; allThemes: 
               </TabsPanel>
 
               <TabsPanel value="elements" className="flex flex-col gap-5">
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex items-center gap-2">
-                    <Input id="theme-name" {...register("name")} placeholder="Theme name" />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => void handleDelete()}
-                      disabled={deleteTheme.isPending}
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                  <FieldError message={errors.name?.message} />
-                </div>
-
                 <SwatchField
                   label="Header & accent"
                   swatches={HEADER_SWATCHES}
