@@ -32,6 +32,7 @@ import {
   type EditPersonValues,
   type Person,
 } from "../schemas/person";
+import { AccountActionDialog } from "./account-action-dialog";
 import { TempPasswordDialog } from "./temp-password-dialog";
 
 /** Edit person (FR-ADM-P-03/04/05/06). Proto 1029-1090 — "Add person" and
@@ -55,6 +56,7 @@ export function EditPersonSlideOver({
   const isSelf = Boolean(person && session?.user.id === person.id);
 
   const [tempPassword, setTempPassword] = useState<string | null>(null);
+  const [accountActionOpen, setAccountActionOpen] = useState(false);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: trpc.users.list.queryKey() });
 
@@ -76,7 +78,6 @@ export function EditPersonSlideOver({
   const disable = useMutation(trpc.users.disable.mutationOptions());
   const enable = useMutation(trpc.users.enable.mutationOptions());
   const sendResetLink = useMutation(trpc.users.sendResetLink.mutationOptions());
-  const setTemp = useMutation(trpc.users.setTempPassword.mutationOptions());
   const activate = useMutation(trpc.users.activate.mutationOptions());
   const forceSignOut = useMutation(trpc.users.forceSignOut.mutationOptions());
   const remove = useMutation(trpc.users.remove.mutationOptions());
@@ -167,20 +168,6 @@ export function EditPersonSlideOver({
     }
   }
 
-  async function handleSetTempPassword() {
-    try {
-      const result = await setTemp.mutateAsync({ id: person!.id });
-      setTempPassword(result.tempPassword);
-    } catch (error) {
-      toast({
-        tone: "error",
-        description: error instanceof Error ? error.message : "Couldn't set a temporary password.",
-      });
-      return;
-    }
-    await invalidate();
-  }
-
   async function handleActivate() {
     try {
       const result = await activate.mutateAsync({ id: person!.id });
@@ -200,7 +187,6 @@ export function EditPersonSlideOver({
     disable.isPending ||
     enable.isPending ||
     sendResetLink.isPending ||
-    setTemp.isPending ||
     activate.isPending ||
     forceSignOut.isPending ||
     remove.isPending;
@@ -340,23 +326,9 @@ export function EditPersonSlideOver({
                   variant="ghost"
                   size="sm"
                   disabled={busy}
-                  onClick={() =>
-                    void withToast(
-                      () => sendResetLink.mutateAsync({ id: person.id }),
-                      "Password reset link sent.",
-                      "Couldn't send a reset link.",
-                    )
-                  }
+                  onClick={() => setAccountActionOpen(true)}
                 >
-                  Email reset link
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={busy}
-                  onClick={() => void handleSetTempPassword()}
-                >
-                  Set temporary password
+                  Reset password
                 </Button>
                 <Button
                   variant="ghost"
@@ -423,12 +395,21 @@ export function EditPersonSlideOver({
         </SlideOverContent>
       </SlideOver>
 
+      {/* Reveal-once temp password from "Mark as active" (FR-ADM-P-04) — the
+          "Reset password" account action below owns its own reveal for the
+          temp-password branch via AccountActionDialog. */}
       <TempPasswordDialog
         name={person.name}
         tempPassword={tempPassword}
         onOpenChange={(next) => {
           if (!next) setTempPassword(null);
         }}
+      />
+
+      <AccountActionDialog
+        person={person}
+        open={accountActionOpen}
+        onOpenChange={setAccountActionOpen}
       />
     </>
   );
