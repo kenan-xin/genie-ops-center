@@ -8,7 +8,7 @@ import { WorkspaceChrome } from "./_components/workspace-chrome";
 
 /**
  * Server-enforced auth boundary for the whole customer workspace surface
- * (hub, recent, favorites, account, /s/[slug]). Mirrors (admin)/layout.tsx:
+ * (hub, favorites, account, /s/[slug]). Mirrors (admin)/layout.tsx:
  * unauthenticated → /login, must-change-password → /change-password — BEFORE any
  * chrome renders, so a future data-bearing RSC can never sit behind a public
  * shell. The client chrome (WorkspaceChrome) is pure presentation; auth lives
