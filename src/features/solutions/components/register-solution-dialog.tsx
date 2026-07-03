@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogFooter,
   DialogHeader,
@@ -15,7 +16,6 @@ import { FieldError, FormError } from "@/components/ui/form-feedback";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SegmentedControl } from "@/components/ui/segmented";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 
 import { useRegisterSolution } from "../api/solutions";
@@ -94,6 +94,12 @@ export function RegisterSolutionDialog({
       }}
     >
       <DialogContent>
+        <DialogClose
+          aria-label="Close"
+          className="absolute right-4 top-4 text-title text-[var(--ink3)] outline-none transition-colors hover:text-[var(--ink)] focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          ✕
+        </DialogClose>
         <form onSubmit={onSubmit} noValidate>
           <DialogHeader>
             <DialogTitle>Add new solution</DialogTitle>
@@ -125,9 +131,8 @@ export function RegisterSolutionDialog({
 
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="reg-desc">Description</Label>
-              <Textarea
+              <Input
                 id="reg-desc"
-                rows={2}
                 placeholder="One-line summary shown on the card"
                 {...register("description")}
               />
