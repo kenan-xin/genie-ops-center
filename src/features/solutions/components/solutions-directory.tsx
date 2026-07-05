@@ -120,18 +120,19 @@ export function SolutionsDirectory() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search solutions…"
-          className="max-w-[280px]"
+          className="w-full sm:max-w-[280px]"
         />
         <SegmentedControl
           options={TYPE_FILTER_OPTIONS}
           value={typeFilter}
           onValueChange={(v) => setTypeFilter(v)}
+          className="w-full sm:w-auto"
         />
         <Select
           items={SORT_OPTIONS}
           value={sort}
           onValueChange={(v) => setSort(v as SolutionSort)}
-          className="ml-auto w-[240px]"
+          className="w-full sm:ml-auto sm:w-[240px]"
         />
       </div>
 
