@@ -134,7 +134,7 @@ export function GroupsDirectory({ initialGroupId }: { initialGroupId?: string } 
         </p>
       </header>
 
-      <div className="flex items-center gap-2 border border-[var(--brand)]/25 bg-[var(--brandtint)] px-3.5 py-2.5">
+      <div className="flex flex-col gap-1 border border-[var(--brand)]/25 bg-[var(--brandtint)] px-3.5 py-2.5">
         <span className="shrink-0 font-mono text-mono-xs font-semibold tracking-[0.08em] text-[var(--brandink)] uppercase">
           How access works
         </span>

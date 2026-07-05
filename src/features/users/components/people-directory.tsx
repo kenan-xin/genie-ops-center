@@ -237,7 +237,7 @@ export function PeopleDirectory() {
         </p>
       </header>
 
-      <div className="flex items-center gap-2 border border-[#d7e3f6] bg-[var(--brandtint)] px-[13px] py-[9px]">
+      <div className="flex flex-col gap-1 border border-[#d7e3f6] bg-[var(--brandtint)] px-[13px] py-[9px]">
         <span className="font-mono text-mono-xs font-semibold whitespace-nowrap tracking-[0.08em] text-[var(--brandink)] uppercase">
           How access works
         </span>
