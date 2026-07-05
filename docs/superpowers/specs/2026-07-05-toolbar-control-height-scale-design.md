@@ -69,8 +69,13 @@ Every form control derives its height from this map. No control hard-codes
   (`md`)**. Update its two admin import sites and add the hub as a third consumer.
   Width stays overridable via `className`.
 - **`SegmentedControl`** — add `size?: ControlSize`. Replace content-height
-  `py-2` with a fixed `md` height + vertical centering. **~34 → 40**, so it lines
-  up with inputs in forms and selects in filter rows.
+  `py-2` with a **`min-height` of `md`** plus vertical centering (`items-center`),
+  **not a rigid fixed height**. **~34 → 40** in the common single-line case, so it
+  lines up with inputs in forms and selects in filter rows — but long labels that
+  wrap on narrow viewports (e.g. "Who can open a solution?" /
+  "What can a person open?", `access-overview.tsx:29-30`) grow instead of
+  clipping. Segment buttons have no `whitespace-nowrap` today, so a rigid `h-10`
+  would clip wrapped text.
 - **`Button`** — refactor its cva heights to pull from the same constants
   (`sm → h-8`, `default → h-10`, `auth → h-11`). Same values, no visual change;
   keeps Button on the shared scale. `icon` (`size-10`) is unchanged.
@@ -120,17 +125,32 @@ toolbar buttons; the hub toolbar migration; the theme-builder top-row buttons.
 - `Tabs` primitive (used only in `theme-builder`) — section navigation, not an
   inline form-control row; left on its intrinsic height.
 
+**Intentional compact deviations that MUST be preserved (do not "fix" to 40):**
+
+- `transfer-list.tsx:96-109` — a compact pane search row (checkbox +
+  `<Input className="h-8">`, deliberately 32px), used in the Access Grants panel
+  and group-inspector members list. The `className="h-8"` override must continue
+  to win over the Input default (it does, via `twMerge` in `cn`).
+- `solutions-directory.tsx:343-353` — inline table-cell status-pill `Select`
+  (`className="h-auto w-auto … py-1"`). Adding a `size` prop to `Select` must not
+  regress this; the `h-auto` className override must still win.
+
 ## Risks / notes
 
 - **`SegmentedControl` 34 → 40 is the widest-reaching change.** It affects every
   segmented usage (forms, filter rows, view toggles), not just toolbars. This is
   the intended consequence of a shared scale and improves alignment with
   adjacent 40px inputs, but it is a global visual change worth eyeballing.
-- **Renaming `AdminSearchInput` → `SearchInput`** touches its two existing import
-  sites plus the hub; a mechanical rename, but it is an API change to a shared
-  component.
-- The hub migration swaps a native `<select>` for the Base UI `Select`; behavior
-  is equivalent (the hub is already a client component).
+- **Renaming `AdminSearchInput` → `SearchInput`** touches exactly two existing
+  import sites (`groups-directory.tsx:14`, `people-directory.tsx:13`) plus the
+  hub. Beyond the rename, the hub needs the search to *grow* (`flex:1`,
+  `max-width:300`), whereas the component bakes in `w-[220px] max-w-[48vw]`. The
+  hub instance must override width to a flex-grow layout via `className` — more
+  than a like-for-like drop-in.
+- The hub migration swaps a native `<select>` for the Base UI `Select`. This is
+  behaviorally *close* but not identical — focus/keyboard/native-form semantics
+  differ. Low risk (client-side, the pattern is already used across admin), but
+  not a strictly equivalent swap.
 
 ## Verification
 
