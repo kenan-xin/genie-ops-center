@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { CONTROL_MIN_HEIGHTS, type ControlSize } from "./control-size";
 
 type SegmentedOption<T extends string> = { value: T; label: string };
 
@@ -12,6 +13,7 @@ function SegmentedControl<T extends string>({
   value,
   onValueChange,
   disabled,
+  size = "md",
   className,
   ...props
 }: Omit<React.ComponentProps<"div">, "onChange"> & {
@@ -19,6 +21,7 @@ function SegmentedControl<T extends string>({
   value: T;
   onValueChange: (value: T) => void;
   disabled?: boolean;
+  size?: ControlSize;
 }) {
   return (
     <div
@@ -26,7 +29,8 @@ function SegmentedControl<T extends string>({
       role="tablist"
       aria-disabled={disabled}
       className={cn(
-        "inline-flex rounded-none border border-[var(--line)] font-sans text-small font-semibold",
+        "inline-flex items-stretch rounded-none border border-[var(--line)] font-sans text-small font-semibold",
+        CONTROL_MIN_HEIGHTS[size],
         disabled && "opacity-50",
         className,
       )}
@@ -43,7 +47,7 @@ function SegmentedControl<T extends string>({
             disabled={disabled}
             onClick={() => onValueChange(option.value)}
             className={cn(
-              "px-3 py-2 transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset disabled:pointer-events-none disabled:cursor-not-allowed",
+              "flex items-center justify-center px-3 py-2 transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset disabled:pointer-events-none disabled:cursor-not-allowed",
               index > 0 && "border-l border-[var(--line)]",
               active
                 ? "bg-[var(--ink)] text-[var(--on-ink)]"
