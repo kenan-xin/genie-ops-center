@@ -272,13 +272,12 @@ function ThemeBuilderEditor({ theme, allThemes }: { theme: ThemeRow; allThemes: 
           <Button
             type="button"
             variant="destructive"
-            size="sm"
             onClick={() => void handleDelete()}
             disabled={deleteTheme.isPending}
           >
             Delete
           </Button>
-          <Button type="submit" size="sm" disabled={isSubmitting || !isDirty}>
+          <Button type="submit" disabled={isSubmitting || !isDirty}>
             {isSubmitting ? "Saving…" : "Save changes"}
           </Button>
         </div>
