@@ -3,6 +3,8 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
+import { CONTROL_HEIGHTS } from "./control-size";
+
 // Ledger buttons: square corners, Hanken Grotesk, type via the --t-* scale (never px/rem
 // — this resolves ticket 01's carry-forward). Brand fill is reserved for
 // `primary`; press = colour shift only (no shrink).
@@ -20,9 +22,9 @@ const buttonVariants = cva(
         link: "bg-transparent font-semibold text-primary underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-10 px-[18px]",
-        sm: "h-8 px-3",
-        auth: "h-11 px-[18px] text-title",
+        default: `${CONTROL_HEIGHTS.md} px-[18px]`,
+        sm: `${CONTROL_HEIGHTS.sm} px-3`,
+        auth: `${CONTROL_HEIGHTS.lg} px-[18px] text-title`,
         icon: "size-10",
       },
     },
