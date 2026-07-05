@@ -59,6 +59,7 @@ The aesthetic is **"Ledger"**: firm, utilitarian, precise. Think a well-set fina
 
 ## COMPONENTS (recipes)
 The style guide DC renders all of these; copy values from it or from the prototype.
+- **Control heights (shared scale):** all form controls derive height from one source of truth — `src/components/ui/control-size.ts` (`CONTROL_HEIGHTS`: `sm`=32 / `md`=40 / `lg`=44px; `CONTROL_MIN_HEIGHTS` for controls that may wrap; `ControlSize` type). `Button`, `Input`, `Select`, `SegmentedControl`, and `SearchInput` all read from it — **never hard-code `h-8/h-10/h-11` on a control.** Any horizontal row that mixes control types (search / input / select / segmented / button) renders all members at the same height; the standard is **40px (`md`)**. `SegmentedControl` uses **min-height** so long labels grow instead of clipping. Deliberate compact exceptions: the `transfer-list` pane search (32px) and the inline table status-pill `Select` (`h-auto`) override the default via `className` and must stay compact; `Input`'s `auth` size (42px, auth screens only) is separate.
 - **Buttons:** Primary (`--brand` fill, white, wt700, 40px), Dark (`--ink` fill), Ghost (transparent + `--line` border, wt600), Destructive (ghost with `--error` text), Text link (`--brand`, wt600).
 - **Inputs:** 40–42px, `1px solid var(--line)`, radius 0, 12px padding; label above is a mono uppercase eyebrow.
 - **Select:** as inputs + the wrapped CSS-triangle caret (see Iconography).
