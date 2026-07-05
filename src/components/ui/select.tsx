@@ -1,6 +1,7 @@
 "use client";
 
 import { Select as SelectPrimitive } from "@base-ui/react/select";
+import { CONTROL_HEIGHTS, type ControlSize } from "./control-size";
 
 import { cn } from "@/lib/utils";
 
@@ -25,6 +26,8 @@ function Select({
   name,
   required,
   form,
+  size = "md",
+  "aria-label": ariaLabel,
 }: {
   items: SelectItem[];
   value?: string | null;
@@ -37,6 +40,8 @@ function Select({
   name?: string;
   required?: boolean;
   form?: string;
+  size?: ControlSize;
+  "aria-label"?: string;
 }) {
   return (
     <SelectPrimitive.Root
@@ -54,8 +59,9 @@ function Select({
     >
       <SelectPrimitive.Trigger
         data-slot="select-trigger"
+        aria-label={ariaLabel}
         className={cn(
-          "flex h-10 w-full items-center justify-between gap-2 rounded-none border border-[var(--line)] bg-[var(--surface)] px-3 font-sans text-body text-foreground outline-none transition-colors focus-visible:border-[var(--brand)] focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-[var(--brand)] data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
+          `flex ${CONTROL_HEIGHTS[size]} w-full items-center justify-between gap-2 rounded-none border border-[var(--line)] bg-[var(--surface)] px-3 font-sans text-body text-foreground outline-none transition-colors focus-visible:border-[var(--brand)] focus-visible:outline-2 focus-visible:-outline-offset-1 focus-visible:outline-[var(--brand)] data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50`,
           className,
         )}
       >
