@@ -131,7 +131,7 @@ export function SolutionsDirectory() {
           items={SORT_OPTIONS}
           value={sort}
           onValueChange={(v) => setSort(v as SolutionSort)}
-          className="ml-auto w-[220px]"
+          className="ml-auto w-[240px]"
         />
       </div>
 
