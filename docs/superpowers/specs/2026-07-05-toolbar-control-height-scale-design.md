@@ -5,13 +5,14 @@
 
 ## Problem
 
-Form controls that sit side-by-side in admin toolbars render at different
-heights, so the toolbars look unpolished. Reported case: the **People** toolbar
-(screenshot) shows the search box, the sort dropdown, and the `+ Add person`
-button at three visibly different heights.
+Form controls that sit side-by-side in the app's toolbars render at different
+heights, so the toolbars look unpolished. Reported cases: the **People** admin
+toolbar (search box / sort dropdown / `+ Add person` button all different
+heights) and the **Groups** toolbar (search box vs `+ New group` button).
 
 The root cause is that there is no shared control-height scale. Each primitive
-hard-codes its own height, so alignment in a toolbar is accidental:
+hard-codes its own height, and several toolbars are hand-rolled with inline
+styles that bypass the primitives entirely — so alignment is accidental:
 
 | Control | Height(s) today |
 | --- | --- |
@@ -20,24 +21,28 @@ hard-codes its own height, so alignment in a toolbar is accidental:
 | `Select` | **40** only |
 | `AdminSearchInput` | **32** only (hard-coded) |
 | `SegmentedControl` | *intrinsic* — no fixed height (`py-2` → ~34) |
-
-Consequences in the current toolbars:
-
-- **People** — search `32` + Select `40` + button `32` → the dropdown is the tall outlier. ✗
-- **Solutions** — Input `40` + Segmented `~34` + Select `40` → segmented is short. ✗
-- **Groups** — search `32` + button `32` → happens to match. ✓ (accidental)
-
-The same primitives are also used together outside those three toolbars — in
-forms (invite/edit person, register solution, theme builder) and in filter rows
-(solutions-hub, access-screen, access-overview) — where the missing shared scale
-causes the same class of misalignment.
+| Hub search box (inline) | **34** (bespoke `<div>` in solutions-hub) |
+| Hub `SortSelect` (inline) | **34** (bespoke native `<select>`) |
 
 ## Decisions
 
-- **All toolbars use a single uniform control height: 40px (`md`).** No
-  per-toolbar size — every toolbar is the same height for visual consistency.
+- **Every horizontal control row uses one uniform height: 40px (`md`).** No
+  per-row size variation — visual consistency across the whole app.
 - **Introduce a shared control-height scale** as the single source of truth, so
   controls can no longer drift apart.
+- **The workspace home hub toolbar migrates onto the shared primitives** (its
+  bespoke inline search + `SortSelect` are replaced), rather than being patched
+  inline — so it joins the shared scale.
+
+## The alignment rule
+
+> Any horizontal row that combines different control types (search / input /
+> select / segmented / button) must have all its members at the shared **40px**
+> (`md`) height.
+
+Standalone clusters of a *single* control type (e.g. a group of compact `sm`
+action buttons in a slide-over section) are internally consistent and are left
+as-is.
 
 ## Design
 
@@ -58,46 +63,80 @@ Every form control derives its height from this map. No control hard-codes
 - **`Input`** — already 40; re-express the **default** height via the map. The
   `auth` size (`h-[42px]`, auth screens only) is left untouched — not a toolbar
   control and not part of this bug.
-- **`Select`** — add `size?: ControlSize`, default `md`. Already 40, so no visual change.
-- **`AdminSearchInput`** — add `size?: ControlSize`. **Default changes 32 → 40 (`md`).**
-  Only consumed by the People/Groups toolbars.
+- **`Select`** — add `size?: ControlSize`, default `md`. Already 40, no visual change.
+- **`AdminSearchInput` → rename to `SearchInput`** — it is no longer admin-only
+  once the workspace hub uses it. Add `size?: ControlSize`; **default 32 → 40
+  (`md`)**. Update its two admin import sites and add the hub as a third consumer.
+  Width stays overridable via `className`.
 - **`SegmentedControl`** — add `size?: ControlSize`. Replace content-height
   `py-2` with a fixed `md` height + vertical centering. **~34 → 40**, so it lines
-  up with Inputs in forms and Selects in filter rows.
+  up with inputs in forms and selects in filter rows.
 - **`Button`** — refactor its cva heights to pull from the same constants
   (`sm → h-8`, `default → h-10`, `auth → h-11`). Same values, no visual change;
   keeps Button on the shared scale. `icon` (`size-10`) is unchanged.
 
-### 3. Make all toolbars uniformly 40px
+### 3. Fix every control row to a uniform 40px
+
+Admin toolbars:
 
 - **People** (`people-directory.tsx`) — search now 40, Select stays 40,
-  `+ Add person` button `size="sm" → "default"` (40). ✓
+  `+ Add person` button `size="sm" → "default"` (40).
 - **Groups** (`groups-directory.tsx`) — search now 40, `+ New group` button
-  `size="sm" → "default"` (40). ✓
+  `size="sm" → "default"` (40).
 - **Solutions** (`solutions-directory.tsx`) — Input 40, Segmented now 40, Select
-  40; header `+ Add` button `size="sm" → "default"` (40). ✓
+  40; header `+ Add` button `size="sm" → "default"` (40).
+
+Workspace + other rows found in the full sweep:
+
+- **Workspace home hub** (`solutions-hub.tsx`) — replace the bespoke inline
+  search `<div>` with `SearchInput`, replace `SortSelect` with the shared
+  `Select`; `SegmentedControl` becomes 40 via the scale. All row members → 40.
+  Remove the now-unused `SortSelect` component.
+- **Theme builder top row** (`theme-builder.tsx`) — `Input` (40) paired with
+  `Delete` / `Save changes` buttons that are `size="sm"` (32); change those two
+  buttons to `size="default"` (40) so the row aligns.
+
+Filter / mode rows that use shared primitives align automatically once the
+primitives share the scale (no per-file change needed): access-overview mode
+toggle + selects, access-screen Grants/Overview toggle.
 
 ## Scope guardrails
 
-- **In scope:** the shared scale module; height wiring for Input, Select,
-  AdminSearchInput, SegmentedControl, Button; the three toolbar buttons. Filter
-  rows that combine Segmented + Select (access-overview, access-screen,
-  solutions-hub) gain aligned heights for free — no code change needed there
-  beyond the primitive updates.
-- **Out of scope:** form-internal `size="sm"` buttons (edit-person slide-over,
-  theme-builder actions, table "Manage" link) stay `sm` — they are not toolbar
-  controls. No unrelated refactoring.
+**In scope:** the shared scale module; height wiring for Input, Select,
+SearchInput (renamed), SegmentedControl, Button; the People/Groups/Solutions
+toolbar buttons; the hub toolbar migration; the theme-builder top-row buttons.
+
+**Out of scope (different component classes, verified during the sweep):**
+
+- Solution viewer chrome (`viewer-toolbar`, 30px pills), app headers (32px),
+  auth logo, empty-state CTA links (`solution-list-page`, 32px) — not
+  form-control toolbars.
+- Inline-editable heading fields in the group slide-over
+  (`group-inspector.tsx`, borderless click-to-edit title/description) — a
+  distinct pattern, not a standard control.
+- `sr-only` radio input in `account-action-dialog.tsx` (custom radio card).
+- Compact `sm` action-button clusters inside slide-over sections
+  (`edit-person-slide-over.tsx`) — single-type groups, internally consistent.
+- `Tabs` primitive (used only in `theme-builder`) — section navigation, not an
+  inline form-control row; left on its intrinsic height.
 
 ## Risks / notes
 
-- **SegmentedControl 34 → 40 is the widest-reaching change.** It affects every
-  segmented usage (mostly forms and filter rows), not just the toolbars. This is
+- **`SegmentedControl` 34 → 40 is the widest-reaching change.** It affects every
+  segmented usage (forms, filter rows, view toggles), not just toolbars. This is
   the intended consequence of a shared scale and improves alignment with
   adjacent 40px inputs, but it is a global visual change worth eyeballing.
+- **Renaming `AdminSearchInput` → `SearchInput`** touches its two existing import
+  sites plus the hub; a mechanical rename, but it is an API change to a shared
+  component.
+- The hub migration swaps a native `<select>` for the Base UI `Select`; behavior
+  is equivalent (the hub is already a client component).
 
 ## Verification
 
-- Visual check: People / Groups / Solutions toolbars — all controls the same
-  height; form dialogs — segmented aligns with inputs.
+- Visual check of every control row: People / Groups / Solutions toolbars, the
+  workspace home hub toolbar, the theme-builder top row, and the access filter /
+  toggle rows — all members the same 40px height; form dialogs — segmented aligns
+  with inputs.
 - `pnpm build` and lint pass.
 - No new automated tests — the change is presentational.
