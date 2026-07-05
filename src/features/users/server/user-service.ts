@@ -7,6 +7,7 @@ import { auth } from "@/server/auth";
 import { db } from "@/server/db";
 import { user } from "@/server/db/schema";
 import { assertStrongPassword } from "@/server/features/password";
+import { isResendConfigured } from "@/server/mailer";
 
 /**
  * One domain service wrapping every better-auth admin mutation, so enforcement
@@ -33,9 +34,9 @@ const USER_ROLES: ("user" | "admin")[] = ["user"];
  * it — the hook logs the link there.
  */
 function requireMailerConfigured(action: "invite" | "reset"): void {
-  if (process.env.NODE_ENV === "production" && !process.env.MAILER_DSN && !process.env.SMTP_URL) {
+  if (process.env.NODE_ENV === "production" && !isResendConfigured()) {
     throw new Error(
-      `${action} requires a delivery adapter in production — set MAILER_DSN/SMTP_URL (and wire sendResetPassword to a real provider). Refusing to create an undeliverable ${action} link.`,
+      `${action} requires Resend in production — set RESEND_API_KEY (and optionally RESEND_FROM_EMAIL). Refusing to create an undeliverable ${action} link.`,
     );
   }
 }

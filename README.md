@@ -39,6 +39,9 @@ cp .env.example .env
 #      BETTER_AUTH_SECRET="$(openssl rand -base64 32)"   # ≥32 chars, required
 #      ADMIN_EMAIL=...                                    # first-admin bootstrap
 #      ADMIN_PASSWORD=...                                 #   (strength-checked; clear after first boot)
+#    Optional for real invite/reset emails:
+#      RESEND_API_KEY=...                                 # if absent, local dev logs links instead
+#      RESEND_FROM_EMAIL=onboarding@resend.dev            # swap to your verified domain later
 #    DATABASE_URL already points at the local Docker DB below.
 
 # 4. Start the dev database (Postgres in a container, data in a volume)

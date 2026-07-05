@@ -40,6 +40,8 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-genie}:${POSTGRES_PASSWORD:-genie}@db:5432/${POSTGRES_DB:-genie}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required}
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:3000}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-onboarding@resend.dev}
       # First-admin bootstrap. Seeded only on a fresh (empty-user) DB; clear after.
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}

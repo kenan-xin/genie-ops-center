@@ -31,6 +31,11 @@ const configSchema = z.object({
   // server-side tRPC client's base (src/trpc/provider.tsx).
   PUBLIC_BASE_URL: z.url("PUBLIC_BASE_URL must be a valid URL"),
 
+  // Transactional email (invite/reset). If RESEND_API_KEY is absent, local dev
+  // falls back to logging links; production callers refuse invite/reset.
+  RESEND_API_KEY: z.string().default(""),
+  RESEND_FROM_EMAIL: z.string().default("onboarding@resend.dev"),
+
   PORT: z.coerce.number().int().positive().default(3000),
 
   // Approved origins for per-solution chat streaming endpoints (FR-ADM-S-03).

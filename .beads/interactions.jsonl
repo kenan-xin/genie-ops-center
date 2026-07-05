@@ -1,0 +1,1 @@
+{"id":"int-67b75bae","kind":"field_change","created_at":"2026-07-05T10:30:29.246159158Z","actor":"kenan.xin","issue_id":"genie-ops-center-f4v","extra":{"field":"status","new_value":"closed","old_value":"in_progress","reason":"Implemented Resend invite/reset delivery with onboarding@resend.dev default, env/docs/compose updates, and passing tests."}}

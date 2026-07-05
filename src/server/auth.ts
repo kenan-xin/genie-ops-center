@@ -8,6 +8,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/server/db";
 import { user } from "@/server/db/schema";
 import { passwordStrengthPlugin } from "@/server/features/password";
+import { isResendConfigured, sendPasswordResetEmail } from "@/server/mailer";
 import * as schema from "@/server/db/schema";
 
 const ONE_MINUTE = 60;
@@ -43,14 +44,18 @@ export const auth = betterAuth({
       // swallows rejections (logs only) — so throwing here CANNOT fail the
       // request. Production fail-closed enforcement therefore lives at the
       // callers (see requireMailerConfigured in features/users/server/user-service.ts), which guard
-      // BEFORE a token/user is created. Here we just never log the bearer URL in
-      // prod; dev/test log it so the flow is usable without a mailer.
-      if (process.env.NODE_ENV === "production") {
-        // Wire a real delivery adapter here (MAILER_DSN/SMTP_URL) when enabling
-        // reset/invite in production. Until then the link is intentionally
-        // discarded — callers should have refused the request before reaching us.
+      // BEFORE a token/user is created. If Resend is configured, use it in any
+      // environment; otherwise never log the bearer URL in prod, but keep the
+      // dev/test console fallback so the flow stays usable without a mailer.
+      if (isResendConfigured()) {
+        await sendPasswordResetEmail({ to: invitedUser.email, url });
         return;
       }
+
+      if (process.env.NODE_ENV === "production") {
+        return;
+      }
+
       // eslint-disable-next-line no-console
       console.info(`[auth] password-reset link for ${invitedUser.email}: ${url}`);
     },

@@ -30,6 +30,8 @@ Because it connects to whatever `DATABASE_URL` points at, the same image is used
 | `DATABASE_URL`                   | **yes**                      | Your external Postgres, e.g. `postgres://user:pass@db.host:5432/dbname`         |
 | `BETTER_AUTH_SECRET`             | **yes**                      | ≥32 chars — `openssl rand -base64 32`                                           |
 | `PUBLIC_BASE_URL`                | **yes**                      | Public base URL of this deployment (auth cookies/reset links, server-side tRPC) |
+| `RESEND_API_KEY`                 | when invite/reset email ships | Resend API key for invite/reset delivery; without it, production invite/reset is refused |
+| `RESEND_FROM_EMAIL`              | optional                     | Defaults to `onboarding@resend.dev` for testing; switch to a verified domain before go-live |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | first boot only              | Bootstrap admin; strength-checked; **clear after first boot**                   |
 | `GENIE_CHAT_API_ALLOWED_ORIGINS` | when chat solutions ship     | Comma-separated approved origins for chat streaming endpoints, e.g. `https://dev-genie.001.gs`. A Chat solution's `apiEndpoint` origin must be on this list. |
 | `ALLOWED_IFRAME_ORIGINS`         | when embedded solutions ship | Comma-separated origins for CSP `frame-src`                                     |
@@ -47,6 +49,8 @@ Secrets are supplied via env **only** — never baked into the image.
 DATABASE_URL=postgres://...your-external-postgres...
 BETTER_AUTH_SECRET=...
 PUBLIC_BASE_URL=https://workspace.example.com
+RESEND_API_KEY=...
+RESEND_FROM_EMAIL=onboarding@resend.dev
 ADMIN_EMAIL=admin@example.com
 ADMIN_PASSWORD=...           # first boot only
 
