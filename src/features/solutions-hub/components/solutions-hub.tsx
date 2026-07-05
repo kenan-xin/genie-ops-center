@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { SearchInput } from "@/components/ui/search-input";
 import { SegmentedControl } from "@/components/ui/segmented";
+import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { relativeTime } from "@/lib/relative-time";
 
@@ -116,51 +118,26 @@ export function SolutionsHub() {
         <div>
           {/* Toolbar: search · type segmented · sort · "N OF M SHOWN" counter */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <div
-              style={{
-                flex: 1,
-                maxWidth: 300,
-                height: 34,
-                border: "1px solid var(--line)",
-                background: "var(--surface)",
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "0 11px",
-              }}
-            >
-              <span
-                aria-hidden
-                style={{
-                  width: 13,
-                  height: 13,
-                  border: "1.5px solid var(--ink3)",
-                  borderRadius: "50%",
-                  flexShrink: 0,
-                }}
-              />
-              <input
-                value={search}
-                onChange={(e) => resetLimit(() => setSearch(e.target.value))}
-                placeholder="Search solutions…"
-                aria-label="Search solutions"
-                style={{
-                  border: "none",
-                  background: "transparent",
-                  outline: "none",
-                  fontSize: "var(--t-body)",
-                  color: "var(--ink)",
-                  width: "100%",
-                }}
-              />
-            </div>
+            <SearchInput
+              value={search}
+              onChange={(v) => resetLimit(() => setSearch(v))}
+              placeholder="Search solutions…"
+              aria-label="Search solutions"
+              className="flex-1 max-w-[300px]"
+            />
             <SegmentedControl
               options={TYPE_FILTERS}
               value={typeFilter}
               onValueChange={(v) => resetLimit(() => setTypeFilter(v))}
               aria-label="Filter by type"
             />
-            <SortSelect value={sort} onChange={(v) => resetLimit(() => setSort(v))} />
+            <Select
+              items={SORTS}
+              value={sort}
+              onValueChange={(v) => resetLimit(() => setSort(v as HubSort))}
+              aria-label="Sort solutions"
+              className="w-[200px]"
+            />
             <div
               style={{
                 font: "500 var(--m-md) var(--font-mono)",
@@ -247,51 +224,6 @@ function HubSkeleton() {
         ))}
       </div>
     </div>
-  );
-}
-
-function SortSelect({ value, onChange }: { value: HubSort; onChange: (v: HubSort) => void }) {
-  return (
-    <span style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value as HubSort)}
-        aria-label="Sort solutions"
-        style={{
-          appearance: "none",
-          WebkitAppearance: "none",
-          border: "1px solid var(--line)",
-          background: "var(--surface)",
-          color: "var(--ink)",
-          cursor: "pointer",
-          borderRadius: 0,
-          padding: "0 32px 0 12px",
-          height: 34,
-          fontSize: "var(--t-sm)",
-        }}
-      >
-        {SORTS.map((s) => (
-          <option key={s.value} value={s.value}>
-            {s.label}
-          </option>
-        ))}
-      </select>
-      <span
-        aria-hidden
-        style={{
-          position: "absolute",
-          right: 12,
-          top: "50%",
-          transform: "translateY(-50%)",
-          width: 0,
-          height: 0,
-          borderLeft: "4px solid transparent",
-          borderRight: "4px solid transparent",
-          borderTop: "5px solid var(--ink3)",
-          pointerEvents: "none",
-        }}
-      />
-    </span>
   );
 }
 
