@@ -152,7 +152,7 @@ export function GroupsDirectory({ initialGroupId }: { initialGroupId?: string } 
           placeholder="Search groups…"
           aria-label="Search groups"
         />
-        <Button variant="dark" size="sm" className="px-[14px]" onClick={() => setCreateOpen(true)}>
+        <Button variant="dark" className="px-[14px]" onClick={() => setCreateOpen(true)}>
           + New group
         </Button>
       </div>

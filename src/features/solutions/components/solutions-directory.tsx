@@ -105,12 +105,7 @@ export function SolutionsDirectory() {
         <div className="flex flex-col gap-1">
           <h1 className="font-sans text-title font-extrabold tracking-[-0.02em]">Solutions</h1>
         </div>
-        <Button
-          variant="dark"
-          size="sm"
-          className="px-[14px]"
-          onClick={() => setRegisterOpen(true)}
-        >
+        <Button variant="dark" className="px-[14px]" onClick={() => setRegisterOpen(true)}>
           + Add
         </Button>
       </header>

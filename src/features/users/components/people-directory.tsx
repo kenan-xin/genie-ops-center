@@ -263,12 +263,7 @@ export function PeopleDirectory() {
             onValueChange={(value) => setSort(value as PersonSort)}
             className="w-[140px]"
           />
-          <Button
-            variant="dark"
-            size="sm"
-            className="px-[14px]"
-            onClick={() => setInviteOpen(true)}
-          >
+          <Button variant="dark" className="px-[14px]" onClick={() => setInviteOpen(true)}>
             + Add person
           </Button>
         </div>
