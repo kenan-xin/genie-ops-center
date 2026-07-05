@@ -11,7 +11,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 
-import { AdminSearchInput } from "@/components/ui/admin-search-input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -146,7 +146,7 @@ export function GroupsDirectory({ initialGroupId }: { initialGroupId?: string } 
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <AdminSearchInput
+        <SearchInput
           value={search}
           onChange={setSearch}
           placeholder="Search groups…"

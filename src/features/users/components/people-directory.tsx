@@ -10,7 +10,7 @@ import {
 } from "@tanstack/react-table";
 import { useCallback, useMemo, useState } from "react";
 
-import { AdminSearchInput } from "@/components/ui/admin-search-input";
+import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -251,7 +251,7 @@ export function PeopleDirectory() {
           All people
         </span>
         <div className="flex flex-wrap items-center gap-2.5">
-          <AdminSearchInput
+          <SearchInput
             value={globalFilter}
             onChange={setGlobalFilter}
             placeholder="Search users…"
