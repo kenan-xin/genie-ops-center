@@ -12,12 +12,16 @@ The aesthetic is **"Ledger"**: firm, utilitarian, precise. Think a well-set fina
 - Fonts: Geist (display + UI/body), Geist Mono (data/labels) — both Google Fonts.
 
 ## Index / manifest
+- **[`implementation.md`](./implementation.md)** — the **living implementation reference**: tokens as shipped in `src/app/globals.css` + the React component kit (`src/components/ui/`) with real variants/props. Read this when working in code.
 - `styles.css` — entry point; `@import`s the four token files. Link this one file.
 - `tokens/colors.css` — ink scale, surfaces, lines, brand, semantic (light + `[data-theme="dark"]`).
 - `tokens/typography.css` — three font families + size scale + the mono-eyebrow note.
 - `tokens/spacing.css` — spacing scale, radius (square-ish), elevation, motion, focus ring.
 - `tokens/fonts.css` — Google Fonts import.
 - `SKILL.md` — how a future agent should use this.
+
+> This `readme.md` is the **visual spec**. Where it and `implementation.md` disagree, the code
+> wins — disagreements are logged in [`implementation.md` § Drift log](./implementation.md#drift-log).
 
 ---
 

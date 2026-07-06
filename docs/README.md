@@ -14,6 +14,7 @@ In-repo mirror of the planning artifacts. Planning happens in Traycer; this `/do
 | [tickets](./tickets/index.md)                                       | Implementation breakdown + dependency graph + status                                 |
 | [execution-log](./execution-log/index.md)                           | Accepted deviations recorded during implementation                                   |
 | [design-package](./design-package/index.md)                         | "Ledger" design system (tokens + recipes) **+ the interactive prototype (`.dc.html`) — screen source of truth** |
+| [design-package/design-system/implementation](./design-package/design-system/implementation.md) | **Living implementation reference** — shipped tokens (`globals.css`) + the React component kit with real props/variants |
 | [deployment](./deployment.md)                                       | Production topology — app image + **external** Postgres, env contract, compose files |
 | [foundation-walkthrough.html](./foundation-walkthrough.html)        | Visual review guide for the built foundation (open in a browser)                     |
 
