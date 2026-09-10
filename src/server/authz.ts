@@ -9,8 +9,8 @@ import { auth } from "@/server/auth";
  * Authorization seam — the single place that decides what a session may do.
  *
  * Three surfaces (RSC, tRPC, `/api/chat`) all resolve a session through
- * {@link getServerAuth}, so the limited-session rules are enforced once, here,
- * not duplicated as page redirects:
+ * {@link getServerAuth} to enforce limited sessions rather than page redirects.
+ * Better Auth's own endpoints enforce the same restriction in auth.ts's before hook:
  *   - `pending` users never reach here — better-auth's `session.create.before`
  *     hook (src/server/auth.ts) blocks their sign-in. Banned users are revoked
  *     by the admin plugin's own session handling.
@@ -49,7 +49,7 @@ export type AuthUser = {
 /**
  * Resolve the session shared by RSC, tRPC, and `/api/chat`. Pass `incoming`
  * headers from a request context; in RSC/route-handler scope it falls back to
- * `next/headers`. Enforces `mustChangePassword` here — the single point.
+ * `next/headers`. Enforces `mustChangePassword` for these application surfaces.
  */
 export async function getServerAuth(incoming?: Headers): Promise<ServerAuth> {
   const h = incoming ?? (await nextHeaders());

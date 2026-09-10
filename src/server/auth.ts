@@ -2,6 +2,7 @@ import "server-only";
 
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { admin } from "better-auth/plugins";
 import { and, eq } from "drizzle-orm";
 
@@ -13,6 +14,15 @@ import * as schema from "@/server/db/schema";
 
 const ONE_MINUTE = 60;
 const FIFTEEN_MINUTES = 15 * ONE_MINUTE;
+const LIMITED_SESSION_PATHS = new Set([
+  "/get-session",
+  "/sign-in/email",
+  "/sign-out",
+  "/change-password",
+  "/request-password-reset",
+  "/reset-password",
+  "/reset-password/:token",
+]);
 
 /**
  * better-auth — identity, credentials, sessions, password reset, admin actions.
@@ -31,6 +41,25 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg", schema }),
   baseURL: process.env.PUBLIC_BASE_URL ?? "http://localhost:3000",
   secret: process.env.BETTER_AUTH_SECRET,
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (LIMITED_SESSION_PATHS.has(ctx.path)) return;
+
+      // Resolve through Better Auth directly; calling auth.api.getSession here
+      // would re-enter our hooks. Endpoints retain their own anonymous guards.
+      const session = await getSessionFromCtx(ctx);
+      if (
+        session?.user &&
+        "mustChangePassword" in session.user &&
+        session.user.mustChangePassword
+      ) {
+        throw new APIError("FORBIDDEN", {
+          code: "PASSWORD_CHANGE_REQUIRED",
+          message: "Change your password before continuing.",
+        });
+      }
+    }),
+  },
   emailAndPassword: {
     enabled: true,
     disableSignUp: true,
