@@ -40,6 +40,7 @@ Both app Compose services inherit the image's health check. In Coolify, deploy w
 | `DATABASE_URL`                   | **yes**                      | Separate PostgreSQL service, e.g. `postgres://user:pass@db.host:5432/dbname`         |
 | `BETTER_AUTH_SECRET`             | **yes**                      | ≥32 chars — `openssl rand -base64 32`                                           |
 | `PUBLIC_BASE_URL`                | **yes**                      | Public base URL of this deployment (auth cookies/reset links, server-side tRPC) |
+| `AUTH_TRUSTED_PROXIES`           | behind multiple proxies      | Comma-separated trusted proxy IPs/CIDRs for Better Auth's `X-Forwarded-For` parsing; empty by default. For Cloudflare + Traefik, use Cloudflare's published ranges and configure the same `forwardedHeaders.trustedIPs` on Traefik's HTTP/HTTPS entrypoints. Never trust all addresses. |
 | `RESEND_API_KEY`                 | when invite/reset email ships | Needed for actual delivery. Admin service invite/reset actions reject missing configuration in production; the public forgot-password path can still report generic success without delivery. |
 | `RESEND_FROM_EMAIL`              | optional                     | Defaults to `onboarding@resend.dev`, which is restricted to the Resend account owner. Use a sender on a verified domain for other recipients. |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | first boot only              | Bootstrap admin; strength-checked; **clear after first boot**                   |

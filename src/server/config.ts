@@ -30,6 +30,8 @@ const configSchema = z.object({
   // This deployment's public URL — better-auth cookies/reset links, and the
   // server-side tRPC client's base (src/trpc/provider.tsx).
   PUBLIC_BASE_URL: z.url("PUBLIC_BASE_URL must be a valid URL"),
+  // Proxy IPs/CIDRs to skip when resolving the client from X-Forwarded-For.
+  AUTH_TRUSTED_PROXIES: z.string().default(""),
 
   // Transactional email (invite/reset). If RESEND_API_KEY is absent, local dev
   // falls back to logging links; production callers refuse invite/reset.
@@ -84,5 +86,12 @@ export function chatAllowedOrigins(env = process.env): string[] {
   return (env.GENIE_CHAT_API_ALLOWED_ORIGINS ?? "")
     .split(",")
     .map((o) => o.trim().replace(/\/$/, ""))
+    .filter(Boolean);
+}
+
+export function authTrustedProxies(env = process.env): string[] {
+  return (env.AUTH_TRUSTED_PROXIES ?? "")
+    .split(",")
+    .map((address) => address.trim())
     .filter(Boolean);
 }

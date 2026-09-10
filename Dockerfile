@@ -31,7 +31,7 @@ ENV DATABASE_URL="postgres://build:build@build:5432/build" \
     BETTER_AUTH_SECRET="build-placeholder-not-used-at-runtime-xxxxxxxxxxxx" \
     BETTER_AUTH_URL="http://localhost:3000"
 
-RUN pnpm build && pnpm build:entrypoint
+RUN mkdir -p public && pnpm build && pnpm build:entrypoint
 
 # ─── runner ──────────────────────────────────────────────────────────────────
 FROM node:24-bookworm-slim AS runner

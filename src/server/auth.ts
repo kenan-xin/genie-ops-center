@@ -7,6 +7,7 @@ import { admin } from "better-auth/plugins";
 import { and, eq } from "drizzle-orm";
 
 import { db } from "@/server/db";
+import { authTrustedProxies } from "@/server/config";
 import { user } from "@/server/db/schema";
 import { passwordStrengthPlugin } from "@/server/features/password";
 import { isResendConfigured, sendPasswordResetEmail } from "@/server/mailer";
@@ -41,6 +42,9 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg", schema }),
   baseURL: process.env.PUBLIC_BASE_URL ?? "http://localhost:3000",
   secret: process.env.BETTER_AUTH_SECRET,
+  advanced: {
+    ipAddress: { trustedProxies: authTrustedProxies() },
+  },
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
       if (LIMITED_SESSION_PATHS.has(ctx.path) && ctx.path !== "/change-password") return;
