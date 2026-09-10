@@ -1,8 +1,8 @@
-# Native apps — isolation & add/remove guide
+# Native apps — planned isolation & add/remove guide
 
 A **native app** is a first-party application built inside this repo (e.g. *Community Manager*, *News Verification*) that customers open through the normal solution viewer at `/s/[slug]`. Native apps are designed to be **self-contained and cleanly removable** — code *and* data — so you can add or retire one without touching core.
 
-> **Status:** this documents the native-apps foundation defined in [tech-plan/native-solutions](../tech-plan/native-solutions/index.md) (ticket 24) and its prerequisite [tech-plan/platform-identity](../tech-plan/platform-identity/index.md) (ticket 25). It becomes operational when those ship. Design decisions and rationale live in those plans; this file is the how-to.
+> **Not implemented:** `src/native/`, the catch-all native viewer, `sync-native-solutions.ts`, the Everyone group and protected-admin invariant do not exist in the current app. This is a future implementation guide for tickets 24/25, not a runnable setup procedure. The current viewer supports chat and embedded solutions. Use Beads for delivery status; the architecture and steps below describe the intended design.
 
 ## How isolation works
 
@@ -17,7 +17,7 @@ Three dimensions of isolation:
 | Dimension | Mechanism |
 | --- | --- |
 | **Code** | Everything for an app lives under `src/native/<app>/`. Core imports it only lazily, by key, through the barrels. |
-| **Data** | Each app's tables live in their **own Postgres schema** — `pgSchema("na_<app>")` — declared in the app's own `schema.ts`. Never in core's `schema.ts`. Removed with `DROP SCHEMA na_<app> CASCADE`; core's `public` schema is untouched. |
+| **Data** | Each app's tables live in their **own Postgres schema** — `pgSchema("na_<app>")` — declared in the app's own `schema.ts`. Never in core's `schema.ts`. Removal requires a reviewed migration that drops only the app-owned tables and schema; do not assume a generated schema drop includes `CASCADE`. |
 | **Server** | Each app's tRPC procedures live in its own `server/router.ts`, merged under one `native` key. Removing the app removes its router with one barrel line. |
 
 A native app **may** freely use the shared UI kit (`@/components/ui/*`), shared components, and the design tokens — the dependency is one-directional.
@@ -40,7 +40,7 @@ src/native/
 - `manifest.ts` is **plain data with no React**, so the Node sync script can import it without dragging a client module into Node.
 - The app surface is a client component and does its own internal routing off the catch-all `/s/[slug]/[[...rest]]` path (deep links work).
 
-## Adding a native app
+## Planned addition procedure (after the foundation ships)
 
 1. **Scaffold the directory** `src/native/<app>/`:
    - `surface.tsx` — a `"use client"` component. It receives `{ solution, rest }` (the sub-path segments) and renders the app, routing internally.
@@ -61,15 +61,15 @@ src/native/
 6. **Generate the migration:** `pnpm db:generate` (drizzle-kit's glob picks up the new `schema.ts`), review, commit.
 7. **Seed the solution row:** run `sync-native-solutions.ts`. It upserts the `solution` row (type `native`) and, on first creation, grants it to the **Everyone** group so all users can reach it. Admins can later re-scope it to specific groups from the Access screen.
 
-The app is now reachable at `/s/<slug>`, appears in the hub (and recents/favorites), and is grantable per-group like any other solution.
+After implementing that foundation and applying its migrations, the app should be reachable at `/s/<slug>`, appears in the hub and favorites, and is grantable per-group like any other solution.
 
-## Removing a native app
+## Planned removal procedure (after the foundation ships)
 
 1. `rm -rf src/native/<app>/`
 2. Delete the app's **one line** in each barrel: `registry.ts`, `manifest.ts`, and (if present) `server/routers.ts`.
-3. `pnpm db:generate` → drizzle emits `DROP … CASCADE` for `na_<app>` (tables **and their data**); review + commit the migration.
-4. Re-run `sync-native-solutions.ts` to drop the app's `solution` row and grants.
-5. `pnpm tsc` — the one-way-import invariant guarantees the only breakages are the barrel lines you already removed. If `tsc` is green, the app is fully gone and core is untouched.
+3. `pnpm db:generate`, then inspect and commit the destructive migration. Remove only the app-owned tables/schema; manually created objects can prevent a schema drop. Apply the migration through the normal deployment process after backing up data.
+4. Re-run the planned `sync-native-solutions.ts` to **archive** its solution row. The design retains grants/favorites behind the archived filter; it does not delete the row or grants. Older plans also mention recents, but that workspace route has since been removed.
+5. Run `pnpm typecheck` and the relevant tests; verify routing, catalogue reconciliation and the migration. A passing type check alone does not prove database cleanup or access behavior.
 
 ## Rules of thumb
 

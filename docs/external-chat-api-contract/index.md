@@ -5,14 +5,14 @@ title: "External Genie Chat API — Observed Contract"
 
 # External Genie Chat API — Observed Contract
 
-Captured by calling `POST https://dev-genie.001.gs/public-api/v2/workflow/chatbot/chats` directly (2026-06-30). This is the **real** streaming contract the Chat solution type must bridge to ai-sdk-ui. Where this conflicts with the prototype's canned-reply behavior, **this wins**.
+Captured by calling `POST https://dev-genie.001.gs/public-api/v2/workflow/chatbot/chats` directly (2026-06-30). This is a dated observation, not a fresh verification of the external service or its production authentication policy. The implemented bridge is in `src/features/chat/server/`. Where this conflicts with the prototype's canned-reply behavior, **this wins**.
 
 ## Transport
 
 - **SSE** — `content-type: text/event-stream`, Cloudflare-fronted, HTTP/2. `cache-control: no-cache`.
 - Each event is a single `data: {json}\n\n` line. **No `event:` types, no `[DONE]` sentinel.**
 - **Termination signal = `status: "completed"`** (or an error event — see lifecycle). Stream closes after.
-- No auth header was required — it's a **public** endpoint today. (Production should still proxy server-side; see invariants.)
+- No auth header was required — the endpoint accepted that request at capture time. (Production should still proxy server-side; see invariants.)
 
 ## Request
 
@@ -65,8 +65,8 @@ Every `data:` event has the same keys:
 **Mapping rule:** stream the `processing` deltas as text; on `completed`, **do not append `answer` again** — it's the full text. Treat `completed` as end-of-stream + source of token usage (and an authoritative full-text reconciliation if needed).
 
 - `answer` contains **inline HTML** (`<strong>`, `<span style="color:#52c41a;">`, `\n`), not plain text — and a delta can split mid-tag _and mid-attribute_ (observed: one delta ends `…<span style="color: #52c41a`, the next begins `;">`). The prototype's plain-text assumption does not hold.
-- **Render via Streamdown (AI Elements `Response`), not a hand-rolled HTML path.** Streamdown renders raw inline HTML by default (`rehype-raw`), sanitizes by default (`rehype-sanitize`, configurable allow/deny lists) and hardens links/images (`rehype-harden`), and is built to render _incomplete_ streaming markup gracefully — exactly the mid-tag-split case. So the XSS boundary **and** the partial-tag problem are handled by the renderer; no separate DOMPurify pass.
-- **One config decision:** `rehype-sanitize`'s default schema strips inline `style`, so the bot's semantic color spans (`style="color:#52c41a"`) render as plain text. To keep the colors, extend the sanitize allow-list to permit `style` — or, cleaner for Ledger, map the spans to Ledger semantic classes via Streamdown's `allowedTags`/`components`. Decide at impl.
+- **Current renderer:** `src/components/ai-elements/response.tsx` uses Streamdown with the app's explicit hardening in `src/features/chat/lib/response-hardening.ts`. It allows absolute `https:`/`mailto:` links and absolute `https:` images; relative URLs and other protocols are rejected.
+- **Inline styles stay stripped.** `mapColorSpansToTone` rewrites recognized complete color spans into the closed Ledger `data-tone` set (`success`, `warn`, `error`, `neutral`) before rendering. Incomplete or unrecognized spans fall through to the renderer's sanitizer. Do not enable arbitrary `style` attributes.
 
 ## `reasoning` — the "thinking" block
 
@@ -86,9 +86,12 @@ flowchart LR
 
 ## ai-sdk-ui bridge (high level — detail belongs in tech-plan)
 
-A Next.js route handler proxies this SSE server-side and re-emits the **ai-sdk UI message stream**: for each `data:` JSON → emit a **`text-delta`** for the `processing` `answer` and a **`reasoning`** delta for any `reasoning`; on `completed` emit `finish` (carry `outputTokens`) and **do not** re-emit the full `answer`. Server holds the bot `uuid` (from solution config) and maps the ai-sdk thread to `sessionUUID` (start empty, persist the returned conversation id for follow-ups). The client renders the answer with **AI Elements `Response` (Streamdown)** — HTML render + sanitization built in (see config note above) — and the thinking with the **AI Elements `Reasoning`** block.
+A Next.js route handler proxies this SSE server-side and re-emits the **ai-sdk UI message stream**: for each `data:` JSON → emit a **`text-delta`** for the `processing` `answer` and a **`reasoning`** delta for any `reasoning`; on `completed` emit `finish` (carry `outputTokens`) and **do not** re-emit the full `answer`. Server holds the bot `uuid` (from solution config) and looks up `sessionUUID` from the user-and-solution-scoped server handle (start empty, persist the returned conversation id for follow-ups). The client renders the answer with **AI Elements `Response` (Streamdown)** — HTML rendering plus the explicit application hardening above — and the thinking with the **AI Elements `Reasoning`** block.
 
-## Resolved / still open
+## Implemented behavior and remaining contract uncertainty
 
-- **Resolved:** `sessionUUID` ownership = **per conversation**, server-issued, client/thread persists it. Bot identity = request `uuid`, per-solution config.
-- **Open (tech-plan):** whether `reasoning` ever streams as multiple deltas (only seen as one block); the Streamdown sanitize-`style` allow-list decision (keep inline colors vs map to Ledger classes); error-event shape (couldn't trigger one); whether transcript history is persisted by us or refetchable; attachment (`documentIDs` etc.) upload path; production auth (today it's open public-api); rate limits / timeouts; how `nodeInfos` (if at all) surfaces in the UI.
+The upstream conversation UUID is stored server-side in `chat_session_handle`, scoped to the user and solution; it is not accepted from the browser. The browser transcript is in memory. The app does not persist or fetch transcript history. New Chat clears the server handle and local messages.
+
+The mapper ignores the repeated final `answer`, closes text/reasoning parts and emits SDK `finish` metadata with `outputTokens`. Populated `errorMessage`, malformed events, unknown statuses and EOF before `completed` fail the request. The UI exposes a safe error and retry, labels interrupted replies incomplete and detects a client stream ending without SDK `finish`.
+
+The original capture did not establish the full upstream error schema, multi-delta reasoning behavior, production authentication requirements or provider rate limits. Attachments and `nodeInfos` UI are not implemented. Revalidate those external details against the intended upstream service when adding them; current work status belongs in Beads.

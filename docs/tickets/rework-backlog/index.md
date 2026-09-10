@@ -6,7 +6,9 @@ status: 2
 
 # Rework backlog
 
-Two sources, sequenced together: the **[Design Conformance Audit](../../design-conformance-audit/index.md)** (Phase 1/2 screen drift + kit + correctness) and the **Phase-3 review** (shell/hub/viewer, 2024-scope). Coarse, story-sized; each leaves the tree green.
+> **Archived backlog snapshot:** these entries are historical design-review notes. Beads is the current backlog and status source; this document is not a second active tracker.
+
+Two sources, sequenced together: the **Design Conformance Audit** (historical source, not present in this checkout) (Phase 1/2 screen drift + kit + correctness) and the **Phase-3 review** (shell/hub/viewer, 2024-scope). Coarse, story-sized; each leaves the tree green.
 
 > **Format note:** kept as one backlog file to stay lean; each ticket below is expanded into its own `tickets/<n>/index.md` when it's picked up for `/traycer-execute`. Numbering continues from the existing 01–14.
 

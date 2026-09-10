@@ -5,6 +5,8 @@ title: "Tech Plan — Platform identity invariants (protected admin + Everyone g
 
 # Tech Plan — Platform identity invariants
 
+> **Planned, not implemented:** protected-admin and Everyone-group invariants below are design requirements, not current guarantees. The current bootstrap seeds only when the user table is empty. Beads owns implementation status.
+
 Two system-managed invariants the platform must always hold, independent of any feature:
 
 1. **A protected admin account** that always exists and can't be locked out.

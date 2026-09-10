@@ -24,7 +24,7 @@ Keep `solution.archived` / `solution.status` / `solution.slug` in mind: add a `s
 - Enum/check constraints on `user.status` / `solution.type` / `solution.status` (the fail-closed *code* guard landed in ticket 04; the DB-level constraint is a separate hardening item — track separately if wanted).
 
 ## Governs
-[data-model](../../tech-plan/data-model/index.md) (the join tables + PKs), [whole-repo review](../../reviews/whole-repo-coderabbit/index.md) (finding #5).
+[data-model](../../tech-plan/data-model/index.md) (the join tables + PKs), whole-repo review (historical source absent from this checkout, finding #5).
 
 ## Depends on
 [03 · Identity + schema + migrations](../03-identity-schema-migrations/index.md). Migrations are additive (a new `drizzle-kit generate`); no data backfill.

@@ -1,6 +1,8 @@
 # Genie Workspace — Documentation
 
-In-repo mirror of the planning artifacts. Planning happens in Traycer; this `/docs` tree is the snapshot synced into the repo at milestones so the design lives alongside the code. When the plan changes in Traycer, re-sync this folder.
+This tree contains current operational guides and historical planning/design artifacts. Start with the [repository README](../README.md) for local setup and [deployment](./deployment.md) for runtime configuration. **Beads (`bd`) owns current work status and backlog**; ticket front matter and checkboxes in archived plans are snapshots, not the active tracker.
+
+The tech plans and tickets describe intended behavior as well as implemented work. In particular, native apps and the Everyone/protected-admin model are still planned. Design prototypes remain the screen reference, subject to the epic brief's production deltas; `src/app/globals.css` and the implementation reference describe shipped tokens.
 
 ## Index
 
@@ -11,14 +13,16 @@ In-repo mirror of the planning artifacts. Planning happens in Traycer; this `/do
 | [tech-plan/data-model](./tech-plan/data-model/index.md)             | Drizzle schema (better-auth + domain tables)                                         |
 | [tech-plan/chat](./tech-plan/chat/index.md)                         | External SSE → ai-sdk-ui chat mechanism (proxy, reasoning, conversation model)       |
 | [external-chat-api-contract](./external-chat-api-contract/index.md) | The **observed** external Genie chat SSE contract (captured live)                    |
-| [tickets](./tickets/index.md)                                       | Implementation breakdown + dependency graph + status                                 |
+| [tickets](./tickets/index.md)                                       | Historical implementation breakdown + dependency graph; use Beads for status                                 |
 | [execution-log](./execution-log/index.md)                           | Accepted deviations recorded during implementation                                   |
 | [design-package](./design-package/index.md)                         | "Ledger" design system (tokens + recipes) **+ the interactive prototype (`.dc.html`) — screen source of truth** |
 | [design-package/design-system/implementation](./design-package/design-system/implementation.md) | **Living implementation reference** — shipped tokens (`globals.css`) + the React component kit with real props/variants |
-| [deployment](./deployment.md)                                       | Production topology — app image + **external** Postgres, env contract, compose files |
-| [foundation-walkthrough.html](./foundation-walkthrough.html)        | Visual review guide for the built foundation (open in a browser)                     |
+| [deployment](./deployment.md)                                       | Planned Coolify topology, separate PostgreSQL, env contract, image health check and Compose examples |
+| [foundation-walkthrough.html](./foundation-walkthrough.html)        | Historical foundation walkthrough; not a current feature inventory                     |
+| [native-apps](./native-apps/index.md) | Planned native module guide; not executable against the current repo |
+| [superpowers](./superpowers/README.md) | Historical dated design specs and implementation plans |
 
-## Not mirrored here
+## Historical artifact provenance
 
 - **Design package screenshots + designer tooling** — the ~140 screenshots (≈3.7 MB binaries), `CLAUDE.md`, `support.js`, and `uploads/` stay in the Traycer artifacts. The interactive prototype `.dc.html` files **are now mirrored** into `design-package/` (they're the screen source of truth, and keeping them out is what let the UI drift from the design).
-- **Critique / review artifacts** — review history. Their conclusions are already folded into the tech plan, so they're not duplicated here.
+- **Critique / review artifacts** — review history. Earlier planning reviews informed the tech plan; current review follow-ups are tracked in Beads.

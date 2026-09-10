@@ -6,6 +6,8 @@ status: 1
 
 # Platform Foundation — Implementation Tickets
 
+> **Historical planning tickets:** front matter, phase labels, dependency diagrams and checkboxes here (and in child documents) are archived planning state. Use Beads (`bd`) for current status, blockers and backlog; do not update these files as a second task tracker. See the [README](../../README.md) for shipped features and setup.
+
 Sequenced breakdown of the [tech plan](../tech-plan/index.md) ([data model](../tech-plan/data-model/index.md) · [chat](../tech-plan/chat/index.md)). Coarse, story-sized; each leaves the codebase working. Critique invariants ride as acceptance criteria on the relevant tickets.
 
 ## Dependency view

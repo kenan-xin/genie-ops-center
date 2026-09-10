@@ -5,6 +5,8 @@ title: "Tech Plan — Native solutions foundation (removable in-app modules)"
 
 # Tech Plan — Native solutions foundation
 
+> **Planned, not implemented:** no `src/native/`, sync script or native catch-all viewer exists yet. The procedures below describe the target architecture and cannot be run against the current repo. See the [planned native-app guide](../../native-apps/index.md) and Beads for status.
+
 A **native solution** is a first-party app built inside this codebase (e.g. a future *Community Manager* or *News Verification*) that a customer opens through the normal solution viewer. This plan defines the runtime and — the load-bearing part — the **module boundary that makes every native app self-contained and cleanly removable**, including its database.
 
 Governs **ticket 24**. **Depends on** [platform-identity](../platform-identity/index.md) (ticket 25) for the `Everyone` group used as the default grant target. Product decisions were owner-approved (2026-07-03).

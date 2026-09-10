@@ -78,7 +78,7 @@ for a different variable.
 - **Status color never travels alone.** It always pairs foreground + tint (e.g. a `StatusBadge`
   is `text-[var(--success)]` on `bg-[var(--successtint)]`).
 - **Chat tone spans are closed.** The external Genie API's inline `color:#hex` spans are
-  rewritten by `rehype-sanitize` to `data-tone="success|warn|error|neutral"` (see `globals.css`
+  rewritten by `mapColorSpansToTone` before Streamdown sanitization to `data-tone="success|warn|error|neutral"` (see `globals.css`
   `[data-tone]`). Never re-allow arbitrary `style`.
 
 ---
@@ -93,9 +93,7 @@ for a different variable.
 | `--font-ui` | `'Hanken Grotesk', system-ui, sans-serif` | `--font-hanken` | All UI + prose + body (wt 400–700). Tailwind `font-sans`. |
 | `--font-mono` | `'IBM Plex Mono', ui-monospace, monospace` | `--font-plex-mono` | Eyebrows, status, IDs, timestamps, counts, table headers. Tailwind `font-mono`. |
 
-> ⚠️ **Font drift — see [Drift log](#drift-log) #1.** The spec (`readme.md`, `tokens/`, `SKILL.md`)
-> names **Geist / Geist Mono**. The shipped product loads **Archivo / Hanken Grotesk / IBM Plex
-> Mono**. Treat the code as correct; the spec prose is stale.
+> **Font mirror difference:** the standalone `styles.css` / `tokens/` mirror still contains Geist / Geist Mono. The app, `readme.md` and `SKILL.md` use Archivo / Hanken Grotesk / IBM Plex Mono. The app does not import the legacy CSS mirror.
 
 ### The responsive scale (stepped, not fluid)
 
@@ -463,11 +461,7 @@ Known disagreements between the spec (`readme.md` / `tokens/` / `SKILL.md`) and 
 Each entry says which side is currently authoritative. Resolve an entry by editing the losing side
 and striking it out here.
 
-1. **Typefaces.** Spec says **Geist / Geist Mono**; production ships **Archivo / Hanken Grotesk /
-   IBM Plex Mono** (`layout.tsx`, `globals.css`). **Code is authoritative.** The spec prose is
-   stale — commit `a8c2799` ("fix stale Geist … comments") is one of several cleanups of this
-   same drift. The `design-package/index.md` note currently claims Geist is correct and Archivo is
-   "wrong"; that claim is itself stale and should be flipped when the spec tokens are regenerated.
+1. **Typefaces.** The standalone CSS/token mirror uses **Geist / Geist Mono**; the app ships **Archivo / Hanken Grotesk / IBM Plex Mono** (`layout.tsx`, `globals.css`). The index, spec readme and skill now identify the shipped fonts. The CSS mirror remains a separate legacy reference and is not imported by the app.
 2. **`Button` auth size.** `readme.md` §COMPONENTS lists the auth input at 42px; the `Button`
    `auth` *size* is `CONTROL_HEIGHTS.lg` (**44px**), while the `Input` `auth` size is `h-[42px]`.
    The two "auth" values differ by design (button vs. input baseline) but the spec blurs them.

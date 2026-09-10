@@ -9,7 +9,7 @@ The aesthetic is **"Ledger"**: firm, utilitarian, precise. Think a well-set fina
 ## Sources
 - Living visual spec: `../Genie Style Guide.dc.html` (open it — it renders every foundation + component).
 - Reference implementation: the Genie Workspace prototype DC in this project (auth, workspace, viewer, admin console). Lift exact values from there.
-- Fonts: Geist (display + UI/body), Geist Mono (data/labels) — both Google Fonts.
+- Shipped fonts: Archivo (display), Hanken Grotesk (UI/body), IBM Plex Mono (data/labels), loaded by `src/app/layout.tsx`. The CSS token mirror still contains the older Geist pair and is not imported by the app.
 
 ## Index / manifest
 - **[`implementation.md`](./implementation.md)** — the **living implementation reference**: tokens as shipped in `src/app/globals.css` + the React component kit (`src/components/ui/`) with real variants/props. Read this when working in code.
@@ -37,7 +37,7 @@ The aesthetic is **"Ledger"**: firm, utilitarian, precise. Think a well-set fina
 
 ## VISUAL FOUNDATIONS
 - **Color:** light-first, near-white surfaces on a cool grey bg. Brand blue `#2360c4` ONLY for the primary action and current selection (nav item, selected row). All other color is semantic: success green, warning amber, error red — each with a pale tint used as a badge/callout background. No gradients. No decorative color.
-- **Type:** Geist for display/headings (wt 800, letter-spacing ≈ -0.02em) AND all UI + prose (wt 400–700) — one family, both roles by weight; Geist Mono for labels/data (wt 600, letter-spacing ≈ 0.06–0.14em, uppercase). Every text size is a responsive token (see "Responsive" below), never a hard-coded px — mono labels included.
+- **Type:** Archivo for display/headings (wt 700–800, letter-spacing ≈ -0.02em), Hanken Grotesk for UI + prose (wt 400–700), IBM Plex Mono for labels/data (wt 600, letter-spacing ≈ 0.06–0.14em, uppercase). Every text size is a responsive token (see "Responsive" below), never a hard-coded px — mono labels included.
 - **Shape:** square-ish. Radius 0 for cards/inputs/badges/buttons; up to 3px for chat bubbles. **Pills (border-radius:11px) are reserved exclusively for toggle switches.** Mono-icon tiles (e.g. "PT", "CD") are 30px squares with no radius.
 - **Structure:** 1px hairlines (`--line`, `--line2`) define everything; a 2px ink rule underlines major result blocks. Tables = header row on `--panel` + hairline-separated rows; row hover = `--panel` fill.
 - **Elevation:** flat by default. Shadow only on lifted surfaces — toasts, dialogs, right-edge slide-overs, dropdown menus.
@@ -56,9 +56,9 @@ The aesthetic is **"Ledger"**: firm, utilitarian, precise. Think a well-set fina
 - **Layout reflow** (direct rules, not tokens): under **920px** the sidebar collapses to an off-canvas drawer (hamburger) and tables stack into rows; at **1180px+** the hub gains its second-column side-rail. Tables otherwise scroll horizontally inside a bordered `overflow:auto` container with a `min-width`.
 
 ## ICONOGRAPHY
-- Icons are **minimal and typographic**, not an icon library. Use crisp Unicode marks and tiny inline SVGs already in the prototype: `✓` (success/check), `!` (alert), `★ / ☆` (favorite), `›` (chevron), `✕` (close), `←  → ↑ ↗ ↻` (nav/refresh), `☰` (mobile menu), `⏻` (sign out), `∅` (empty), `●` (status dot). The send arrow is a small inline SVG (paper-plane).
+- The prototype uses **minimal typographic** icons. The app also uses thin-stroke `lucide-react` icons in its component kit. Use crisp Unicode marks and tiny inline SVGs already in the prototype: `✓` (success/check), `!` (alert), `★ / ☆` (favorite), `›` (chevron), `✕` (close), `←  → ↑ ↗ ↻` (nav/refresh), `☰` (mobile menu), `⏻` (sign out), `∅` (empty), `●` (status dot). The send arrow is a small inline SVG (paper-plane).
 - Status moments do **not** use icon badges. They lead with a **mono eyebrow** (e.g. `● UNDER MAINTENANCE`) optionally over a 30×3px semantic accent bar, or a small **squared keyline tile** (38px, 1.5px semantic border + tint) containing a single typographic mark (`✓` / `!`). **Never** a filled circle with an emoji/glyph.
-- No emoji anywhere. No third-party icon font. If a real icon set is ever needed, add a thin-stroke line set (e.g. Lucide) and document it here — but default to the typographic marks above.
+- No emoji anywhere. No third-party icon font. Lucide is already installed and used; keep icons consistent with the surrounding screen.
 - Custom carets: native `<select>` carets vary, so for balanced padding wrap a select in `position:relative` with `appearance:none` + a CSS-triangle caret (`border-left/right transparent + border-top` in `--ink3`). Do NOT use SVG `data:` URI backgrounds on form controls — they break html-to-image export.
 
 ## COMPONENTS (recipes)
@@ -73,11 +73,11 @@ The style guide DC renders all of these; copy values from it or from the prototy
 - **Tabs:** text + `border-bottom:2px solid var(--brand)` on active.
 - **Card:** `1px solid var(--line)` on `--surface`, no radius/shadow.
 - **Table row:** grid; mono "XX" tile + name/desc; status badge; row-level controls (e.g. favorite ★) live in their OWN trailing column, never crowded against data.
-- **Dialog / confirm:** centered card, `--shadow-dialog`, scrim; header (Geist title + body), footer with right-aligned Cancel (ghost) + primary; destructive primary uses `--error`.
+- **Dialog / confirm:** centered card, `--shadow-dialog`, scrim; header (Archivo title + body), footer with right-aligned Cancel (ghost) + primary; destructive primary uses `--error`.
 - **Slide-over:** right-edge panel, `--shadow-side`, used for record editing (e.g. a person).
 - **Toast:** surface card + 4px semantic left bar + mono ✓/! mark; auto-dismiss; fade-up.
-- **Empty state:** dashed 1.5px square (42px) with `∅` (or `☆`), Geist title, muted body, optional ghost CTA.
+- **Empty state:** dashed 1.5px square (42px) with `∅` (or `☆`), Archivo title, muted body, optional ghost CTA.
 - **Loading:** skeleton rows (shimmer opacity on `--line2` bars) for tables; rotating ring spinner for embedded/processing.
-- **Status hero:** confirmation = squared keyline ✓ tile + mono eyebrow; disruption = 30×3px semantic bar + mono eyebrow + Geist headline.
+- **Status hero:** confirmation = squared keyline ✓ tile + mono eyebrow; disruption = 30×3px semantic bar + mono eyebrow + Archivo headline.
 - **Chat:** bot bubble = `--panel`, user bubble = `--brand`/white, radius 3px; 26px avatar tile; optional ▲▼ feedback under bot replies.
 - **Offline/connectivity:** fixed top `--error` bar, driven by real `online`/`offline` events.

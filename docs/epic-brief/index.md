@@ -5,6 +5,8 @@ title: "Genie Workspace — Epic Brief"
 
 # Genie Workspace — Epic Brief
 
+> **Scope document:** this records intended product behavior, including future work. It is not a deployment or completion report. Current setup is in the [README](../../README.md); Beads tracks implementation status.
+
 > Product / UI name is **Genie Workspace** (brand wordmark "Genie"). "Genie Control Station" and "Demo Hub" are prototype/source terms and are **not** used in production code, routes, or copy. Internal repo: `genie-ops-center`.
 
 ## Summary

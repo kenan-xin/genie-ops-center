@@ -37,20 +37,32 @@ Both app Compose services inherit the image's health check. In Coolify, deploy w
 
 | Var                              | Required                     | Notes                                                                           |
 | -------------------------------- | ---------------------------- | ------------------------------------------------------------------------------- |
-| `DATABASE_URL`                   | **yes**                      | Your external Postgres, e.g. `postgres://user:pass@db.host:5432/dbname`         |
+| `DATABASE_URL`                   | **yes**                      | Separate PostgreSQL service, e.g. `postgres://user:pass@db.host:5432/dbname`         |
 | `BETTER_AUTH_SECRET`             | **yes**                      | ≥32 chars — `openssl rand -base64 32`                                           |
 | `PUBLIC_BASE_URL`                | **yes**                      | Public base URL of this deployment (auth cookies/reset links, server-side tRPC) |
-| `RESEND_API_KEY`                 | when invite/reset email ships | Resend API key for invite/reset delivery; without it, production invite/reset is refused |
-| `RESEND_FROM_EMAIL`              | optional                     | Defaults to `onboarding@resend.dev` for testing; switch to a verified domain before go-live |
+| `RESEND_API_KEY`                 | when invite/reset email ships | Needed for actual delivery. Admin service invite/reset actions reject missing configuration in production; the public forgot-password path can still report generic success without delivery. |
+| `RESEND_FROM_EMAIL`              | optional                     | Defaults to `onboarding@resend.dev`, which is restricted to the Resend account owner. Use a sender on a verified domain for other recipients. |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | first boot only              | Bootstrap admin; strength-checked; **clear after first boot**                   |
-| `GENIE_CHAT_API_ALLOWED_ORIGINS` | when chat solutions ship     | Comma-separated approved origins for chat streaming endpoints, e.g. `https://dev-genie.001.gs`. A Chat solution's `apiEndpoint` origin must be on this list. |
-| `ALLOWED_IFRAME_ORIGINS`         | when embedded solutions ship | Comma-separated origins for CSP `frame-src`                                     |
+| `GENIE_CHAT_API_ALLOWED_ORIGINS` | for chat solutions     | Comma-separated approved origins for chat streaming endpoints, e.g. `https://dev-genie.001.gs`. A Chat solution's `apiEndpoint` origin must be on this list. |
+| `ALLOWED_IFRAME_ORIGINS`         | for embedded solutions | Comma-separated origins added to CSP `frame-src`; `self` remains allowed                                     |
 
 > The chat streaming endpoint is **per-solution** config (`config.apiEndpoint`), not a single env base — but its origin must be on `GENIE_CHAT_API_ALLOWED_ORIGINS` (the SSRF allow-list, default-seed, and rotation point).
 
 Secrets are supplied via env **only** — never baked into the image.
 
-## Running the app image against an external DB
+The [Resend test sender restriction](https://resend.com/docs/knowledge-base/403-error-resend-dev-domain) applies even with a valid API key. A configured API key is not proof of successful email delivery. Better Auth can log provider failures while the initiating request reports success. Verify invite/reset delivery with the intended sender before onboarding users; failure visibility is tracked in Beads (`genie-ops-center-xu6`).
+
+## Planned Coolify deployment
+
+Build the repository Dockerfile and route the app's internal port **3000** at `https://work.agilgenie.ai`. PostgreSQL 16 will run as a separate Coolify resource on the same Lighthouse server, with a persistent volume and a private network reachable from the app. Set `DATABASE_URL` to that service's internal hostname, database and credentials. `localhost` inside the app container points to the app itself.
+
+Set runtime environment variables in Coolify. Node is supplied by the `node:24-bookworm-slim` image; the Lighthouse host does not need Node or nvm. The image tag tracks Node 24 rather than pinning a patch or digest. Keep `BETTER_AUTH_SECRET` stable across redeploys, and remove bootstrap credentials after the initial admin is created.
+
+Cloudflare DNS resolves to proxy addresses, so public DNS alone does not verify the configured Lighthouse origin. Origin routing and HTTPS still need deployment validation. Off-server backup storage and a restore test are also pending; a persistent volume survives container replacement but does not protect against loss of the server.
+
+Remote PostgreSQL administration is planned through an [SSH tunnel](https://www.postgresql.org/docs/current/ssh-tunnels.html). It has not been configured. The tunnel must target a database address reachable from the Lighthouse SSH host, or a host-loopback-only published port; a private Docker service name is not necessarily resolvable by the host. Keep PostgreSQL off the public Internet. The exact connection settings depend on the Coolify resource that is created.
+
+## Running the app image against a separate DB
 
 `docker-compose.app.yml` runs **only the app** and points it at the `DATABASE_URL` you supply (no `db` service):
 
@@ -58,33 +70,35 @@ Secrets are supplied via env **only** — never baked into the image.
 # .env (your real prod values)
 DATABASE_URL=postgres://...your-external-postgres...
 BETTER_AUTH_SECRET=...
-PUBLIC_BASE_URL=https://workspace.example.com
+PUBLIC_BASE_URL=https://work.agilgenie.ai
 RESEND_API_KEY=...
-RESEND_FROM_EMAIL=onboarding@resend.dev
+RESEND_FROM_EMAIL=workspace@your-verified-domain.example
 ADMIN_EMAIL=admin@example.com
 ADMIN_PASSWORD=...           # first boot only
 
 docker compose -f docker-compose.app.yml up -d --build
 ```
 
-You can equally run the image directly (k8s, Nomad, systemd, ECS…):
+For a local image check against a database reachable from the container:
 
 ```bash
 docker build -t genie-workspace .
-docker run -d --name genie-app -p 80:3000 \
+docker run -d --name genie-app -p 127.0.0.1:3000:3000 \
   --env-file .env.prod genie-workspace
 ```
 
 ## The Postgres you connect to
 
-Provision and tune it as you would any production database — connection pooling (PgBouncer or the managed service's pooler), backups, monitoring, sufficient CPU/IOPS for the workload. The app's Drizzle `Pool` reads `DATABASE_URL`; size the pool to the platform (the entrypoint uses a short-lived dedicated connection for migrate/bootstrap only).
+The app uses a `pg.Pool` with library defaults; there is no pool-size environment setting in this repo. The container entrypoint holds a session-level advisory lock on a dedicated database connection while migrations and bootstrap run. Use a direct database connection or a session-preserving pooler for startup; a transaction-mode pooler does not preserve that lock. Plan backups, monitoring and capacity for the workload. The repository does not provision or schedule backups.
 
 ## What the other compose files are for
 
 | File                      | Purpose                                                                | Runs Postgres?      |
 | ------------------------- | ---------------------------------------------------------------------- | ------------------- |
 | `docker-compose.app.yml`  | **Production-shape**: app image against your external DB               | **No** (external)   |
-| `docker-compose.dev.yml`  | **Local dev**: Postgres container only; you run `pnpm dev` on the host | Yes (dev throwaway) |
-| `docker-compose.full.yml` | **All-in-one smoke / fresh-deploy test**: app + Postgres               | Yes (ephemeral)     |
+| `docker-compose.dev.yml`  | **Local dev**: Postgres container only; you run `pnpm dev` on the host | Yes (persistent dev volume) |
+| `docker-compose.full.yml` | **All-in-one smoke / fresh-deploy test**: app + Postgres               | Yes (persistent test volume)     |
 
 `full.yml` tests the whole boot sequence (build → migrate → seed → serve) in one command. Production PostgreSQL is provisioned separately in Coolify, with its own storage and backup configuration.
+
+Both database Compose files retain their named volumes after `down`; `down -v` removes the volume and its data. The dev Compose publishes PostgreSQL on the host, while the full smoke Compose keeps it on the internal network. Neither file is the planned Coolify production resource definition.

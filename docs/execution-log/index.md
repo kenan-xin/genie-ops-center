@@ -5,6 +5,8 @@ title: "Execution Log — accepted deviations"
 
 # Execution Log — accepted deviations
 
+> **Historical execution record:** assertions below describe the code at the time of each entry. Later changes can supersede fonts, scripts, tests, authentication and deployment behavior. Use the [README](../../README.md), [deployment guide](../deployment.md) and current code for setup; use Beads for work status.
+
 Brief record of technically-sound deviations accepted during execution (technical lens). Product-level decisions are unchanged.
 
 ## Ticket 01 · Scaffold & infra — Well Implemented
