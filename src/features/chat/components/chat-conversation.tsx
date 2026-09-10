@@ -1,7 +1,6 @@
 "use client";
 
-import { DefaultChatTransport } from "ai";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 
 import { Action, Actions } from "@/components/ai-elements/actions";
@@ -22,6 +21,7 @@ import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
 import { Button } from "@/components/ui/button";
 import { useNewChat } from "@/features/chat/api/chat";
 import { useChatFeedback } from "@/features/chat/hooks/use-chat-feedback";
+import { createChatTransport, lastTextPart } from "@/features/chat/lib/chat-transport";
 import type { ChatUIMessage } from "@/features/chat/server/ui-message";
 
 type ChatConversationProps = {
@@ -33,15 +33,6 @@ type ChatConversationProps = {
   accentColor?: string | null;
   accentColorInvert?: string | null;
 };
-
-function lastTextPart(message: ChatUIMessage | undefined): string {
-  if (!message) return "";
-  for (let i = message.parts.length - 1; i >= 0; i--) {
-    const part = message.parts[i];
-    if (part.type === "text") return part.text;
-  }
-  return "";
-}
 
 /**
  * The interactive chat surface mounted by `ChatSlot` (ticket 12's placeholder,
@@ -58,36 +49,53 @@ export function ChatConversation({
   accentColorInvert,
 }: ChatConversationProps) {
   const [input, setInput] = useState("");
+  const requestPending = useRef(false);
   const newChat = useNewChat();
   const { votes, rate } = useChatFeedback();
 
-  const transport = useMemo(
-    () =>
-      new DefaultChatTransport<ChatUIMessage>({
-        api: "/api/chat",
-        prepareSendMessagesRequest: ({ messages }) => ({
-          body: { solutionId, prompt: lastTextPart(messages.at(-1)) },
-        }),
-      }),
-    [solutionId],
-  );
+  const transport = useMemo(() => createChatTransport(solutionId), [solutionId]);
 
-  const { messages, sendMessage, status, setMessages } = useChat<ChatUIMessage>({ transport });
+  const { messages, sendMessage, regenerate, error, clearError, status, setMessages } =
+    useChat<ChatUIMessage>({ transport });
 
   const isBusy = status === "submitted" || status === "streaming";
   const botMonogram = monogram?.trim() || "A";
   const showStarters = messages.length === 0 && (starterPrompts?.length ?? 0) > 0;
 
-  const submit = (text: string) => {
+  const submit = async (text: string) => {
     const trimmed = text.trim();
-    if (!trimmed || isBusy) return;
+    if (!trimmed || isBusy || error || newChat.isPending || requestPending.current) return;
+    requestPending.current = true;
     setInput("");
-    void sendMessage({ text: trimmed });
+    try {
+      await sendMessage({ text: trimmed });
+    } finally {
+      requestPending.current = false;
+    }
+  };
+
+  const retry = async () => {
+    if (!error || isBusy || newChat.isPending || requestPending.current) return;
+    requestPending.current = true;
+    try {
+      await regenerate();
+    } finally {
+      requestPending.current = false;
+    }
   };
 
   const handleNewChat = () => {
-    if (isBusy || newChat.isPending) return;
-    newChat.mutate({ solutionId }, { onSuccess: () => setMessages([]) });
+    if (isBusy || newChat.isPending || requestPending.current) return;
+    newChat.mutate(
+      { solutionId },
+      {
+        onSuccess: () => {
+          setMessages([]);
+          clearError();
+          setInput("");
+        },
+      },
+    );
   };
 
   return (
@@ -144,7 +152,9 @@ export function ChatConversation({
               .join("");
             const vote = votes[message.id];
             const isLast = message.id === messages.at(-1)?.id;
-            const showFeedback = feedbackEnabled && text.length > 0 && !(isLast && isBusy);
+            const interrupted = isLast && !!error;
+            const showFeedback =
+              feedbackEnabled && text.length > 0 && !(isLast && isBusy) && !interrupted;
 
             return (
               <div className="flex flex-col gap-[5px]" key={message.id}>
@@ -156,8 +166,10 @@ export function ChatConversation({
                   />
                   <div className="flex min-w-0 max-w-[80%] flex-col gap-2">
                     {reasoningPart ? (
-                      <Reasoning isStreaming={reasoningPart.state === "streaming"}>
-                        <ReasoningTrigger />
+                      <Reasoning isStreaming={isBusy && reasoningPart.state === "streaming"}>
+                        <ReasoningTrigger>
+                          {interrupted ? "Reasoning interrupted" : undefined}
+                        </ReasoningTrigger>
                         <ReasoningContent>{reasoningPart.text}</ReasoningContent>
                       </Reasoning>
                     ) : null}
@@ -165,6 +177,9 @@ export function ChatConversation({
                       <MessageContent from="assistant">
                         <Response>{text}</Response>
                       </MessageContent>
+                    ) : null}
+                    {interrupted ? (
+                      <p className="text-small text-[var(--error)]">Incomplete response</p>
                     ) : null}
                   </div>
                 </Message>
@@ -191,6 +206,24 @@ export function ChatConversation({
               </div>
             );
           })}
+          {error ? (
+            <div
+              className="flex flex-wrap items-center gap-3 border border-[var(--error)] bg-[var(--errortint)] px-3 py-2 text-small text-[var(--error)]"
+              role="alert"
+            >
+              <p className="min-w-0 flex-1">
+                We couldn’t complete the response. Retry the message or start a new chat.
+              </p>
+              <Button disabled={newChat.isPending} onClick={retry} size="sm" type="button">
+                Retry
+              </Button>
+            </div>
+          ) : null}
+          {newChat.isError ? (
+            <p className="text-small text-[var(--error)]" role="alert">
+              We couldn’t start a new chat. Your messages are still here. Try New chat again.
+            </p>
+          ) : null}
         </ConversationContent>
         <ConversationScrollButton />
       </Conversation>
@@ -206,18 +239,18 @@ export function ChatConversation({
       <PromptInput
         onSubmit={(event) => {
           event.preventDefault();
-          submit(input);
+          void submit(input);
         }}
       >
         <PromptInputField
-          disabled={isBusy}
+          disabled={isBusy || newChat.isPending}
           onChange={(event) => setInput(event.target.value)}
           value={input}
         />
         <PromptInputSubmit
           accentColor={accentColor}
           accentColorInvert={accentColorInvert}
-          disabled={isBusy || !input.trim()}
+          disabled={isBusy || !!error || newChat.isPending || !input.trim()}
           status={status}
         />
       </PromptInput>

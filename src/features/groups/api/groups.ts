@@ -6,7 +6,18 @@ import { useTRPC } from "@/trpc/provider";
 
 // Feature query/mutation wrappers (AGENTS.md folder contract, features/<domain>/api/).
 
-const LIST_KEY = ["groups", "list"] as const;
+function invalidateGroupViews(
+  trpc: ReturnType<typeof useTRPC>,
+  queryClient: ReturnType<typeof useQueryClient>,
+  groupId: string,
+) {
+  return Promise.all([
+    queryClient.invalidateQueries(trpc.groups.list.queryFilter()),
+    queryClient.invalidateQueries(trpc.groups.get.queryFilter({ id: groupId })),
+    queryClient.invalidateQueries(trpc.groups.overviewBySolution.queryFilter()),
+    queryClient.invalidateQueries(trpc.groups.overviewByPerson.queryFilter()),
+  ]);
+}
 
 export function useGroupsQuery(search?: string) {
   const trpc = useTRPC();
@@ -24,7 +35,7 @@ export function useCreateGroup() {
   const queryClient = useQueryClient();
   return useMutation(
     trpc.groups.create.mutationOptions({
-      onSuccess: () => void queryClient.invalidateQueries({ queryKey: LIST_KEY }),
+      onSuccess: () => queryClient.invalidateQueries(trpc.groups.list.queryFilter()),
     }),
   );
 }
@@ -34,12 +45,11 @@ export function useUpdateGroup() {
   const queryClient = useQueryClient();
   return useMutation(
     trpc.groups.update.mutationOptions({
-      onSuccess: (_data, variables) => {
-        void queryClient.invalidateQueries({ queryKey: LIST_KEY });
-        void queryClient.invalidateQueries({
-          queryKey: trpc.groups.get.queryKey({ id: variables.id }),
-        });
-      },
+      onSuccess: (_data, variables) =>
+        Promise.all([
+          invalidateGroupViews(trpc, queryClient, variables.id),
+          queryClient.invalidateQueries(trpc.users.list.queryFilter()),
+        ]),
     }),
   );
 }
@@ -49,26 +59,25 @@ export function useDeleteGroup() {
   const queryClient = useQueryClient();
   return useMutation(
     trpc.groups.remove.mutationOptions({
-      onSuccess: () => void queryClient.invalidateQueries({ queryKey: LIST_KEY }),
+      onSuccess: (_data, variables) =>
+        Promise.all([
+          invalidateGroupViews(trpc, queryClient, variables.id),
+          queryClient.invalidateQueries(trpc.users.list.queryFilter()),
+        ]),
     }),
   );
 }
 
-/** Membership and grant writes also dirty the People directory (group badges) and the overview. */
 export function useSetMembers() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   return useMutation(
     trpc.groups.setMembers.mutationOptions({
-      onSuccess: (_data, variables) => {
-        void queryClient.invalidateQueries({ queryKey: LIST_KEY });
-        void queryClient.invalidateQueries({
-          queryKey: trpc.groups.get.queryKey({ id: variables.groupId }),
-        });
-        void queryClient.invalidateQueries({ queryKey: ["users", "list"] });
-        void queryClient.invalidateQueries({ queryKey: ["groups", "overviewBySolution"] });
-        void queryClient.invalidateQueries({ queryKey: ["groups", "overviewByPerson"] });
-      },
+      onSuccess: (_data, variables) =>
+        Promise.all([
+          invalidateGroupViews(trpc, queryClient, variables.groupId),
+          queryClient.invalidateQueries(trpc.users.list.queryFilter()),
+        ]),
     }),
   );
 }
@@ -78,14 +87,7 @@ export function useSetSolutions() {
   const queryClient = useQueryClient();
   return useMutation(
     trpc.groups.setSolutions.mutationOptions({
-      onSuccess: (_data, variables) => {
-        void queryClient.invalidateQueries({ queryKey: LIST_KEY });
-        void queryClient.invalidateQueries({
-          queryKey: trpc.groups.get.queryKey({ id: variables.groupId }),
-        });
-        void queryClient.invalidateQueries({ queryKey: ["groups", "overviewBySolution"] });
-        void queryClient.invalidateQueries({ queryKey: ["groups", "overviewByPerson"] });
-      },
+      onSuccess: (_data, variables) => invalidateGroupViews(trpc, queryClient, variables.groupId),
     }),
   );
 }
