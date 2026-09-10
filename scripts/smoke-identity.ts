@@ -9,6 +9,7 @@
  *  4. mustChangePassword is enforced at the shared accessor (getServerAuth)
  *  5. idle config (expiresIn/updateAge/cookieCache) is what we expect
  *  6. clearing mustChangePassword restores normal authenticated access
+ *  7. public signup is rejected without creating users or sessions
  * Not a test framework — one file, asserts, exits non-zero on the first failure.
  */
 import { bootstrapAdmin } from "@/server/bootstrap";
@@ -28,10 +29,6 @@ function check(name: string, cond: boolean, detail = "") {
   }
 }
 
-async function signUp(email: string, password: string, name = "User") {
-  return auth.api.signUpEmail({ body: { email, password, name } });
-}
-
 async function main() {
   console.info("\n[1] bootstrap — idempotent, seeds admin, sets mustChangePassword");
   process.env.ADMIN_EMAIL = "admin@example.com";
@@ -49,6 +46,29 @@ async function main() {
   const count = (await db.select({ id: user.id }).from(user)).length;
   check("bootstrap idempotent (still one user)", count === 1, `got ${count}`);
 
+  console.info("\n[1b] public signup is disabled");
+  const baseURL = process.env.PUBLIC_BASE_URL ?? "http://localhost:3000";
+  const signupResponse = await auth.handler(
+    new Request(new URL("/api/auth/sign-up/email", baseURL), {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Origin: new URL(baseURL).origin },
+      body: JSON.stringify({
+        email: "uninvited@example.com",
+        password: "Sup3rSecret!pw",
+        name: "Uninvited",
+      }),
+    }),
+  );
+  const signupBody = await signupResponse.json();
+  check("public signup returns 400", signupResponse.status === 400);
+  check("signup is explicitly disabled", signupBody.code === "EMAIL_PASSWORD_SIGN_UP_DISABLED");
+  check("signup sets no session cookie", !signupResponse.headers.has("set-cookie"));
+  check("signup creates no user", (await db.select({ id: user.id }).from(user)).length === 1);
+  check(
+    "signup creates no session",
+    (await db.select({ id: session.id }).from(session)).length === 0,
+  );
+
   // Weak password rejected — simulate by calling bootstrap with a weak pw on an
   // empty-ish DB isn't possible now (table not empty), so assert the validator directly.
   console.info("\n[2] password strength + bootstrap weak-password rejection");
@@ -63,7 +83,9 @@ async function main() {
 
   console.info("\n[3] pending user blocked at session.create.before");
   // Create a user, flip to pending, attempt sign-in → must fail (no session).
-  await signUp("pending@example.com", "Sup3rSecret!pw", "Pending");
+  await auth.api.createUser({
+    body: { email: "pending@example.com", password: "Sup3rSecret!pw", name: "Pending" },
+  });
   await db.update(user).set({ status: "pending" }).where(eq(user.email, "pending@example.com"));
   const [pendingUser] = await db
     .select({ id: user.id })

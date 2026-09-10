@@ -33,6 +33,7 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   emailAndPassword: {
     enabled: true,
+    disableSignUp: true,
     // requireEmailVerification is off: clicking the reset link + setting a
     // password IS the invite verification. No separate email-verify step.
     requireEmailVerification: false,

@@ -498,10 +498,10 @@ async function main() {
   let testUserId: string | null = null;
 
   try {
-    const signUpResult = await auth.api.signUpEmail({
+    const created = await auth.api.createUser({
       body: { email: testEmail, password: testPassword, name: "Chat Proxy Test" },
     });
-    testUserId = signUpResult.user.id;
+    testUserId = created.user.id;
 
     console.info(
       "\n[7] conversation-handle: generation-guard (New chat mid-stream can't be resurrected)",

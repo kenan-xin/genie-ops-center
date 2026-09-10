@@ -43,7 +43,7 @@ async function main() {
   check("schema accepts strong", passwordSchema.safeParse(STRONG).success === true);
 
   console.info("\n[2] signIn.email response carries mustChangePassword + role");
-  await auth.api.signUpEmail({ body: { email: "chg@t.co", password: STRONG, name: "Chg" } });
+  await auth.api.createUser({ body: { email: "chg@t.co", password: STRONG, name: "Chg" } });
   const [chg] = await db.select().from(user).where(eq(user.email, "chg@t.co")).limit(1);
   await db.update(user).set({ mustChangePassword: true }).where(eq(user.id, chg!.id));
 
@@ -79,7 +79,7 @@ async function main() {
   );
 
   console.info("\n[4] token reset activates pending + clears mustChangePassword");
-  await auth.api.signUpEmail({ body: { email: "inv@t.co", password: STRONG, name: "Inv" } });
+  await auth.api.createUser({ body: { email: "inv@t.co", password: STRONG, name: "Inv" } });
   const [inv] = await db.select().from(user).where(eq(user.email, "inv@t.co")).limit(1);
   await db
     .update(user)
