@@ -30,6 +30,7 @@ import {
   CHAT_UPSTREAM_TIMEOUTS,
 } from "@/features/chat/server/limits";
 import { readSseDataLines } from "@/features/chat/server/sse-reader";
+import { ChatRequestError, readChatRequestBody } from "@/features/chat/server/request-body";
 import { mapGenieStreamToUiMessageChunks } from "@/features/chat/server/stream-mapper";
 import type { ChatUIMessage } from "@/features/chat/server/ui-message";
 import { fetchGenieStream } from "@/features/chat/server/upstream-fetch";
@@ -40,7 +41,7 @@ import { sendChatMessageSchema } from "@/features/chat/schemas/chat";
  * message stream. Server-side only; the client (ticket 14) is a plain
  * `useChat` + `DefaultChatTransport` posting `{ solutionId, prompt }`.
  *
- * Guard order matches the tech-plan sequence: parse body → session →
+ * Guard order: session → bounded body parsing →
  * assertCanRun (grant + not archived + status=ready) → independent type
  * guard (assertCanRun doesn't check type — critique B4) → lease → bounded
  * upstream fetch → stream mapping → generation/config-version-guarded
@@ -84,7 +85,7 @@ function trpcStatusOf(error: TRPCError): number {
 
 /** Never leak upstream hostnames/internals to the client — log detail, return a generic message. */
 function errorResponse(error: unknown): NextResponse {
-  if (error instanceof RouteError) {
+  if (error instanceof RouteError || error instanceof ChatRequestError) {
     return NextResponse.json({ error: error.message }, { status: error.status });
   }
   if (error instanceof TRPCError) {
@@ -116,15 +117,9 @@ export async function POST(request: NextRequest): Promise<Response> {
   let leaseHeld: { userId: string; solutionId: string; leaseOwner: string } | null = null;
 
   try {
-    let json: unknown;
-    try {
-      json = await request.json();
-    } catch {
-      throw new RouteError(400, "Invalid JSON body");
-    }
-    const body = sendChatMessageSchema.parse(json);
     const auth = await getServerAuth(request.headers);
     const user = requireActiveUser(auth);
+    const body = sendChatMessageSchema.parse(await readChatRequestBody(request));
 
     const [row] = await db
       .select({
