@@ -4,7 +4,7 @@
 
 See **[`docs/`](./docs/README.md)** for the full design: [what & why](./docs/epic-brief/index.md), [architecture](./docs/tech-plan/index.md), and the [implementation tickets](./docs/tickets/index.md).
 
-> **Implemented:** authentication and account sessions; admin People, Groups/Access, Solutions and Themes; workspace hub and favorites; embedded viewer; streaming chat with error feedback and retry; Docker startup migrations/bootstrap and a database-aware health check. Public signup is disabled. Native apps and the Everyone/protected-admin model remain planned. The admin overview and live chat theme application still have unfinished behavior tracked in Beads. The first Lighthouse deployment is not yet provisioned; see [deployment](./docs/deployment.md).
+> **Implemented:** authentication and account sessions; admin People, Groups/Access, Solutions and Themes; workspace hub and favorites; embedded viewer; streaming chat with error feedback and retry; Docker startup migrations/bootstrap and a database-aware health check. Public signup is disabled. Native apps and the Everyone/protected-admin model remain planned. The admin overview and live chat theme application still have unfinished behavior tracked in Beads. The first Lighthouse deployment is running at https://work.agilgenie.ai. See [deployment](./docs/deployment.md).
 
 ## Tech stack
 
@@ -141,7 +141,7 @@ curl -sS http://localhost:3000/api/health  # → {"status":"ok"}
 docker compose -p genie-smoke -f docker-compose.full.yml down
 ```
 
-This uses [`docker-compose.full.yml`](./docker-compose.full.yml) — an **all-in-one smoke / fresh-deploy test only**, not the production topology (the planned Coolify deployment builds the Dockerfile and provisions PostgreSQL separately).
+This uses [`docker-compose.full.yml`](./docker-compose.full.yml) — an **all-in-one smoke / fresh-deploy test only**, not the production topology (the Coolify deployment builds the Dockerfile and provisions PostgreSQL separately).
 
 > **App-only smoke (prod-shaped):** to verify the image against an *already-running* external Postgres, use `docker-compose.app.yml` with `DATABASE_URL` pointed at it instead — it runs the app image with no `db` service.
 
@@ -204,4 +204,4 @@ Dockerfile · docker-compose.{dev,app,full}.yml · lefthook.yml · entrypoint bu
 
 ## Deployment
 
-Ships as a single configurable Docker image, one deployment per customer. The container connects to an **external** Postgres (`DATABASE_URL`), validates env, migrates-on-start under a Postgres advisory lock, seeds the first admin, then serves. **Postgres is not run in the image.** Planned Coolify topology, env contract, and Compose / `docker run` examples are in **[docs/deployment.md](./docs/deployment.md)**.
+Ships as a single configurable Docker image, one deployment per customer. The container connects to an **external** Postgres (`DATABASE_URL`), validates env, migrates-on-start under a Postgres advisory lock, seeds the first admin, then serves. **Postgres is not run in the image.** Coolify topology, env contract, and Compose / `docker run` examples are in **[docs/deployment.md](./docs/deployment.md)**.

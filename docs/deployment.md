@@ -1,8 +1,8 @@
 # Production deployment
 
-**Topology: the app and database run separately.** For the first deployment, Coolify will manage an app container and a PostgreSQL container on the same Tencent Lighthouse server. PostgreSQL needs persistent storage and a private network connection from the app. A managed or dedicated PostgreSQL server is also supported through `DATABASE_URL`.
+**Topology: the app and database run separately.** Coolify manages an app container and a PostgreSQL container on the same Tencent Lighthouse server. PostgreSQL needs persistent storage and a private network connection from the app. A managed or dedicated PostgreSQL server is also supported through `DATABASE_URL`.
 
-The selected public URL is `https://work.agilgenie.ai`. This describes the planned deployment; the production resources are not yet provisioned. Off-server backup storage still needs to be selected before retaining real production data.
+The selected public URL is `https://work.agilgenie.ai`. Resources were provisioned on 2026-09-10. The app is healthy through both Cloudflare and the origin proxy. Tencent Lighthouse permits inbound TCP 443 for HTTPS. Off-server backup storage still needs to be selected before retaining real production data.
 
 ```
 ┌───────────────┐         ┌──────────────────────────┐
@@ -31,7 +31,7 @@ The Dockerfile checks `/api/health` over loopback using Node, so the runner need
 
 Checks run every 10 seconds, with six consecutive failures marking the container unhealthy. The 180-second startup grace period allows for the entrypoint's default 120-second migration-lock wait and migration/bootstrap work. A successful probe makes the container healthy immediately; it does not have to wait out the grace period. Reassess this allowance if migration duration or `LOCK_TIMEOUT_MS` increases.
 
-Both app Compose services inherit the image's health check. In Coolify, deploy with the Dockerfile build pack and enable health checks; the [Dockerfile check takes precedence over the UI probe](https://coolify.io/docs/knowledge-base/health-checks). Verify the deployed container becomes healthy and the proxy routes to it. Docker health status alone does not automatically restart an unhealthy running container.
+Both app Compose services inherit the image's health check. On the installed Coolify 4.3.18, leave its generated HTTP health-check override disabled (`health_check_enabled=false`). Coolify then detects the Dockerfile check (`custom_healthcheck_found=true`) and uses the image's Node command. Enabling the HTTP override before detection replaced it with a failing curl/wget probe in the first deployment. Verify the actual container's `Config.Healthcheck`, rather than relying on the UI toggle alone. Coolify waits through the configured startup period before finishing the deployment, even if Docker reports healthy sooner. Docker health status alone does not automatically restart an unhealthy running container.
 
 ## Required environment
 
@@ -53,15 +53,32 @@ Secrets are supplied via env **only** — never baked into the image.
 
 The [Resend test sender restriction](https://resend.com/docs/knowledge-base/403-error-resend-dev-domain) applies even with a valid API key. A configured API key is not proof of successful email delivery. Better Auth can log provider failures while the initiating request reports success. Verify invite/reset delivery with the intended sender before onboarding users; failure visibility is tracked in Beads (`genie-ops-center-xu6`).
 
-## Planned Coolify deployment
+## Current Coolify deployment
 
-Build the repository Dockerfile and route the app's internal port **3000** at `https://work.agilgenie.ai`. PostgreSQL 16 will run as a separate Coolify resource on the same Lighthouse server, with a persistent volume and a private network reachable from the app. Set `DATABASE_URL` to that service's internal hostname, database and credentials. `localhost` inside the app container points to the app itself.
+Build the repository Dockerfile and route the app's internal port **3000** at `https://work.agilgenie.ai`. PostgreSQL 16 runs as a separate Coolify resource on the same Lighthouse server, with a persistent volume and a private network reachable from the app. Set `DATABASE_URL` to that service's internal hostname, database and credentials. `localhost` inside the app container points to the app itself.
 
 Set runtime environment variables in Coolify. Node is supplied by the `node:24-bookworm-slim` image; the Lighthouse host does not need Node or nvm. The image tag tracks Node 24 rather than pinning a patch or digest. Keep `BETTER_AUTH_SECRET` stable across redeploys, and remove bootstrap credentials after the initial admin is created.
 
-Cloudflare DNS resolves to proxy addresses, so public DNS alone does not verify the configured Lighthouse origin. Origin routing and HTTPS still need deployment validation. Off-server backup storage and a restore test are also pending; a persistent volume survives container replacement but does not protect against loss of the server.
+Cloudflare DNS proxies `work.agilgenie.ai` to Lighthouse `129.226.214.125`. Traefik on Lighthouse terminates HTTPS and routes to the app; the local Coolify VM at `192.168.50.24:8000` only manages deployment over SSH. Both public and direct-origin HTTPS passed normal TLS validation. The Cloudflare Full (strict) dashboard setting has not been inspected. Both Traefik and Better Auth are configured with Cloudflare's published proxy ranges; client-IP extraction is verified by the deployment smoke check. A database dump restored successfully into a separate temporary database, which was then removed. Scheduled off-server backups remain pending (`genie-ops-center-n3r`); persistent storage does not protect against loss of the server.
 
-Remote PostgreSQL administration is planned through an [SSH tunnel](https://www.postgresql.org/docs/current/ssh-tunnels.html). It has not been configured. The tunnel must target a database address reachable from the Lighthouse SSH host, or a host-loopback-only published port; a private Docker service name is not necessarily resolvable by the host. Keep PostgreSQL off the public Internet. The exact connection settings depend on the Coolify resource that is created.
+The resources are in **Genie Workspace → production → tc1**:
+
+| Resource | Coolify UUID / container name |
+| --- | --- |
+| App: Genie Workspace | `crxh0klwfrwzv1snoglbblew` |
+| Database: genie-postgres | `ihtijyutvwtxkxvxeg6vgh6p` |
+| Database volume | `postgres-data-ihtijyutvwtxkxvxeg6vgh6p` |
+
+The private GitHub repository uses a dedicated read-only deploy key. Deploy `main` from Coolify; automatic GitHub deployments are not configured. Production starts with one administrator and no demo solutions or chats. Bootstrap settings were cleared after creating the administrator; first login requires a password change. Resend uses `Genie Workspace <noreply@agilgenie.ai>` on the verified domain; actual invitation/reset delivery still needs a recipient-approved test.
+
+Remote PostgreSQL administration was verified through an [SSH tunnel](https://www.postgresql.org/docs/current/ssh-tunnels.html). Run this locally and keep the terminal open:
+
+```bash
+db_ip=$(ssh -n root@129.226.214.125 "docker inspect ihtijyutvwtxkxvxeg6vgh6p --format '{{(index .NetworkSettings.Networks \"coolify\").IPAddress}}'")
+ssh -o ExitOnForwardFailure=yes -N -L "127.0.0.1:15432:${db_ip}:5432" root@129.226.214.125
+```
+
+Connect your database client to `127.0.0.1:15432`, database `genie`, user `genie`, using the database password shown in Coolify. The SSH transport encrypts the remote connection; PostgreSQL has no public host port. Resolve the container IP each time because it may change when Coolify recreates the container. Stop the tunnel with Ctrl+C.
 
 ## Running the app image against a separate DB
 
@@ -102,4 +119,4 @@ The app uses a `pg.Pool` with library defaults; there is no pool-size environmen
 
 `full.yml` tests the whole boot sequence (build → migrate → seed → serve) in one command. Production PostgreSQL is provisioned separately in Coolify, with its own storage and backup configuration.
 
-Both database Compose files retain their named volumes after `down`; `down -v` removes the volume and its data. The dev Compose publishes PostgreSQL on the host, while the full smoke Compose keeps it on the internal network. Neither file is the planned Coolify production resource definition.
+Both database Compose files retain their named volumes after `down`; `down -v` removes the volume and its data. The dev Compose publishes PostgreSQL on the host, while the full smoke Compose keeps it on the internal network. Neither file is the Coolify production resource definition.
