@@ -55,6 +55,8 @@ The [Resend test sender restriction](https://resend.com/docs/knowledge-base/403-
 
 ## Current Coolify deployment
 
+The tc1 proxy runs `traefik:v3.7.13` (upgraded on 2026-09-10 after reviewing the [3.7 migration guide](https://doc.traefik.io/traefik/v3.7/migrate/v3/)). Coolify retains the proxy configuration and its backups under `/data/coolify/proxy/` on tc1. The upgrade preserved the existing certificate storage, routing and Cloudflare trust settings; public HTTPS, direct-origin HTTPS, login and HTTP redirects were verified afterward.
+
 Build the repository Dockerfile and route the app's internal port **3000** at `https://work.agilgenie.ai`. PostgreSQL 16 runs as a separate Coolify resource on the same Lighthouse server, with a persistent volume and a private network reachable from the app. Set `DATABASE_URL` to that service's internal hostname, database and credentials. `localhost` inside the app container points to the app itself.
 
 Set runtime environment variables in Coolify. Node is supplied by the `node:24-bookworm-slim` image; the Lighthouse host does not need Node or nvm. The image tag tracks Node 24 rather than pinning a patch or digest. Keep `BETTER_AUTH_SECRET` stable across redeploys, and remove bootstrap credentials after the initial admin is created.
