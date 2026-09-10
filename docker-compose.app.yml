@@ -1,8 +1,7 @@
 # Production-style run of the APP IMAGE ONLY.
-# Postgres is NOT included — in production the database runs on a managed /
-# dedicated host (RDS, Cloud SQL, Crunchy Bridge, a bare-metal server, etc.)
-# for performance, backups, and operational control. This compose just runs the
-# app and points it at the external DATABASE_URL you supply.
+# Postgres is NOT included — provision it separately (for example, a Coolify
+# database container with persistent storage). This compose runs the app and
+# points it at the DATABASE_URL you supply.
 #
 #   docker compose -f docker-compose.app.yml up -d --build
 #
@@ -33,15 +32,3 @@ services:
       ALLOWED_IFRAME_ORIGINS: ${ALLOWED_IFRAME_ORIGINS:-}
     ports:
       - "${APP_PORT:-3000}:3000"
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "node",
-          "-e",
-          "fetch('http://localhost:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 6
-      start_period: 30s

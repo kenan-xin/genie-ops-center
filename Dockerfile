@@ -54,6 +54,10 @@ COPY --chown=node:node --from=build /app/dist/entrypoint.mjs ./entrypoint.mjs
 USER node
 EXPOSE 3000
 
+# Allow the 120s migration-lock wait plus migration/bootstrap time.
+HEALTHCHECK --interval=10s --timeout=5s --start-period=180s --retries=6 \
+  CMD ["node", "-e", "fetch('http://127.0.0.1:' + (process.env.PORT || '3000') + '/api/health', { redirect: 'error' }).then(r => process.exit(r.status === 200 ? 0 : 1)).catch(() => process.exit(1))"]
+
 # `--conditions react-server` makes the `server-only` marker resolve to its
 # empty impl inside the bundled server graph.
 CMD ["node", "--conditions", "react-server", "entrypoint.mjs"]

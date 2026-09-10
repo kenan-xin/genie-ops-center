@@ -1,11 +1,13 @@
 # Production deployment
 
-**Topology: the app runs in a container; the database does not.** One configurable Docker image, one deployment per customer. Postgres is a separate, externally-managed resource — a managed service (RDS, Cloud SQL, Crunchy Bridge, Neon, …) or a dedicated/bare-metal server — chosen and tuned for performance, backups, and operational control. The image **never** runs its own Postgres in production.
+**Topology: the app and database run separately.** For the first deployment, Coolify will manage an app container and a PostgreSQL container on the same Tencent Lighthouse server. PostgreSQL needs persistent storage and a private network connection from the app. A managed or dedicated PostgreSQL server is also supported through `DATABASE_URL`.
+
+The selected public URL is `https://work.agilgenie.ai`. This describes the planned deployment; the production resources are not yet provisioned. Off-server backup storage still needs to be selected before retaining real production data.
 
 ```
 ┌───────────────┐         ┌──────────────────────────┐
-│  App container │ ──────▶ │  External Postgres        │
-│  (this image)  │  TCP    │  (managed / dedicated)    │
+│  App container │ ──────▶ │  PostgreSQL container     │
+│  (this image)  │  TCP    │  (persistent storage)     │
 └───────────────┘         └──────────────────────────┘
         ▲
         │ env (DATABASE_URL, secrets, …)
@@ -22,6 +24,14 @@ The entrypoint (`src/server/entrypoint.ts`) runs, in order, on **every** start:
 5. Release the lock and start the standalone Next.js server.
 
 Because it connects to whatever `DATABASE_URL` points at, the same image is used across environments — only the env differs.
+
+## Container health
+
+The Dockerfile checks `/api/health` over loopback using Node, so the runner needs no curl or wget. The endpoint returns HTTP 200 only after a successful database query; errors return 503. Redirects, other status codes, connection failures and probes exceeding five seconds fail the check.
+
+Checks run every 10 seconds, with six consecutive failures marking the container unhealthy. The 180-second startup grace period allows for the entrypoint's default 120-second migration-lock wait and migration/bootstrap work. A successful probe makes the container healthy immediately; it does not have to wait out the grace period. Reassess this allowance if migration duration or `LOCK_TIMEOUT_MS` increases.
+
+Both app Compose services inherit the image's health check. In Coolify, deploy with the Dockerfile build pack and enable health checks; the [Dockerfile check takes precedence over the UI probe](https://coolify.io/docs/knowledge-base/health-checks). Verify the deployed container becomes healthy and the proxy routes to it. Docker health status alone does not automatically restart an unhealthy running container.
 
 ## Required environment
 
@@ -77,4 +87,4 @@ Provision and tune it as you would any production database — connection poolin
 | `docker-compose.dev.yml`  | **Local dev**: Postgres container only; you run `pnpm dev` on the host | Yes (dev throwaway) |
 | `docker-compose.full.yml` | **All-in-one smoke / fresh-deploy test**: app + Postgres               | Yes (ephemeral)     |
 
-`full.yml` exists purely to test the whole boot sequence (build → migrate → seed → serve) in one command — it is **not** the production topology.
+`full.yml` tests the whole boot sequence (build → migrate → seed → serve) in one command. Production PostgreSQL is provisioned separately in Coolify, with its own storage and backup configuration.
