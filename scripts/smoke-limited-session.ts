@@ -127,15 +127,16 @@ async function main() {
     });
     assert.equal(wrongPassword.status, 400);
     await forbidden(await request("/admin/list-users", adminCookie));
-    assert.equal(
-      (
-        await request("/change-password", adminCookie, {
-          currentPassword: password,
-          newPassword,
-        })
-      ).status,
-      200,
-    );
+    const changed = await request("/change-password", adminCookie, {
+      currentPassword: password,
+      newPassword,
+    });
+    assert.equal(changed.status, 200);
+    adminCookie = changed.headers
+      .getSetCookie()
+      .map((c) => c.split(";")[0])
+      .join("; ");
+    assert.ok(adminCookie);
     const fresh = await (await request("/get-session", adminCookie)).json();
     assert.equal(fresh.user.mustChangePassword, false);
     assert.equal((await request("/admin/list-users", adminCookie)).status, 200);

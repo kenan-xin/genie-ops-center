@@ -43,7 +43,7 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
-      if (LIMITED_SESSION_PATHS.has(ctx.path)) return;
+      if (LIMITED_SESSION_PATHS.has(ctx.path) && ctx.path !== "/change-password") return;
 
       // Resolve through Better Auth directly; calling auth.api.getSession here
       // would re-enter our hooks. Endpoints retain their own anonymous guards.
@@ -53,10 +53,35 @@ export const auth = betterAuth({
         "mustChangePassword" in session.user &&
         session.user.mustChangePassword
       ) {
+        if (ctx.path === "/change-password") {
+          // A second login with the temporary password must not become usable
+          // when this user finishes recovery. Enforce this even for raw callers.
+          return {
+            context: {
+              ...ctx,
+              body: { ...ctx.body, revokeOtherSessions: true },
+            },
+          };
+        }
         throw new APIError("FORBIDDEN", {
           code: "PASSWORD_CHANGE_REQUIRED",
           message: "Change your password before continuing.",
         });
+      }
+    }),
+    after: createAuthMiddleware(async (ctx) => {
+      const result = ctx.context.returned;
+      if (
+        ctx.path === "/admin/set-user-password" &&
+        result &&
+        typeof result === "object" &&
+        "status" in result &&
+        result.status === true
+      ) {
+        // Cover service calls and the directly exposed admin endpoint. Only a
+        // successful reset may revoke sessions; the acting admin is unaffected
+        // unless resetting their own password.
+        await ctx.context.internalAdapter.deleteUserSessions(ctx.body.userId);
       }
     }),
   },
