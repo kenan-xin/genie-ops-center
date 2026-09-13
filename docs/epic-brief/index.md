@@ -72,7 +72,7 @@ flowchart LR
 - **Admin is a server-enforced privilege boundary** — every admin route and tRPC procedure checks role/capability on the server. Admin separation is _not_ just a separate screen or hidden nav.
 - **External chat is server-side proxied** — the external chat API base URL and credentials live server-side only and never reach the client.
 - **No tenant boundary in the schema** — one deployment serves one customer; there is no organization/workspace table. The entire People/Groups/Solutions store belongs to that single customer; isolation is at the deployment level.
-- **Per-deployment configuration** — DB URL, external chat API base + token, and allowed iframe origins are deployment config, not code.
+- **Per-deployment configuration** — DB URL and external chat API configuration are deployment config, not code. Authorized administrators configure embedded apps as public HTTPS URLs in the product.
 
 ## Locked framing decisions
 

@@ -14,9 +14,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
  *    popups/modals. The embed is unauthenticated; there is NO SSO/token in the
  *    URL or postMessage. `allow-scripts` lets the app run; everything else is
  *    denied.
- *  - CSP `frame-src` is set app-wide from `ALLOWED_IFRAME_ORIGINS` (non-
- *    wildcard) by middleware; this component trusts the server to have already
- *    gated `iframeUrl` to an allowed origin.
+ *  - CSP `frame-src` permits HTTPS child frames. The shared solution schema
+ *    limits iframe URLs to public HTTPS URLs at editor and server write time.
  *
  * Reload is implemented by bumping a `nonce` query param on the iframe `src` so
  * the browser re-fetches without mutating history; the key also forces React to

@@ -58,7 +58,8 @@ Set these only when the described feature is needed.
 | `ADMIN_EMAIL` | Bootstrapping the first administrator in an empty database | Has no effect after a user exists. |
 | `ADMIN_PASSWORD` | Bootstrapping the first administrator in an empty database | Strong temporary password. It sets `mustChangePassword`; remove it after the first successful login. |
 | `GENIE_CHAT_API_ALLOWED_ORIGINS` | Configuring chat solutions | Comma-separated HTTPS origins permitted for per-solution chat upstreams. Empty prevents chat solutions being saved or streamed. |
-| `ALLOWED_IFRAME_ORIGINS` | Configuring embedded solutions | Comma-separated origins added to CSP `frame-src`; `self` remains allowed. |
+
+Embedded solutions need no environment setting: authorized administrators can configure any public HTTPS URL. An external app can still decline to render in an iframe through its own `X-Frame-Options` or `Content-Security-Policy: frame-ancestors` response header.
 
 ### Optional app runtime controls
 

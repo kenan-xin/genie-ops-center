@@ -12,7 +12,7 @@ The `/s/[slug]` viewer that hosts each solution type, with status gating and the
 
 - **Viewer route** `/s/[slug]`: resolves the solution, applies `assertCanSee` (render) and `assertCanRun` (live experience); records the open to `recent`.
 - **Status gating** (FR-VIEW-05): `Maintenance`/`Down` render a non-interactive status notice instead of the live experience; `Draft` not openable at all.
-- **Embedded (Smart-API)** (FR-VIEW-04): render the external app in a sandboxed `<iframe>` by per-solution `iframeUrl`; loading + error states with retry; reload control. CSP `frame-src` from `ALLOWED_IFRAME_ORIGINS` allow-list.
+- **Embedded (Smart-API)** (FR-VIEW-04): render a public HTTPS app in a sandboxed `<iframe>` by per-solution `iframeUrl`; loading + error states with retry; reload control. CSP `frame-src` permits HTTPS child frames.
 - **Native**: not openable in foundation (enum only) — hidden from the catalogue; no live path.
 
 ## Scope — out

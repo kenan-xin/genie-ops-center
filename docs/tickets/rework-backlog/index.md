@@ -30,7 +30,7 @@ Two sources, sequenced together: the **Design Conformance Audit** (historical so
 - **23 · Phase-3 review fixes (shell / hub / viewer)** — Deps: 16 (soft).
   - **Shell:** hamburger has inline `display` so the hide-on-desktop media query can't win → make it class/breakpoint-driven (P1). Evaluate the Next-16 `middleware`→`proxy` deprecation (warning, not a break).
   - **Hub:** single-source native exclusion in `canSee` (remove the duplicated `<> 'native'` in the hub SQL — the invariant is one predicate); refresh the server-rendered PINNED rail after a favorite toggle (currently stale until navigation); reconcile sort/`UPDATED` semantics with the prototype; side-rail timestamp.
-  - **Viewer:** move the viewer controls (`← Hub`, title, `▤`, `⤢`) into the 54px route-aware header per the prototype (currently a second in-page toolbar); add the Down-status "View status page ↗" link; seed down/draft demo variants (or fix the seed comment). *(The two P1 security findings — iframe origin allow-list + sandbox popup-escape — and the URL-parse P2 are already fixed in `f5ccd90`.)*
+  - **Viewer:** move the viewer controls (`← Hub`, title, `▤`, `⤢`) into the 54px route-aware header per the prototype (currently a second in-page toolbar); add the Down-status "View status page ↗" link; seed down/draft demo variants (or fix the seed comment). *(The sandbox popup-escape and URL-parse findings are fixed in `f5ccd90`; iframe embedding now intentionally permits public HTTPS apps.)*
 
 ## Dependency view & schedule
 

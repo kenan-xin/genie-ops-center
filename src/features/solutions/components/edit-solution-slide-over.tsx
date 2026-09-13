@@ -391,7 +391,7 @@ function EmbeddedConfigFields({
           message={(errors.config as { iframeUrl?: { message?: string } })?.iframeUrl?.message}
         />
         <p className="text-mono-xs text-[var(--ink3)]">
-          Must be HTTPS. Allowed origins are controlled by ALLOWED_IFRAME_ORIGINS.
+          Must be HTTPS. The external app must allow itself to be embedded.
         </p>
       </div>
 

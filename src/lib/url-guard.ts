@@ -85,8 +85,8 @@ function parseHttpsUrl(raw: string, field: string): URL {
  * AND its origin must be in `allowedOrigins`. Used at the tRPC write boundary and
  * re-checked before the live experience (chat fetch / iframe render). Throws on fail.
  *
- * `emptyListMessage` lets callers name the relevant env var in the "no origins"
- * error (chat → GENIE_CHAT_API_ALLOWED_ORIGINS, iframe → ALLOWED_IFRAME_ORIGINS).
+ * `emptyListMessage` lets callers name the relevant env var when no chat
+ * origins are approved.
  */
 export function assertAllowedEndpoint(
   raw: string,
