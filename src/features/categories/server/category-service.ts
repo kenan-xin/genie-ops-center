@@ -4,7 +4,7 @@ import { TRPCError } from "@trpc/server";
 import { asc, eq, sql } from "drizzle-orm";
 
 import { db } from "@/server/db";
-import { category, solutionCategory } from "@/server/db/schema";
+import { category, solution, solutionCategory } from "@/server/db/schema";
 import type { AuthUser } from "@/server/authz";
 import { resolveExplicitOrder } from "@/features/solutions-hub/lib/reorder";
 import { listHubSolutions } from "@/features/solutions-hub/server/queries";
@@ -56,7 +56,12 @@ export async function createCategory(name: string): Promise<{ id: string }> {
 }
 
 export async function renameCategory(id: string, name: string): Promise<void> {
-  await db.update(category).set({ name, updatedAt: new Date() }).where(eq(category.id, id));
+  const [row] = await db
+    .update(category)
+    .set({ name, updatedAt: new Date() })
+    .where(eq(category.id, id))
+    .returning({ id: category.id });
+  if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "Category not found" });
 }
 
 /**
@@ -64,7 +69,9 @@ export async function renameCategory(id: string, name: string): Promise<void> {
  * become standalone. A delete never removes a solution from the sidebar.
  */
 export async function deleteCategory(id: string): Promise<void> {
-  await db.delete(category).where(eq(category.id, id));
+  const [row] = await db.delete(category).where(eq(category.id, id)).returning({ id: category.id });
+  if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "Category not found" });
+  // solution_category rows cascade via FK onDelete.
 }
 
 export async function reorderCategories(orderedIds: string[]): Promise<void> {
@@ -104,9 +111,18 @@ export async function assignCategory(solutionId: string, categoryId: string | nu
     await db.delete(solutionCategory).where(eq(solutionCategory.solutionId, solutionId));
     return;
   }
-  // Check the category first. Without this, assigning to a category another
-  // admin just deleted raises a Postgres foreign-key violation (23503), which
-  // reaches the admin screen as an opaque 500 instead of a clear message.
+  // Check both foreign keys before the insert. Without this, assigning a
+  // solution or category another admin just deleted raises a Postgres
+  // foreign-key violation (23503), which reaches the admin screen as an
+  // opaque 500 instead of a clear message.
+  const [targetSolution] = await db
+    .select({ id: solution.id })
+    .from(solution)
+    .where(eq(solution.id, solutionId))
+    .limit(1);
+  if (!targetSolution) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Solution not found" });
+  }
   const [target] = await db
     .select({ id: category.id })
     .from(category)

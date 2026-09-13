@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
  * Which categories the user has collapsed. The category itself is admin-owned,
@@ -32,23 +32,28 @@ export function useCollapsedCategories() {
   // Start empty so the server render and the first client render agree; the
   // stored value arrives in the effect below. Every category starts expanded.
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
+  // Mirrors `collapsed` so rapid toggles always read the current value, not
+  // the stale one captured by the render that built the callback.
+  const collapsedRef = useRef<Set<string>>(collapsed);
 
   useEffect(() => {
-    setCollapsed(parseCollapsed(window.localStorage.getItem(COLLAPSED_KEY)));
+    const stored = parseCollapsed(window.localStorage.getItem(COLLAPSED_KEY));
+    collapsedRef.current = stored;
+    setCollapsed(stored);
   }, []);
 
   // The write happens OUTSIDE the state updater. A `setState` updater must stay
   // pure: React can call it twice under StrictMode, or discard the render.
-  const toggle = useCallback(
-    (id: string) => {
-      const next = new Set(collapsed);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      window.localStorage.setItem(COLLAPSED_KEY, serialiseCollapsed(next));
-      setCollapsed(next);
-    },
-    [collapsed],
-  );
+  // Reads `collapsedRef.current`, so two rapid toggles compose instead of both
+  // computing from the same stale snapshot.
+  const toggle = useCallback((id: string) => {
+    const next = new Set(collapsedRef.current);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    collapsedRef.current = next;
+    window.localStorage.setItem(COLLAPSED_KEY, serialiseCollapsed(next));
+    setCollapsed(next);
+  }, []);
 
   const isCollapsed = useCallback((id: string) => collapsed.has(id), [collapsed]);
 
