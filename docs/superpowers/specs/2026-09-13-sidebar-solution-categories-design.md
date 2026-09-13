@@ -186,5 +186,13 @@ separate model on six questions. Accepted from it:
 - Collapse state lives in `localStorage`.
 - One category per solution, over a join table, was accepted after review.
 
-Rejected from it: an "Uncategorised" bucket. Standalone first-level rows serve
+Two details changed when the plan met the code. Both are deliberate:
+
+- Collapse state is stored as an array of collapsed category ids, not a map of
+  id to boolean. Absence means expanded, so the map would carry only `false`
+  values for every category the user never touched.
+- The admin reorders categories with up and down controls, not by dragging.
+  The list is short, and the controls work on touch.
+
+Rejected from the second opinion: an "Uncategorised" bucket. Standalone first-level rows serve
 the same need and treat "no category" as a deliberate choice.

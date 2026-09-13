@@ -22,7 +22,7 @@
 - Form controls take their height from `src/components/ui/control-size.ts`. Never hard-code `h-8`, `h-10`, or `h-11`.
 - Colours and type come from Ledger tokens, for example `var(--ink2)` and `var(--t-body)`. Never hard-code a hex value in a component.
 - Run shell commands through `rtk`, for example `rtk pnpm test`.
-- Track work in beads. Never use TodoWrite or a markdown checklist for task state.
+- Track work in beads: `bd update genie-ops-center-t2k --claim` when you start, `bd close` when you finish. The checkboxes in this file track progress THROUGH THIS DOCUMENT only. Never open a TodoWrite list or a separate markdown checklist for issue state.
 - Tests run in the `node` environment and only match `src/**/*.test.ts`. A `.test.tsx` file will NOT run. Test pure functions, and mock `@/server/db` the way `src/server/features/solution-access.test.ts` does.
 - `pnpm dev` can crash under Console Ninja. Use `rtk pnpm build` as the smoke check.
 
@@ -532,6 +532,7 @@ Create `src/features/categories/server/category-service.ts`:
 ```ts
 import "server-only";
 
+import { TRPCError } from "@trpc/server";
 import { asc, eq, sql } from "drizzle-orm";
 
 import { db } from "@/server/db";
@@ -626,6 +627,17 @@ export async function assignCategory(
   if (categoryId === null) {
     await db.delete(solutionCategory).where(eq(solutionCategory.solutionId, solutionId));
     return;
+  }
+  // Check the category first. Without this, assigning to a category another
+  // admin just deleted raises a Postgres foreign-key violation (23503), which
+  // reaches the admin screen as an opaque 500 instead of a clear message.
+  const [target] = await db
+    .select({ id: category.id })
+    .from(category)
+    .where(eq(category.id, categoryId))
+    .limit(1);
+  if (!target) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Category not found" });
   }
   await db
     .insert(solutionCategory)
@@ -966,15 +978,18 @@ export function useCollapsedCategories() {
     setCollapsed(parseCollapsed(window.localStorage.getItem(COLLAPSED_KEY)));
   }, []);
 
-  const toggle = useCallback((id: string) => {
-    setCollapsed((prev) => {
-      const next = new Set(prev);
+  // The write happens OUTSIDE the state updater. A `setState` updater must stay
+  // pure: React can call it twice under StrictMode, or discard the render.
+  const toggle = useCallback(
+    (id: string) => {
+      const next = new Set(collapsed);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       window.localStorage.setItem(COLLAPSED_KEY, serialiseCollapsed(next));
-      return next;
-    });
-  }, []);
+      setCollapsed(next);
+    },
+    [collapsed],
+  );
 
   const isCollapsed = useCallback((id: string) => collapsed.has(id), [collapsed]);
 
@@ -1117,7 +1132,7 @@ export function SidebarCategories() {
                 aria-hidden
                 style={{
                   color: "var(--ink3)",
-                  fontSize: 10,
+                  fontSize: "var(--m-sm)",
                   transition: "transform var(--dur-fast) var(--ease)",
                   transform: collapsed ? "rotate(-90deg)" : "none",
                 }}
