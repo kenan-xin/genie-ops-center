@@ -8,6 +8,7 @@ import { IdleTimeout } from "@/components/idle-timeout";
 
 import { OfflineIndicator } from "./offline-indicator";
 import { PinnedFavorites } from "./pinned-favorites";
+import { SidebarCategories } from "./sidebar-categories";
 import { UserFooter } from "./user-footer";
 import { WorkspaceHeader } from "./workspace-header";
 import { WorkspaceNav } from "./workspace-nav";
@@ -95,19 +96,25 @@ export function WorkspaceChrome({
           GENIE
         </span>
       </div>
-      <div style={{ padding: "14px 12px", flex: 1, overflow: "auto", minHeight: 0 }}>
-        <div
-          style={{
-            font: "600 var(--m-sm) var(--font-mono)",
-            letterSpacing: "0.13em",
-            color: "var(--ink3)",
-            padding: "0 6px 8px",
-          }}
-        >
-          WORKSPACE
+      <div
+        className="ws-rail"
+        style={{ padding: "14px 12px", flex: 1, overflowY: "auto", minHeight: 0 }}
+      >
+        <div className="ws-navsticky">
+          <div
+            style={{
+              font: "600 var(--m-sm) var(--font-mono)",
+              letterSpacing: "0.13em",
+              color: "var(--ink3)",
+              padding: "0 6px 8px",
+            }}
+          >
+            WORKSPACE
+          </div>
+          <WorkspaceNav />
         </div>
-        <WorkspaceNav />
         <PinnedFavorites />
+        <SidebarCategories />
       </div>
       <UserFooter name={userName} role={userRole} />
     </>

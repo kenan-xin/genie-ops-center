@@ -1,11 +1,9 @@
 /**
- * Pure partition/reindex logic for `reorderFavorites` (design spec §5.3),
- * extracted so it can be unit-tested without a DB. `requestedOrder` may
- * contain unknown ids (dropped) and duplicates (de-duplicated); any id from
- * `currentIds` missing from the request is appended, preserving its current
- * relative order.
+ * Apply a requested order to a subset of ids, keeping every id the request does
+ * not name in its current relative position. Used by the favorites rail and by
+ * the admin category order.
  */
-export function resolveFavoriteReorder(currentIds: string[], requestedOrder: string[]): string[] {
+export function resolveExplicitOrder(currentIds: string[], requestedOrder: string[]): string[] {
   const currentSet = new Set(currentIds);
   const provided: string[] = [];
   const providedSet = new Set<string>();
