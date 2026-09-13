@@ -47,7 +47,7 @@ Every deployment needs `DATABASE_URL`, `BETTER_AUTH_SECRET`, and `PUBLIC_BASE_UR
 | `DATABASE_URL` | **yes** | — | every app deployment | PostgreSQL URL used by migrations, Drizzle, and Better Auth. Inside Docker, `localhost` is the app container, never the database. |
 | `BETTER_AUTH_SECRET` | **yes** | — | every app deployment | Stable random value, at least 32 characters. Generate with `openssl rand -base64 32`; changing it invalidates active sessions. |
 | `PUBLIC_BASE_URL` | **yes** | — | every app deployment | Canonical HTTPS URL for auth cookies, reset links, and server-side tRPC. No trailing path. |
-| `PORT` | no | `3000` | app container | Internal listening port. If changed, update the Coolify domain's internal port and the smoke Compose mapping. |
+| `PORT` | no | `3000` | app container | Container listening port. If changed, update the reverse proxy's upstream port and the smoke Compose mapping. |
 | `AUTH_TRUSTED_PROXIES` | no | empty | reverse-proxy deployments | Comma-separated trusted proxy IPs/CIDRs for `X-Forwarded-For`. Cloudflare + Traefik needs Cloudflare's published ranges in both services. Never trust `0.0.0.0/0`. |
 | `RESEND_API_KEY` | email delivery | empty | invitations / password resets | Production admin actions reject absent email configuration. Host `pnpm dev` logs links when empty. |
 | `RESEND_FROM_EMAIL` | no | `onboarding@resend.dev` | email delivery | Use a sender at a verified Resend domain for recipients beyond the account owner. |
