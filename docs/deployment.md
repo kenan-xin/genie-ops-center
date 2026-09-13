@@ -35,25 +35,41 @@ Both app Compose services inherit the image's health check. A deployment platfor
 
 `.env.example` is the copy-safe, complete template. Keep real values in your local `.env`, deployment-platform variables, or another secret manager; never commit them. The entrypoint validates the three required runtime values before connecting to PostgreSQL or starting Next.js.
 
-Every deployment needs `DATABASE_URL`, `BETTER_AUTH_SECRET`, and `PUBLIC_BASE_URL`. All other runtime values are optional unless the feature in the table says it applies: Resend needs both `RESEND_API_KEY` and a verified `RESEND_FROM_EMAIL` to send real invitation or password-reset messages; bootstrap credentials are needed only when automatically creating the very first administrator.
+Every deployment needs `DATABASE_URL`, `BETTER_AUTH_SECRET`, and `PUBLIC_BASE_URL`. The sections below separate those startup blockers from conditional feature settings and optional runtime controls. Resend needs both `RESEND_API_KEY` and a verified `RESEND_FROM_EMAIL` to send real invitation or password-reset messages; bootstrap credentials are needed only when automatically creating the very first administrator.
 
-### App runtime variables
+### Required app runtime values
 
-| Variable | Required | Default | Where it applies | Notes |
-| --- | --- | --- | --- | --- |
-| `NODE_ENV` | no | `production` in the image | host `pnpm dev` / runtime | Use `development` locally. The Dockerfile fixes the container to `production`; do not override it in Coolify. |
-| `DATABASE_URL` | **yes** | — | every app deployment | PostgreSQL URL used by migrations, Drizzle, and Better Auth. Inside Docker, `localhost` is the app container, never the database. |
-| `BETTER_AUTH_SECRET` | **yes** | — | every app deployment | Stable random value, at least 32 characters. Generate with `openssl rand -base64 32`; changing it invalidates active sessions. |
-| `PUBLIC_BASE_URL` | **yes** | — | every app deployment | Canonical HTTPS URL for auth cookies, reset links, and server-side tRPC. No trailing path. |
-| `PORT` | no | `3000` | app container | Container listening port. If changed, update the reverse proxy's upstream port and the smoke Compose mapping. |
-| `AUTH_TRUSTED_PROXIES` | no | empty | reverse-proxy deployments | Comma-separated trusted proxy IPs/CIDRs for `X-Forwarded-For`. Add only the published ranges of proxy services you operate. Never trust `0.0.0.0/0`. |
-| `RESEND_API_KEY` | email delivery | empty | invitations / password resets | Production admin actions reject absent email configuration. Host `pnpm dev` logs links when empty. |
-| `RESEND_FROM_EMAIL` | no | `onboarding@resend.dev` | email delivery | Use a sender at a verified Resend domain for recipients beyond the account owner. |
-| `ADMIN_EMAIL` | first boot | empty | first empty database only | Initial administrator email. It has no effect after a user exists. |
-| `ADMIN_PASSWORD` | first boot | empty | first empty database only | Strong temporary password. It sets `mustChangePassword`; remove it after the initial boot. |
-| `GENIE_CHAT_API_ALLOWED_ORIGINS` | chat solutions | empty | chat configuration / proxy | Comma-separated HTTPS origins permitted for per-solution chat upstreams. Empty prevents chat solutions being saved or streamed. |
-| `ALLOWED_IFRAME_ORIGINS` | embedded solutions | empty | embedded solution viewer | Comma-separated origins added to CSP `frame-src`; `self` remains allowed. |
-| `LOCK_TIMEOUT_MS` | no | `120000` | startup entrypoint | Maximum milliseconds a replica waits for the Postgres migration advisory lock. |
+Set all three for every deployment. The entrypoint fails before any database work if one is missing or invalid.
+
+| Variable | Notes |
+| --- | --- |
+| `DATABASE_URL` | PostgreSQL URL used by migrations, Drizzle, and Better Auth. Inside Docker, `localhost` is the app container, never the database. |
+| `BETTER_AUTH_SECRET` | Stable random value, at least 32 characters. Generate with `openssl rand -base64 32`; changing it invalidates active sessions. |
+| `PUBLIC_BASE_URL` | Canonical HTTPS URL for auth cookies, reset links, and server-side tRPC. No trailing path. |
+
+### Conditional feature configuration
+
+Set these only when the described feature is needed.
+
+| Variable | Configure it when | Notes |
+| --- | --- | --- |
+| `RESEND_API_KEY` | Sending invitation or password-reset emails | Required with `RESEND_FROM_EMAIL` for real email delivery. Production admin actions reject absent email configuration; host `pnpm dev` logs links when it is empty. |
+| `RESEND_FROM_EMAIL` | Sending invitation or password-reset emails | Use a sender on a verified Resend domain for recipients beyond the account owner. |
+| `ADMIN_EMAIL` | Bootstrapping the first administrator in an empty database | Has no effect after a user exists. |
+| `ADMIN_PASSWORD` | Bootstrapping the first administrator in an empty database | Strong temporary password. It sets `mustChangePassword`; remove it after the first successful login. |
+| `GENIE_CHAT_API_ALLOWED_ORIGINS` | Configuring chat solutions | Comma-separated HTTPS origins permitted for per-solution chat upstreams. Empty prevents chat solutions being saved or streamed. |
+| `ALLOWED_IFRAME_ORIGINS` | Configuring embedded solutions | Comma-separated origins added to CSP `frame-src`; `self` remains allowed. |
+
+### Optional app runtime controls
+
+These have safe defaults and can normally be left unchanged.
+
+| Variable | Default | Notes |
+| --- | --- | --- |
+| `NODE_ENV` | `production` in the image | Use `development` for host `pnpm dev`. The Dockerfile fixes the container to `production`. |
+| `PORT` | `3000` | Container listening port. If changed, update the reverse proxy's upstream port and the smoke Compose mapping. |
+| `AUTH_TRUSTED_PROXIES` | empty | Comma-separated proxy IPs/CIDRs trusted for `X-Forwarded-For`. Add only published ranges of proxy services you operate. Never trust `0.0.0.0/0`. |
+| `LOCK_TIMEOUT_MS` | `120000` | Maximum milliseconds a replica waits for the Postgres migration advisory lock. |
 
 ### Docker Compose helper variables
 
