@@ -4,14 +4,14 @@
  * The admin lifecycle tests (and any live "reset password" action run against
  * the dev DB) can leave the seeded local admin locked out: password changed to
  * an unknown value and/or `mustChangePassword` set. This restores a known,
- * strong login in place, so you don't have to `pnpm db:dev:reset` (which wipes
+ * strong login in place, so you don't have to `pnpm db:local:reset` (which wipes
  * the whole volume).
  *
  * NOT for production: it writes the credential directly (via better-auth's own
  * internal adapter — the same call `POST /admin/set-user-password` makes), so it
  * bypasses the admin session a real reset requires. Guarded by NODE_ENV.
  *
- * Usage (with the dev DB running — `pnpm db:dev`):
+ * Usage (with the local DB running — `pnpm db:local`):
  *   pnpm reset-admin                                  # admin@example.com / .env ADMIN_PASSWORD (or Str0ng!Passw0rd)
  *   pnpm reset-admin you@example.com 'YourStr0ng!pw'  # custom target + password
  *
@@ -62,7 +62,7 @@ async function main(): Promise<void> {
   const [target] = await db.select().from(user).where(eq(user.email, email)).limit(1);
   if (!target) {
     console.error(
-      `✗ No user with email "${email}". Migrate + bootstrap the DB first (pnpm db:dev).`,
+      `✗ No user with email "${email}". Migrate + bootstrap the DB first (pnpm db:local).`,
     );
     process.exit(1);
   }

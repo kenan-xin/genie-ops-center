@@ -38,20 +38,17 @@ openssl rand -base64 32
 # Set ADMIN_EMAIL and a strong ADMIN_PASSWORD for the first admin.
 # Keep DATABASE_URL=postgres://genie:genie@localhost:5432/genie for local dev.
 
-# 3. Start the dev database and wait until it is ready
+# 3. Start the local database and wait until it is ready
 # Uses a persistent named volume; requires host port 5432 to be free.
-docker compose -f docker-compose.dev.yml up -d --wait
+docker compose -f docker-compose.local.yml up -d --wait
 
-# 4. First initialization: use the app image's migration/bootstrap entrypoint.
-# Inside Compose, the DB host is "db". This override does not change .env.
-DATABASE_URL=postgres://genie:genie@db:5432/genie \
-  docker compose -f docker-compose.dev.yml -f docker-compose.app.yml up --build --wait
+# 4. First initialization: use the optional bootstrap service. It uses the app
+# image's migration/bootstrap entrypoint and reaches the DB as "db" internally.
+docker compose -f docker-compose.local.yml --profile bootstrap up --build --wait
 
-# 5. Stop and remove only the bootstrap app, keeping the initialized dev DB.
-DATABASE_URL=postgres://genie:genie@db:5432/genie \
-  docker compose -f docker-compose.dev.yml -f docker-compose.app.yml stop app
-DATABASE_URL=postgres://genie:genie@db:5432/genie \
-  docker compose -f docker-compose.dev.yml -f docker-compose.app.yml rm -f app
+# 5. Stop and remove only the bootstrap app, keeping the initialized local DB.
+docker compose -f docker-compose.local.yml stop bootstrap
+docker compose -f docker-compose.local.yml rm -f bootstrap
 
 # 6. Run Next on the host with hot reload, using .env's localhost DB URL.
 pnpm dev    # http://localhost:3000
@@ -59,7 +56,7 @@ pnpm dev    # http://localhost:3000
 
 The initial container run seeds one admin only when the `user` table is empty and both bootstrap variables are supplied. Sign in at `/admin/login` and change the temporary password. Clear `ADMIN_PASSWORD` from `.env` after seeding. Removing the bootstrap app above also removes its saved container environment. An admin account still needs group grants to open workspace solutions.
 
-**`pnpm dev` and `pnpm db:migrate` do not bootstrap an admin.** Once the database is initialized, daily startup is `pnpm db:dev`, `pnpm db:migrate` when new migrations exist, then `pnpm dev`. If you change the dev DB credentials, update both `.env`'s host URL and the container URL above. Changing Compose credentials does not change an existing PostgreSQL volume's credentials.
+**`pnpm dev` and `pnpm db:migrate` do not bootstrap an admin.** Once the database is initialized, daily startup is `pnpm db:local`, `pnpm db:migrate` when new migrations exist, then `pnpm dev`. If you change the local DB credentials, update both `.env`'s host URL and the container URL above. Changing Compose credentials does not change an existing PostgreSQL volume's credentials.
 
 For local invite/reset testing, leave `RESEND_API_KEY` empty to log links in the **development** server console, or configure Resend for real delivery. The bootstrap image runs in production mode and does not log reset links. Generate secret values in the shell and paste them into `.env`; `.env` does not execute `$(...)` shell commands.
 
@@ -74,17 +71,17 @@ For local invite/reset testing, leave `RESEND_API_KEY` empty to log links in the
 | `pnpm db:migrate`               | Apply new migrations to the dev DB                              |
 | `pnpm db:generate`              | Generate a migration from schema changes (`src/server/db/schema.ts`) |
 | `pnpm db:studio`                | Open Drizzle Studio against `DATABASE_URL`                      |
-| `pnpm db:dev` / `db:dev:stop`   | Start / stop the Postgres container (data kept)                 |
-| `pnpm db:dev:down`              | Remove the container (data volume kept)                         |
-| `pnpm db:dev:reset`             | **Wipe** the volume and remove the container (does not restart it)                             |
+| `pnpm db:local` / `db:local:stop` | Start / stop the Postgres container (data kept)               |
+| `pnpm db:local:down`              | Remove the container (data volume kept)                       |
+| `pnpm db:local:reset`             | **Wipe** the volume and remove the container (does not restart it)                           |
 
-The dev DB defaults to `genie:genie@localhost:5432/genie` (matches `.env.example`). Override via `.env`: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `POSTGRES_PORT`.
+The local DB defaults to `genie:genie@localhost:5432/genie` (matches `.env.example`). Override via `.env`: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `POSTGRES_PORT`.
 
 ## Connecting an external database
 
 The Drizzle client, container migrator and drizzle-kit all read **`DATABASE_URL`**. Use a PostgreSQL service compatible with the schema and migration permissions; the bundled database examples use PostgreSQL 16. Public URLs, auth secrets and integration allowlists also vary by deployment.
 
-- **Local Docker DB (default dev):** `DATABASE_URL=postgres://genie:genie@localhost:5432/genie` — the `pnpm db:dev` container.
+- **Local Docker DB (default dev):** `DATABASE_URL=postgres://genie:genie@localhost:5432/genie` — the `pnpm db:local` container.
 - **External / managed Postgres (staging, prod, or a cloud DB for dev):** point `DATABASE_URL` at it — RDS, Cloud SQL, Crunchy Bridge, Neon, Supabase, or a bare-metal server. Example:
   ```bash
   export DATABASE_URL="postgres://user:pass@db.host.example.com:5432/genie?sslmode=verify-full"
@@ -99,14 +96,13 @@ The Drizzle client, container migrator and drizzle-kit all read **`DATABASE_URL`
 
 | Want to…                                  | Do this                                                                 |
 | ----------------------------------------- | ----------------------------------------------------------------------- |
-| Develop locally after first initialization           | `pnpm db:dev` (Docker Postgres) + the default `DATABASE_URL`            |
+| Develop locally after first initialization           | `pnpm db:local` (Docker Postgres) + the default `DATABASE_URL`          |
 | Point dev/staging at a managed/cloud DB   | Set `DATABASE_URL` to it in `.env`, then `pnpm db:migrate`              |
-| Run the prod-shaped app image             | `docker compose -f docker-compose.app.yml up -d --build` (external DB)  |
 | Test a full fresh deploy (app + DB image) | The smoke test below                                                     |
 
 ## Fresh-deploy smoke test
 
-Stop the host dev server and remove any previous `genie-app` bootstrap container (step 5 above) before this test. Use a disposable env and unused ports. The explicit `genie-smoke` Compose project isolates this test from the dev project/volume, but the files still use fixed container names (`genie-app`, `genie-db`) that must be free. Its test volume is reused until removed; `down` preserves it and `down -v` deletes its data.
+Stop the host dev server before this test. Use a disposable env and unused ports. The explicit `genie-smoke` Compose project isolates this test from the local project and volume. Its test volume is reused until removed; `down` preserves it and `down -v` deletes its data.
 
 End-to-end test of a brand-new deployment: build the app image, start it with its own test Postgres, and verify the boot sequence (env validate → advisory-locked migrate → seed the first admin → serve). Use this before a release or to verify a Dockerfile/entrypoint change.
 
@@ -120,10 +116,10 @@ export APP_PORT=3000
 export RESEND_API_KEY=""                               # no real email in this smoke test
 
 # 2. Build + boot app + Postgres (reuses its named volume if one already exists)
-docker compose -p genie-smoke -f docker-compose.full.yml up --build --wait
+docker compose -p genie-smoke -f docker-compose.smoke.yml up --build --wait
 
 # 3. Wait for the app to be healthy, then watch the boot sequence
-docker logs genie-app | grep -E 'entrypoint|bootstrap|Ready'
+docker compose -p genie-smoke -f docker-compose.smoke.yml logs app | grep -E 'entrypoint|bootstrap|Ready'
 # Expect:
 #   [entrypoint] booting (config validated)
 #   [entrypoint] advisory lock acquired
@@ -138,20 +134,17 @@ curl -fsS http://localhost:3000/login     # sign-in page
 curl -sS http://localhost:3000/api/health  # → {"status":"ok"}
 
 # 5. Tear down (add -v to also wipe the test DB volume)
-docker compose -p genie-smoke -f docker-compose.full.yml down
+docker compose -p genie-smoke -f docker-compose.smoke.yml down
 ```
 
-This uses [`docker-compose.full.yml`](./docker-compose.full.yml) — an **all-in-one smoke / fresh-deploy test only**, not the production topology (the Coolify deployment builds the Dockerfile and provisions PostgreSQL separately).
-
-> **App-only smoke (prod-shaped):** to verify the image against an *already-running* external Postgres, use `docker-compose.app.yml` with `DATABASE_URL` pointed at it instead — it runs the app image with no `db` service.
+This uses [`docker-compose.smoke.yml`](./docker-compose.smoke.yml) — an **all-in-one smoke / fresh-deploy test only**, not the production topology (the Coolify deployment builds the Dockerfile and provisions PostgreSQL separately).
 
 ## Compose files at a glance
 
 | File                      | Use                                                                     | Runs Postgres?    |
 | ------------------------- | ----------------------------------------------------------------------- | ----------------- |
-| `docker-compose.dev.yml`  | **Local dev** — Postgres container only; you run `pnpm dev` on the host | Yes (persistent dev volume)   |
-| `docker-compose.app.yml`  | **Production-shape** — app image against your external DB               | **No** (external) |
-| `docker-compose.full.yml` | **All-in-one smoke / fresh-deploy test** — app + Postgres               | Yes (persistent test volume)   |
+| `docker-compose.local.yml` | **Local dev** — Postgres plus an optional first-run bootstrap service; you run `pnpm dev` on the host | Yes (persistent local volume) |
+| `docker-compose.smoke.yml` | **All-in-one smoke / fresh-deploy test** — app + Postgres               | Yes (persistent test volume)  |
 
 ## Scripts
 
@@ -164,7 +157,7 @@ This uses [`docker-compose.full.yml`](./docker-compose.full.yml) — an **all-in
 | `pnpm lint` / `lint:fix`                                       | oxlint                                                          |
 | `pnpm format` / `format:check`                                 | oxfmt                                                           |
 | `pnpm db:generate` / `db:migrate` / `db:studio`                | drizzle-kit migrations / studio                                 |
-| `pnpm db:dev` / `db:dev:stop` / `db:dev:down` / `db:dev:reset` | local Postgres container lifecycle                              |
+| `pnpm db:local` / `db:local:stop` / `db:local:down` / `db:local:reset` | local Postgres container lifecycle                        |
 
 `pnpm test` runs Vitest; `pnpm test:watch` watches tests. The standalone Docker server is started by its bundled entrypoint, not `pnpm start`. For local recovery of an **existing** dev admin, `pnpm reset-admin` resets its password and clears blocked lifecycle flags; it neither creates users nor migrates a database. Never point this development helper at production.
 

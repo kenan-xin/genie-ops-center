@@ -246,8 +246,7 @@
         <tbody>
           <tr><td>Types / lint / format</td><td><code>pnpm typecheck</code> · <code>oxlint</code> · <code>oxfmt --check</code> (whole tree)</td><td><span class="ok">✓ green</span></td></tr>
           <tr><td>Identity invariants</td><td><code>scripts/smoke-identity.ts</code> vs real Postgres — 6 groups incl. weak-reset rejection + pending-only activation</td><td><span class="ok">✓ pass</span></td></tr>
-          <tr><td>Fresh-deploy</td><td><code>docker compose -f docker-compose.full.yml up --build</code> on empty volume → migrate → seed → <code>GET /</code> 200, <code>/api/health</code> ok</td><td><span class="ok">✓ pass</span></td></tr>
-          <tr><td>Prod topology</td><td><code>docker-compose.app.yml</code> (no db service) against an external Postgres → boots + serves</td><td><span class="ok">✓ pass</span></td></tr>
+          <tr><td>Fresh-deploy</td><td><code>docker compose -f docker-compose.smoke.yml up --build</code> on empty volume → migrate → seed → <code>GET /</code> 200, <code>/api/health</code> ok</td><td><span class="ok">✓ pass</span></td></tr>
           <tr><td>Migration fidelity</td><td>committed <code>0000_init.sql</code> == fresh <code>drizzle generate</code></td><td><span class="ok">✓ review</span></td></tr>
           <tr><td>Pre-commit hook</td><td>lefthook blocks a staged lint error</td><td><span class="ok">✓ pass</span></td></tr>
           <tr><td>Real-browser DOM / responsive</td><td>no headless Chrome here — &lt;920px drawer + dark-contrast fix are code-correct but unviewed</td><td><span class="todo">⌛ deferred</span></td></tr>

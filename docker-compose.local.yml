@@ -1,54 +1,54 @@
-# One-command all-in-one smoke / fresh-deploy test (app + Postgres). NOT the
-# production deployment configuration — provision production Postgres separately
-# with persistent storage and backups (see docs/deployment.md).
+# Local development services. Run `pnpm dev` on your host; this file provides
+# a persistent PostgreSQL container and an optional first-run bootstrap service.
 #
-#   docker compose -f docker-compose.full.yml up --build
-#   docker compose -f docker-compose.full.yml down -v   # wipe the DB volume
+#   pnpm db:local          # start the database
+#   pnpm db:local:stop     # stop it
+#   pnpm db:local:down     # stop + delete the container (data volume is kept)
+#   pnpm db:local:reset    # stop + delete the volume (WIPES local data)
+#   docker compose -f docker-compose.local.yml --profile bootstrap up --build --wait
+#                              # first initialization: migrate + seed the admin
 #
-# Secrets are supplied via a top-level .env file (docker compose loads it
-# automatically) — see .env.example. Nothing is baked into the image. One image,
-# one deployment per customer.
+# Credentials match .env.example's DATABASE_URL. Override via the PG_* vars below
+# or a top-level .env file (docker compose loads it automatically).
 
 services:
   db:
     image: postgres:16-alpine
-    container_name: genie-db
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-genie}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-genie}
       POSTGRES_DB: ${POSTGRES_DB:-genie}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - genie-db:/var/lib/postgresql/data
+      - genie-db-dev:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-genie} -d ${POSTGRES_DB:-genie}"]
       interval: 5s
       timeout: 3s
       retries: 10
 
-  app:
+  bootstrap:
+    profiles: ["bootstrap"]
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: genie-app
-    restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
     environment:
-      # Postgres URL pointing at the compose service (not localhost).
       DATABASE_URL: postgres://${POSTGRES_USER:-genie}:${POSTGRES_PASSWORD:-genie}@db:5432/${POSTGRES_DB:-genie}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required}
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:3000}
+      AUTH_TRUSTED_PROXIES: ${AUTH_TRUSTED_PROXIES:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-onboarding@resend.dev}
-      # First-admin bootstrap. Seeded only on a fresh (empty-user) DB; clear after.
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       GENIE_CHAT_API_ALLOWED_ORIGINS: ${GENIE_CHAT_API_ALLOWED_ORIGINS:-}
       ALLOWED_IFRAME_ORIGINS: ${ALLOWED_IFRAME_ORIGINS:-}
-    ports:
-      - "${APP_PORT:-3000}:3000"
+      LOCK_TIMEOUT_MS: ${LOCK_TIMEOUT_MS:-120000}
 
 volumes:
-  genie-db:
+  genie-db-dev:

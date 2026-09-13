@@ -144,7 +144,7 @@ async function grant(groupId: string, solutionId: string) {
 
 async function addAdminsToGroup(groupId: string) {
   // Every user gets membership so the demo embed is openable immediately after
-  // `pnpm db:dev && pnpm tsx scripts/seed-demo-solutions.ts`.
+  // `pnpm db:local && pnpm tsx scripts/seed-demo-solutions.ts`.
   const admins = await db.select({ id: user.id }).from(user);
   await Promise.all(
     admins.map((a) =>

@@ -82,31 +82,6 @@ ssh -o ExitOnForwardFailure=yes -N -L "127.0.0.1:15432:${db_ip}:5432" root@129.2
 
 Connect your database client to `127.0.0.1:15432`, database `genie`, user `genie`, using the database password shown in Coolify. The SSH transport encrypts the remote connection; PostgreSQL has no public host port. Resolve the container IP each time because it may change when Coolify recreates the container. Stop the tunnel with Ctrl+C.
 
-## Running the app image against a separate DB
-
-`docker-compose.app.yml` runs **only the app** and points it at the `DATABASE_URL` you supply (no `db` service):
-
-```bash
-# .env (your real prod values)
-DATABASE_URL=postgres://...your-external-postgres...
-BETTER_AUTH_SECRET=...
-PUBLIC_BASE_URL=https://opscenter.agilgenie.ai
-RESEND_API_KEY=...
-RESEND_FROM_EMAIL=workspace@your-verified-domain.example
-ADMIN_EMAIL=admin@example.com
-ADMIN_PASSWORD=...           # first boot only
-
-docker compose -f docker-compose.app.yml up -d --build
-```
-
-For a local image check against a database reachable from the container:
-
-```bash
-docker build -t genie-workspace .
-docker run -d --name genie-app -p 127.0.0.1:3000:3000 \
-  --env-file .env.prod genie-workspace
-```
-
 ## The Postgres you connect to
 
 The app uses a `pg.Pool` with library defaults; there is no pool-size environment setting in this repo. The container entrypoint holds a session-level advisory lock on a dedicated database connection while migrations and bootstrap run. Use a direct database connection or a session-preserving pooler for startup; a transaction-mode pooler does not preserve that lock. Plan backups, monitoring and capacity for the workload. The repository does not provision or schedule backups.
@@ -115,10 +90,9 @@ The app uses a `pg.Pool` with library defaults; there is no pool-size environmen
 
 | File                      | Purpose                                                                | Runs Postgres?      |
 | ------------------------- | ---------------------------------------------------------------------- | ------------------- |
-| `docker-compose.app.yml`  | **Production-shape**: app image against your external DB               | **No** (external)   |
-| `docker-compose.dev.yml`  | **Local dev**: Postgres container only; you run `pnpm dev` on the host | Yes (persistent dev volume) |
-| `docker-compose.full.yml` | **All-in-one smoke / fresh-deploy test**: app + Postgres               | Yes (persistent test volume)     |
+| `docker-compose.local.yml` | **Local dev**: Postgres plus an optional first-run bootstrap service; you run `pnpm dev` on the host | Yes (persistent local volume) |
+| `docker-compose.smoke.yml` | **All-in-one smoke / fresh-deploy test**: app + Postgres               | Yes (persistent test volume) |
 
-`full.yml` tests the whole boot sequence (build → migrate → seed → serve) in one command. Production PostgreSQL is provisioned separately in Coolify, with its own storage and backup configuration.
+`smoke.yml` tests the whole boot sequence (build → migrate → seed → serve) in one command. Production PostgreSQL is provisioned separately in Coolify, with its own storage and backup configuration.
 
-Both database Compose files retain their named volumes after `down`; `down -v` removes the volume and its data. The dev Compose publishes PostgreSQL on the host, while the full smoke Compose keeps it on the internal network. Neither file is the Coolify production resource definition.
+Both Compose files retain their named volumes after `down`; `down -v` removes the volume and its data. The local Compose publishes PostgreSQL on the host, while the smoke Compose keeps it on the internal network. Neither file is the Coolify production resource definition.
