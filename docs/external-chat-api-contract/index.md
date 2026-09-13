@@ -9,7 +9,7 @@ Captured by calling `POST https://dev-genie.001.gs/public-api/v2/workflow/chatbo
 
 ## Transport
 
-- **SSE** — `content-type: text/event-stream`, Cloudflare-fronted, HTTP/2. `cache-control: no-cache`.
+- **SSE** — `content-type: text/event-stream`, HTTP/2. `cache-control: no-cache`.
 - Each event is a single `data: {json}\n\n` line. **No `event:` types, no `[DONE]` sentinel.**
 - **Termination signal = `status: "completed"`** (or an error event — see lifecycle). Stream closes after.
 - No auth header was required — the endpoint accepted that request at capture time. (Production should still proxy server-side; see invariants.)
