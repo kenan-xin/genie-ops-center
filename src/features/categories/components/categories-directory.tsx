@@ -181,6 +181,14 @@ export function CategoriesDirectory() {
   }
 
   const listPending = categoriesQuery.isPending || assignmentsQuery.isPending;
+  // Both tables depend on these two reads. If either fails, `assignedBySolution`
+  // and `assignItems` fall back to empty, so a filed solution renders as "None"
+  // and the only choice on offer is "None" — an admin editing from that view
+  // would overwrite real assignments. Neither table may render without them.
+  const listError = categoriesQuery.isError || assignmentsQuery.isError;
+  const listErrorMessage =
+    ((categoriesQuery.error ?? assignmentsQuery.error) as { message: string } | null)?.message ||
+    "Couldn't load categories.";
 
   return (
     <div className="flex flex-col gap-6">
@@ -228,11 +236,8 @@ export function CategoriesDirectory() {
             <Skeleton key={i} className="h-11 w-full" />
           ))}
         </div>
-      ) : categoriesQuery.isError || assignmentsQuery.isError ? (
-        <p className="text-small text-[var(--error)]">
-          {((categoriesQuery.error ?? assignmentsQuery.error) as { message: string } | null)
-            ?.message || "Couldn't load categories."}
-        </p>
+      ) : listError ? (
+        <p className="text-small text-[var(--error)]">{listErrorMessage}</p>
       ) : categories.length === 0 ? (
         <EmptyState
           title="No categories yet"
@@ -387,6 +392,8 @@ export function CategoriesDirectory() {
           <p className="text-small text-[var(--error)]">
             {(solutionsQuery.error as { message: string }).message || "Couldn't load solutions."}
           </p>
+        ) : listError ? (
+          <p className="text-small text-[var(--error)]">{listErrorMessage}</p>
         ) : solutions.length === 0 ? (
           <p className="text-small text-[var(--ink3)]">
             No solutions yet — register one in Solutions, then file it here.
