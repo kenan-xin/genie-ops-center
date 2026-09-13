@@ -1,0 +1,1106 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PROTOTYPE · Sidebar solution groups</title>
+<!--
+  THROWAWAY PROTOTYPE — not production code, not wired to any API.
+  Question: what should user-managed solution groups look like in the sidebar?
+  Three variants of the workspace sidebar, switchable via ?variant=A|B|C and the
+  floating bottom bar. All state is in memory. Reload resets everything.
+  Tokens copied from src/app/globals.css (dark tier).
+-->
+<style>
+:root {
+  --ink:#eef1f4; --ink2:#9aa3b0; --ink3:#6b7585; --faint:#5c6675;
+  --bg:#13171e; --surface:#181d25; --panel:#1d242e;
+  --line:#313a46; --line2:#262e38;
+  --sidebar:#13171e;
+  --brand:#2360c4; --brandink:#7fb2f0; --brandtint:#1c2738; --onbrand:#fff;
+  --success:#5fcf94; --error:#e06a5e;
+  --font-display:"Archivo",system-ui,sans-serif;
+  --font-ui:"Hanken Grotesk",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,monospace;
+  --t-body:15.5px; --t-sm:13.6px; --t-title:18.6px; --t-display:31px;
+  --m-sm:11.5px; --m-md:13px;
+  --sidebar-w:236px;
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+html[data-theme="light"] {
+  --ink:#14161b; --ink2:#4a515c; --ink3:#8b929c; --faint:#aab0ba;
+  --bg:#fbfcfd; --surface:#fff; --panel:#f2f4f7;
+  --line:#c8cdd5; --line2:#e2e5ea; --sidebar:#fff;
+  --brandink:#2360c4; --brandtint:#eef4fc;
+  --success:#1f9a5c; --error:#d94032;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body {
+  font-family:var(--font-ui); font-size:var(--t-body);
+  background:var(--bg); color:var(--ink);
+  height:100dvh; overflow:hidden;
+}
+button, input, select { font:inherit; color:inherit; }
+.app { display:flex; height:100dvh; overflow:hidden; }
+
+/* ---------- sidebar shell (shared across variants) ---------- */
+aside.side {
+  width:var(--sidebar-w); flex-shrink:0;
+  background:var(--sidebar); border-right:1px solid var(--line);
+  display:flex; flex-direction:column;
+}
+.brandbar {
+  display:flex; align-items:center; gap:9px;
+  padding:15px 16px; border-bottom:1px solid var(--line2);
+}
+.gtile {
+  width:24px; height:24px; background:var(--ink); color:var(--bg);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-display); font-weight:800; font-size:var(--t-body);
+}
+.wordmark { font-family:var(--font-display); font-weight:700; font-size:var(--t-sm); letter-spacing:-.01em; }
+.sidebody { padding:14px 12px; flex:1; overflow-y:auto; min-height:0; }
+/* Thin, quiet scrollbar — the rail must not gain a heavy chrome bar when it
+   overflows. Firefox uses the standard properties; WebKit needs the -webkit- rules. */
+.sidebody { scrollbar-width:thin; scrollbar-color:var(--line) transparent; }
+.sidebody::-webkit-scrollbar { width:8px; }
+.sidebody::-webkit-scrollbar-thumb { background:var(--line); border:2px solid var(--sidebar); }
+.sidebody::-webkit-scrollbar-thumb:hover { background:var(--ink3); }
+.sidebody::-webkit-scrollbar-track { background:transparent; }
+.railhead {
+  font:600 var(--m-sm) var(--font-mono); letter-spacing:.13em;
+  color:var(--ink3); padding:0 6px 8px;
+  display:flex; align-items:center; justify-content:space-between; gap:6px;
+}
+.railhead.spaced { padding-top:18px; }
+.navitem {
+  display:flex; align-items:center; gap:9px;
+  padding:8px 10px; font-size:var(--t-body); cursor:pointer;
+  border-left:3px solid transparent; color:var(--ink2);
+  text-decoration:none; background:none; border-top:0; border-right:0; border-bottom:0; width:100%;
+  text-align:left;
+}
+.navitem:hover { background:var(--panel); }
+.navitem.active {
+  background:var(--brandtint); border-left-color:var(--brand);
+  color:var(--brandink); font-weight:700;
+}
+.footer {
+  border-top:1px solid var(--line2); padding:12px 14px;
+  display:flex; align-items:center; gap:9px; font-size:var(--t-sm); color:var(--ink2);
+}
+.avatar {
+  width:26px; height:26px; background:var(--panel); color:var(--ink);
+  display:flex; align-items:center; justify-content:center;
+  font:700 var(--m-sm) var(--font-mono);
+}
+
+/* ---------- group primitives ---------- */
+.grouphead {
+  display:flex; align-items:center; gap:6px; width:100%;
+  padding:7px 6px 7px 8px; background:none; border:0; cursor:pointer;
+  color:var(--ink2); text-align:left;
+}
+.grouphead:hover { background:var(--panel); }
+.grouphead .caret { width:10px; color:var(--ink3); font-size:10px; transition:transform .15s var(--ease); }
+.grouphead[aria-expanded="false"] .caret { transform:rotate(-90deg); }
+.grouphead .gname { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:var(--t-sm); font-weight:600; letter-spacing:.01em; }
+.grouphead .count { font:600 var(--m-sm) var(--font-mono); color:var(--ink3); }
+.kebab {
+  border:0; background:none; cursor:pointer; color:var(--ink3);
+  padding:2px 4px; font-size:14px; line-height:1; opacity:0;
+}
+.grouprow:hover .kebab, .kebab:focus-visible { opacity:1; }
+.groupitems { display:flex; flex-direction:column; }
+.solitem {
+  display:flex; align-items:center; gap:6px;
+  padding:6px 8px 6px 10px; margin-left:10px;
+  font-size:var(--t-sm); color:var(--ink2); cursor:pointer;
+  border-left:3px solid transparent; background:none; border-top:0; border-right:0; border-bottom:0;
+  width:calc(100% - 10px); text-align:left;
+}
+.solitem:hover { background:var(--panel); }
+.solitem.active { background:var(--brandtint); border-left-color:var(--brand); color:var(--brandink); font-weight:700; }
+.solitem .grip { color:var(--faint); font-size:var(--m-sm); letter-spacing:-1px; cursor:grab; flex-shrink:0; }
+.solitem .label { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.solitem.dragging { opacity:.35; }
+.dropinto { box-shadow:inset 0 0 0 1px var(--brand); background:var(--brandtint); }
+.dropbefore { box-shadow:inset 0 2px 0 var(--brand); }
+.emptyhint {
+  margin:2px 0 4px 20px; padding:7px 9px;
+  border:1px dashed var(--line); color:var(--ink3);
+  font-size:var(--t-sm);
+}
+.raildivider { height:1px; background:var(--line2); margin:14px 6px 10px; }
+.grouphead.navlevel {
+  padding:8px 10px; border-left:3px solid transparent;
+  font-size:var(--t-body); color:var(--ink2);
+}
+.grouphead.navlevel .gname { font-size:inherit; font-weight:400; letter-spacing:0; }
+.grouphead.navlevel:hover { background:var(--panel); }
+.grouphead.navlevel.dimmed .gname { color:var(--ink3); }
+.solitem.toplevel {
+  margin-left:0; width:100%; padding:8px 10px; font-size:var(--t-body);
+}
+/* Sticky WORKSPACE block. Negative margins pull it to the rail edges so the
+   background covers the full width while the rows keep their padding. */
+.navsticky {
+  position:sticky; top:-14px; z-index:5;
+  background:var(--sidebar);
+  margin:-14px -12px 4px; padding:14px 12px 8px;
+  border-bottom:1px solid var(--line2);
+}
+.uncrow { color:var(--ink3); font-size:var(--t-sm); }
+.uncrow:hover { color:var(--brandink); }
+.editrow { color:var(--ink3); font-size:var(--t-sm); margin-top:10px; }
+.editrow:hover { color:var(--brandink); }
+.editbanner {
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  margin:0 0 8px; padding:7px 9px;
+  background:var(--brandtint); border-left:3px solid var(--brand);
+  font:600 var(--m-sm) var(--font-mono); letter-spacing:.1em; color:var(--brandink);
+}
+.grouprow.editing .kebab { opacity:.55; }
+.grouprow.editing:hover .kebab { opacity:1; }
+.ghostbtn {
+  display:flex; align-items:center; gap:7px; width:100%;
+  padding:8px 10px; margin-top:6px; cursor:pointer;
+  background:none; border:1px dashed var(--line); color:var(--ink3);
+  font-size:var(--t-sm); text-align:left;
+}
+.ghostbtn:hover { color:var(--brandink); border-color:var(--brand); }
+.linkbtn {
+  background:none; border:0; cursor:pointer; color:var(--brandink);
+  font:600 var(--m-sm) var(--font-mono); letter-spacing:.08em; padding:0;
+}
+.nameinput {
+  width:100%; background:var(--surface); border:1px solid var(--brand);
+  color:var(--ink); padding:6px 8px; font-size:var(--t-sm); outline:none;
+}
+.menu {
+  position:absolute; z-index:200; min-width:172px;
+  background:var(--surface); border:1px solid var(--line);
+  box-shadow:0 12px 34px rgba(0,0,0,.45); padding:4px 0;
+}
+.menu button {
+  display:block; width:100%; text-align:left; padding:8px 12px;
+  background:none; border:0; cursor:pointer; font-size:var(--t-sm); color:var(--ink2);
+}
+.menu button:hover { background:var(--panel); color:var(--ink); }
+.menu button.danger:hover { color:var(--error); }
+.menu .sep { height:1px; background:var(--line2); margin:4px 0; }
+.menu .mhead { padding:6px 12px; font:600 var(--m-sm) var(--font-mono); letter-spacing:.1em; color:var(--ink3); }
+
+/* ---------- main content (mock Solutions page) ---------- */
+main.main { flex:1; display:flex; flex-direction:column; min-width:0; }
+.topbar {
+  height:54px; flex-shrink:0; border-bottom:1px solid var(--line2);
+  display:flex; align-items:center; justify-content:space-between; padding:0 22px;
+}
+.topbar h1 { font-family:var(--font-display); font-size:var(--t-title); font-weight:700; }
+.content { flex:1; overflow:auto; padding:34px 40px 120px; }
+.lede { font-family:var(--font-display); font-size:var(--t-display); font-weight:400; margin-bottom:22px; color:var(--ink); }
+.toolbar { display:flex; gap:10px; align-items:center; margin-bottom:18px; flex-wrap:wrap; }
+.ctl { height:40px; display:flex; align-items:center; padding:0 14px; border:1px solid var(--line); background:var(--surface); color:var(--ink2); font-size:var(--t-sm); }
+.seg { display:flex; border:1px solid var(--line); }
+.seg button { height:40px; padding:0 16px; background:none; border:0; cursor:pointer; color:var(--ink2); font-size:var(--t-sm); }
+.seg button.on { background:var(--panel); color:var(--ink); font-weight:600; }
+.thead, .trow {
+  display:grid; grid-template-columns:2.4fr .8fr .8fr .6fr 40px;
+  align-items:center; gap:10px; padding:14px 16px;
+}
+.thead { font:600 var(--m-sm) var(--font-mono); letter-spacing:.12em; color:var(--ink3); border:1px solid var(--line2); border-bottom:0; }
+.trow { border:1px solid var(--line2); border-top:0; }
+.trow:hover { background:var(--panel); }
+.tile { width:30px; height:30px; background:var(--panel); display:inline-flex; align-items:center; justify-content:center; font:700 var(--m-sm) var(--font-mono); color:var(--ink2); margin-right:12px; }
+.cellname { display:flex; align-items:center; min-width:0; }
+.cellname span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pill { font:600 var(--m-sm) var(--font-mono); color:var(--success); }
+.mono { font:600 var(--m-sm) var(--font-mono); color:var(--ink3); letter-spacing:.08em; }
+.star { background:none; border:0; cursor:pointer; font-size:15px; }
+
+/* ---------- modal (variant B organiser) ---------- */
+.scrim { position:fixed; inset:0; background:rgba(8,10,14,.6); z-index:300; display:flex; align-items:center; justify-content:center; padding:24px; }
+.dialog { background:var(--surface); border:1px solid var(--line); width:min(760px,100%); max-height:82vh; display:flex; flex-direction:column; box-shadow:0 12px 34px rgba(0,0,0,.5); }
+.dialog header { padding:16px 20px; border-bottom:1px solid var(--line2); display:flex; justify-content:space-between; align-items:center; }
+.dialog header h2 { font-family:var(--font-display); font-size:var(--t-title); font-weight:700; }
+.dialog .body { padding:18px 20px; overflow:auto; display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+.dialog footer { padding:14px 20px; border-top:1px solid var(--line2); display:flex; justify-content:flex-end; gap:10px; }
+.pane { border:1px solid var(--line2); display:flex; flex-direction:column; min-height:280px; }
+.pane > .ph { padding:10px 12px; border-bottom:1px solid var(--line2); font:600 var(--m-sm) var(--font-mono); letter-spacing:.1em; color:var(--ink3); display:flex; justify-content:space-between; align-items:center; }
+.pane > .pb { padding:8px; overflow:auto; flex:1; }
+.chip { display:flex; align-items:center; gap:8px; padding:7px 9px; font-size:var(--t-sm); color:var(--ink2); border:1px solid transparent; cursor:grab; }
+.chip:hover { background:var(--panel); border-color:var(--line2); }
+.btn { height:36px; padding:0 14px; border:1px solid var(--line); background:var(--surface); color:var(--ink); cursor:pointer; font-size:var(--t-sm); }
+.btn.primary { background:var(--brand); border-color:var(--brand); color:var(--onbrand); font-weight:600; }
+
+/* ---------- prototype switcher + state panel ---------- */
+.switcher {
+  position:fixed; left:50%; bottom:18px; transform:translateX(-50%); z-index:500;
+  display:flex; align-items:center; gap:2px;
+  background:#fff; color:#14161b; box-shadow:0 8px 26px rgba(0,0,0,.45);
+  font-family:var(--font-mono); font-size:12px;
+}
+.switcher button { border:0; background:none; cursor:pointer; padding:10px 14px; font:inherit; color:inherit; }
+.switcher button:hover { background:#e9edf3; }
+.switcher .cur { padding:10px 16px; font-weight:700; border-left:1px solid #d5dae2; border-right:1px solid #d5dae2; white-space:nowrap; }
+.switcher .tag { background:#14161b; color:#fff; padding:10px 12px; font-weight:700; letter-spacing:.1em; }
+.statepanel {
+  position:fixed; right:16px; bottom:18px; z-index:500; width:300px;
+  background:var(--surface); border:1px solid var(--line); font-family:var(--font-mono); font-size:11px;
+}
+.statepanel > summary { cursor:pointer; padding:8px 10px; color:var(--ink3); letter-spacing:.1em; }
+.statepanel pre { max-height:34vh; overflow:auto; padding:0 10px 10px; color:var(--ink2); line-height:1.5; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brandbar"><span class="gtile">G</span><span class="wordmark">GENIE</span></div>
+    <div class="sidebody" id="sidebody"></div>
+    <div class="footer"><span class="avatar">KX</span><div><div style="color:var(--ink)">Kenan</div><div style="font:600 var(--m-sm) var(--font-mono);color:var(--ink3);letter-spacing:.1em">CUSTOMER</div></div></div>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <h1>Solutions</h1>
+      <button class="btn" id="themetoggle" title="Toggle light/dark">◐</button>
+    </div>
+    <div class="content" id="content"></div>
+  </main>
+</div>
+
+<div class="switcher">
+  <span class="tag">PROTOTYPE</span>
+  <button id="prev" title="Previous variant (←)">‹</button>
+  <span class="cur" id="curlabel"></span>
+  <span class="cur" id="rowcount" style="font-weight:400;color:#4a515c"></span>
+  <button id="unctoggle" title="Cycle the uncategorised treatment (variant F)"></button>
+  <button id="loadtoggle" title="Swap between a small and a large catalogue"></button>
+  <button id="navtoggle" title="Pin the WORKSPACE nav to the top of the rail"></button>
+  <button id="next" title="Next variant (→)">›</button>
+</div>
+
+<details class="statepanel">
+  <summary>STATE</summary>
+  <pre id="statedump"></pre>
+</details>
+
+<script>
+/* =========================================================================
+   Fake data. No fetching, no persistence — reload resets.
+   ========================================================================= */
+const BASE = [
+  { id:"s1",  name:"Loan Review",          code:"LO", type:"EMBED", updated:"0m" },
+  { id:"s2",  name:"Credit Memo Drafter",  code:"CM", type:"CHAT",  updated:"2h" },
+  { id:"s3",  name:"KYC Screening",        code:"KY", type:"EMBED", updated:"1d" },
+  { id:"s4",  name:"Collateral Valuation", code:"CV", type:"EMBED", updated:"1d" },
+  { id:"s5",  name:"Covenant Tracker",     code:"CT", type:"CHAT",  updated:"3d" },
+  { id:"s6",  name:"Trade Finance Assist", code:"TF", type:"CHAT",  updated:"4d" },
+  { id:"s7",  name:"Fraud Signals",        code:"FS", type:"EMBED", updated:"6d" },
+  { id:"s8",  name:"Portfolio Digest",     code:"PD", type:"CHAT",  updated:"1w" },
+  { id:"s9",  name:"Regulatory Q&A",       code:"RQ", type:"CHAT",  updated:"2w" },
+  { id:"s10", name:"Onboarding Copilot",   code:"OC", type:"EMBED", updated:"3w" },
+];
+
+/* Stress set — used by the LOAD toggle to show the rail overflowing. 90 names
+   built from two word lists, so every combination stays readable. */
+const SUBJECTS = [
+  "Claims","Prior Auth","Clinical Notes","Patient Intake","Contract",
+  "Clause","Disclosure","Matter","Vendor Risk","Sanctions",
+  "Payments","Treasury","Invoice","Shipment","Supplier",
+  "Warranty","Field Service","Asset Register","Incident","Shift",
+  "Collateral","Escrow","Tariff","Dispute","Renewal",
+  "Policy","Premium","Tax","Payroll","Procurement",
+];
+const ACTIONS = ["Triage","Review","QA","Assist","Summary","Tracker","Digest","Extraction","Copilot"];
+const EXTRA = [];
+for (let a = 0; a < ACTIONS.length; a++) {
+  for (let s = 0; s < SUBJECTS.length; s++) {
+    const name = SUBJECTS[s] + " " + ACTIONS[a];
+    EXTRA.push({
+      id:"x" + EXTRA.length,
+      name,
+      code:name.replace(/[^A-Za-z ]/g, "").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(),
+      type:EXTRA.length % 3 === 0 ? "CHAT" : "EMBED",
+      updated:((EXTRA.length % 28) + 1) + "d",
+    });
+  }
+}
+
+let SOLUTIONS = BASE.slice();
+const byId = id => SOLUTIONS.find(s => s.id === id);
+
+let uid = 100;
+const newId = () => "g" + (++uid);
+
+/* The whole prototype reads and writes this one object. */
+let state = null;
+
+/* Catalogue sizes the LOAD button cycles through, and the category names used
+   to fill them. The largest load leaves plenty of solutions uncategorised, so
+   the top-level rows overflow the rail on their own. */
+const LOADS = [10, 30, 60, 100];
+const CAT_NAMES = [
+  "Financial","Healthcare","Legal","Risk","Payments",
+  "Supply chain","Operations","Underwriting","Servicing","Analytics",
+];
+let loadIdx = 0;
+
+function applyScale(idx) {
+  loadIdx = idx % LOADS.length;
+  const count = LOADS[loadIdx];
+  SOLUTIONS = BASE.concat(EXTRA.slice(0, Math.max(0, count - BASE.length)));
+  resetState();
+  if (count === 10) return;
+
+  const catCount = count >= 100 ? 10 : count >= 60 ? 8 : 6;
+  const perCat = 5;
+  const ids = SOLUTIONS.map(s => s.id);
+  state.groups = CAT_NAMES.slice(0, catCount).map((name, i) => ({
+    id:"g" + (i + 1),
+    name,
+    collapsed:i !== 0,
+    items:ids.slice(i * perCat, i * perCat + perCat),
+  }));
+}
+
+function resetState() {
+  state = {
+    activeId: "s1",
+    pinned: ["s1", "s3", "s8"],
+    // Seeded by the system: Financial / Healthcare / Legal. Admin owns them.
+    // Legal stays empty so the "empty category" case is visible.
+    groups: [
+      { id:"g1", name:"Financial", collapsed:false, items:["s1","s2","s5","s4"] },
+      { id:"g2", name:"Healthcare", collapsed:true, items:["s3","s7"] },
+      { id:"g3", name:"Legal", collapsed:true, items:[] },
+    ],
+    viewGroupId: "all",   // variant C only
+    editMode: false,      // variant C only
+    dialogOpen: false,    // variant B only
+    railEdit: false,      // variant D only — unlocks destructive rail actions
+    uncStyle: "toplevel", // variant F only — how uncategorised solutions read
+  };
+}
+resetState();
+
+const groupById = id => state.groups.find(g => g.id === id);
+const groupOf = solId => state.groups.find(g => g.items.includes(solId));
+const groupedIds = () => new Set(state.groups.flatMap(g => g.items));
+const ungroupedPinned = () => state.pinned.filter(id => !groupedIds().has(id));
+
+/* ---- mutations (all in memory) ---- */
+function createGroup(name) {
+  const g = { id:newId(), name:name || "New group", collapsed:false, items:[] };
+  state.groups.push(g);
+  return g;
+}
+function renameGroup(id, name) { const g = groupById(id); if (g && name.trim()) g.name = name.trim(); }
+function deleteGroup(id) { state.groups = state.groups.filter(g => g.id !== id); }
+function removeFromGroup(solId) { state.groups.forEach(g => { g.items = g.items.filter(i => i !== solId); }); }
+function moveToGroup(solId, groupId, beforeId) {
+  removeFromGroup(solId);
+  const g = groupById(groupId);
+  if (!g) return;
+  const at = beforeId ? g.items.indexOf(beforeId) : -1;
+  if (at === -1) g.items.push(solId); else g.items.splice(at, 0, solId);
+}
+
+/* =========================================================================
+   Tiny DOM helper.
+   ========================================================================= */
+function el(tag, props = {}, kids = []) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (v === null || v === undefined || v === false) continue;
+    if (k === "class") n.className = v;
+    else if (k === "text") n.textContent = v;
+    else if (k === "html") n.innerHTML = v;
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2).toLowerCase(), v);
+    else n.setAttribute(k, v === true ? "" : v);
+  }
+  (Array.isArray(kids) ? kids : [kids]).filter(Boolean).forEach(c => n.appendChild(c));
+  return n;
+}
+function railHead(label, action, spaced) {
+  return el("div", { class:"railhead" + (spaced ? " spaced" : "") }, [
+    el("span", { text:label }),
+    action || null,
+  ]);
+}
+function primaryNav(activeHref) {
+  return el("nav", {}, ["Solutions","Favorites","Account"].map(label =>
+    el("a", {
+      class:"navitem" + (label === activeHref ? " active" : ""),
+      href:"#", text:label,
+      onclick:(e) => e.preventDefault(),
+    })));
+}
+
+/* ---- floating context menu ---- */
+let openMenu = null;
+function closeMenu() { if (openMenu) { openMenu.remove(); openMenu = null; } }
+document.addEventListener("click", (e) => {
+  if (openMenu && !openMenu.contains(e.target)) closeMenu();
+});
+function showMenu(anchor, entries) {
+  closeMenu();
+  const r = anchor.getBoundingClientRect();
+  const m = el("div", { class:"menu" }, entries.map(x =>
+    x.sep ? el("div", { class:"sep" })
+    : x.head ? el("div", { class:"mhead", text:x.head })
+    : el("button", {
+        class: x.danger ? "danger" : "", text:x.label,
+        // stopPropagation: without it this click bubbles to the document
+        // handler below, which would close a menu the action just opened.
+        onclick:(e) => { e.stopPropagation(); closeMenu(); x.run(); },
+      })));
+  m.style.left = Math.min(r.left, window.innerWidth - 190) + "px";
+  m.style.top = (r.bottom + 4) + "px";
+  document.body.appendChild(m);
+  openMenu = m;
+}
+function moveEntries(solId) {
+  const cur = groupOf(solId);
+  const targets = state.groups.filter(g => g.id !== (cur && cur.id));
+  const out = [{ head:"MOVE TO" }];
+  targets.forEach(g => out.push({ label:g.name, run:() => { moveToGroup(solId, g.id); render(); } }));
+  out.push({ label:"New group…", run:() => { const g = createGroup("New group"); moveToGroup(solId, g.id); renamingId = g.id; render(); } });
+  if (cur) {
+    out.push({ sep:true });
+    out.push({ label:"Remove from group", danger:true, run:() => { removeFromGroup(solId); render(); } });
+  }
+  return out;
+}
+
+/* ---- drag and drop (variants A and B) ---- */
+let drag = null; // { solId }
+function makeDraggable(node, solId) {
+  node.draggable = true;
+  node.addEventListener("dragstart", (e) => {
+    drag = { solId };
+    node.classList.add("dragging");
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", solId);
+  });
+  node.addEventListener("dragend", () => { drag = null; render(); });
+}
+function makeDropTarget(node, onDrop, cls) {
+  node.addEventListener("dragover", (e) => {
+    if (!drag) return;
+    e.preventDefault();
+    e.stopPropagation();
+    node.classList.add(cls || "dropinto");
+  });
+  node.addEventListener("dragleave", () => node.classList.remove(cls || "dropinto"));
+  node.addEventListener("drop", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    node.classList.remove(cls || "dropinto");
+    if (drag) onDrop(drag.solId);
+    drag = null;
+    render();
+  });
+}
+
+let renamingId = null; // group currently being renamed inline
+function groupNameNode(g) {
+  if (renamingId !== g.id) return null;
+  const input = el("input", { class:"nameinput", value:g.name });
+  const commit = () => { renameGroup(g.id, input.value); renamingId = null; render(); };
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") commit();
+    if (e.key === "Escape") { renamingId = null; render(); }
+    e.stopPropagation();
+  });
+  input.addEventListener("blur", commit);
+  setTimeout(() => { input.focus(); input.select(); }, 0);
+  return input;
+}
+
+function solutionRow(solId, opts = {}) {
+  const s = byId(solId);
+  const row = el("button", {
+    class:"solitem" + (state.activeId === solId ? " active" : ""),
+    onclick:() => { state.activeId = solId; render(); },
+  }, [
+    opts.noGrip ? null : el("span", { class:"grip", text:"⠿⠿", "aria-hidden":true }),
+    el("span", { class:"label", text:s.name }),
+    opts.trailing || null,
+  ]);
+  if (!opts.noGrip && !opts.locked) makeDraggable(row, solId);
+  if (opts.dropBefore) makeDropTarget(row, (id) => opts.dropBefore(id), "dropbefore");
+  return row;
+}
+
+/* =========================================================================
+   VARIANT A — Groups own the rail. Favourites become one implicit group.
+   Inline management: drag between groups, kebab on hover, inline rename.
+   ========================================================================= */
+function variantA(body, opts = {}) {
+  const gated = opts.gated === true;      // variants D/E: everything below is locked
+  const flat = opts.flat === true;        // variant E: groups are top-level nav rows
+  const accordion = opts.accordion === true; // one group open at a time (row budget)
+  const live = !gated || state.railEdit;  // are edit affordances active right now?
+
+  body.appendChild(railHead("WORKSPACE"));
+  body.appendChild(primaryNav("Solutions"));
+
+  if (flat) {
+    body.appendChild(el("div", { class:"raildivider" }));
+    if (live) body.appendChild(editBanner());
+  } else if (gated) {
+    body.appendChild(railHead("MY GROUPS",
+      el("button", {
+        class:"linkbtn",
+        style:state.railEdit ? "color:var(--ink)" : "",
+        text:state.railEdit ? "DONE" : "EDIT",
+        onclick:() => { state.railEdit = !state.railEdit; renamingId = null; render(); },
+      }),
+      true));
+    if (state.railEdit) body.appendChild(editBanner());
+  } else {
+    body.appendChild(railHead("MY GROUPS",
+      el("button", { class:"linkbtn", text:"+ NEW", onclick:() => { const g = createGroup("New group"); renamingId = g.id; render(); } }),
+      true));
+  }
+
+  state.groups.forEach(g => {
+    const wrap = el("div", { class:"grouprow" + (live ? " editing" : "") });
+    const editing = groupNameNode(g);
+    if (editing) {
+      wrap.appendChild(el("div", { style:"padding:4px 6px" }, editing));
+    } else {
+      const kebab = live
+        ? el("button", { class:"kebab", text:"⋯", title:"Group actions" })
+        : null;
+      if (kebab) {
+        kebab.addEventListener("click", (e) => {
+          e.stopPropagation();
+          showMenu(kebab, [
+            { label:"Rename group", run:() => { renamingId = g.id; render(); } },
+            { label:"Collapse all others", run:() => { state.groups.forEach(x => { if (x.id !== g.id) x.collapsed = true; }); render(); } },
+            { sep:true },
+            { label:"Delete group…", danger:true, run:() => confirmDelete(kebab, g) },
+          ]);
+        });
+      }
+      const caret = el("span", { class:"caret", text:"▾" });
+      const gname = el("span", { class:"gname", text:g.name });
+      const count = el("span", { class:"count", text:String(g.items.length) });
+      const head = el("button", {
+        class:"grouphead" + (flat ? " navlevel" : ""),
+        "aria-expanded":String(!g.collapsed),
+        onclick:() => {
+          const opening = g.collapsed;
+          // Accordion: the rail height stays bounded however many groups exist.
+          if (accordion && opening) state.groups.forEach(x => { x.collapsed = true; });
+          g.collapsed = !opening;
+          render();
+        },
+        // Flat mode puts the caret last so group names line up with the
+        // primary nav labels instead of being indented by a disclosure slot.
+      }, flat ? [gname, count, caret] : [caret, gname, count]);
+      if (live) makeDropTarget(head, (solId) => { moveToGroup(solId, g.id); g.collapsed = false; });
+      const line = el("div", { style:"display:flex;align-items:center" }, [head, kebab]);
+      wrap.appendChild(line);
+    }
+
+    if (!g.collapsed) {
+      const items = el("div", { class:"groupitems" });
+      if (g.items.length === 0) {
+        const hint = el("div", { class:"emptyhint", text:live ? "Drop a solution here" : "Empty group" });
+        if (live) makeDropTarget(hint, (solId) => moveToGroup(solId, g.id));
+        items.appendChild(hint);
+      }
+      g.items.forEach(solId => {
+        let kebab = null;
+        if (live) {
+          kebab = el("button", { class:"kebab", text:"⋯" });
+          kebab.addEventListener("click", (e) => { e.stopPropagation(); showMenu(kebab, moveEntries(solId)); });
+        }
+        const row = solutionRow(solId, {
+          noGrip:!live,
+          locked:!live,
+          trailing:kebab,
+          dropBefore:live ? ((dragged) => moveToGroup(dragged, g.id, solId)) : null,
+        });
+        row.classList.add("grouprow");
+        if (live) row.classList.add("editing");
+        items.appendChild(row);
+      });
+      if (live) makeDropTarget(items, (solId) => moveToGroup(solId, g.id));
+      wrap.appendChild(items);
+    }
+    body.appendChild(wrap);
+  });
+
+  const loose = ungroupedPinned();
+  if (loose.length) {
+    if (flat) body.appendChild(el("div", { class:"raildivider" }));
+    else body.appendChild(railHead("UNGROUPED", null, true));
+    const box = el("div", {});
+    loose.forEach(solId => {
+      let kebab = null;
+      if (live) {
+        kebab = el("button", { class:"kebab", text:"⋯" });
+        kebab.addEventListener("click", (e) => { e.stopPropagation(); showMenu(kebab, moveEntries(solId)); });
+      }
+      const row = solutionRow(solId, { noGrip:!live, locked:!live, trailing:kebab });
+      row.classList.add("grouprow");
+      if (live) row.classList.add("editing");
+      box.appendChild(row);
+    });
+    if (live) makeDropTarget(box, (solId) => removeFromGroup(solId));
+    body.appendChild(box);
+  }
+
+  if (live) {
+    body.appendChild(el("button", {
+      class:"ghostbtn", text:"+  New group",
+      onclick:() => { const g = createGroup("New group"); renamingId = g.id; render(); },
+    }));
+  }
+
+  // Flat mode lost the MY GROUPS heading that used to carry EDIT, so the
+  // control moves to a quiet row at the foot of the rail.
+  if (flat && gated && !state.railEdit) {
+    body.appendChild(el("button", {
+      class:"navitem editrow", text:"✎  Edit groups",
+      onclick:() => { state.railEdit = true; render(); },
+    }));
+  }
+}
+
+/* =========================================================================
+   VARIANT E — variant D, but groups sit at the top level of the nav instead
+   of under a MY GROUPS heading. Caret moves right so names align with
+   Solutions / Favorites / Account. EDIT moves to the foot of the rail.
+   ========================================================================= */
+function variantE(body) { variantA(body, { gated:true, flat:true, accordion:true }); }
+
+/* =========================================================================
+   VARIANT D — variant A behind an explicit edit mode. Reading the rail can
+   never change it: no grips, no kebabs, no drop targets, no New group button
+   until EDIT is pressed. Deleting a group takes a second confirming click.
+   ========================================================================= */
+function variantD(body) { variantA(body, { gated:true }); }
+
+function editBanner() {
+  return el("div", { class:"editbanner" }, [
+    el("span", { text:"✎ EDITING GROUPS" }),
+    el("button", {
+      class:"linkbtn", style:"color:var(--ink)", text:"DONE",
+      onclick:() => { state.railEdit = false; renamingId = null; render(); },
+    }),
+  ]);
+}
+
+/* Two-step delete: the menu is replaced by a confirm entry, so one stray
+   click can never destroy a group. */
+function confirmDelete(anchor, g) {
+  showMenu(anchor, [
+    { head:"DELETE \"" + g.name.toUpperCase().slice(0, 16) + "\"?" },
+    { label:"Yes, delete the group", danger:true, run:() => { deleteGroup(g.id); render(); } },
+    { label:"Cancel", run:() => {} },
+  ]);
+}
+
+/* =========================================================================
+   VARIANT B — PINNED rail stays exactly as today. GROUPS sit below it as a
+   second layer, and all management happens in an "Organise" dialog, not
+   inline. The sidebar itself stays read-only apart from collapsing.
+   ========================================================================= */
+function variantB(body) {
+  body.appendChild(railHead("WORKSPACE"));
+  body.appendChild(primaryNav("Solutions"));
+
+  body.appendChild(railHead("PINNED", null, true));
+  state.pinned.forEach(solId => body.appendChild(solutionRow(solId, { noGrip:false })));
+
+  body.appendChild(railHead("GROUPS",
+    el("button", { class:"linkbtn", text:"ORGANISE", onclick:() => { state.dialogOpen = true; render(); } }),
+    true));
+
+  state.groups.forEach(g => {
+    const head = el("button", {
+      class:"grouphead", "aria-expanded":String(!g.collapsed),
+      onclick:() => { g.collapsed = !g.collapsed; render(); },
+    }, [
+      el("span", { class:"caret", text:"▾" }),
+      el("span", { class:"gname", text:g.name }),
+      el("span", { class:"count", text:String(g.items.length) }),
+    ]);
+    body.appendChild(head);
+    if (!g.collapsed) {
+      const items = el("div", { class:"groupitems" });
+      g.items.forEach(solId => items.appendChild(solutionRow(solId, { noGrip:true })));
+      if (!g.items.length) items.appendChild(el("div", { class:"emptyhint", text:"Empty — use Organise" }));
+      body.appendChild(items);
+    }
+  });
+
+  if (state.dialogOpen) organiseDialog();
+}
+
+function organiseDialog() {
+  const inGroups = groupedIds();
+  const unassigned = SOLUTIONS.filter(s => !inGroups.has(s.id));
+
+  const left = el("div", { class:"pane" }, [
+    el("div", { class:"ph" }, [el("span", { text:"UNASSIGNED" }), el("span", { text:String(unassigned.length) })]),
+    el("div", { class:"pb" }, unassigned.map(s => {
+      const chip = el("div", { class:"chip" }, [
+        el("span", { class:"grip", text:"⠿⠿" }),
+        el("span", { text:s.name }),
+      ]);
+      makeDraggable(chip, s.id);
+      return chip;
+    })),
+  ]);
+  makeDropTarget(left.querySelector(".pb"), (solId) => removeFromGroup(solId));
+
+  const right = el("div", { class:"pane" }, [
+    el("div", { class:"ph" }, [
+      el("span", { text:"GROUPS" }),
+      el("button", { class:"linkbtn", text:"+ NEW GROUP", onclick:() => { createGroup("New group"); render(); } }),
+    ]),
+    el("div", { class:"pb" }, state.groups.map(g => {
+      const box = el("div", { style:"border:1px solid var(--line2);margin-bottom:10px" });
+      const nameEditor = el("input", {
+        class:"nameinput", value:g.name,
+        style:"border:0;border-bottom:1px solid var(--line2);background:var(--panel);font-weight:600",
+      });
+      nameEditor.addEventListener("change", () => { renameGroup(g.id, nameEditor.value); render(); });
+      const headline = el("div", { style:"display:flex;align-items:center;gap:6px" }, [
+        nameEditor,
+        el("button", { class:"kebab", style:"opacity:1", text:"🗑", title:"Delete group",
+          onclick:() => { deleteGroup(g.id); render(); } }),
+      ]);
+      const items = el("div", { style:"padding:6px;min-height:54px" },
+        g.items.length
+          ? g.items.map(solId => {
+              const chip = el("div", { class:"chip" }, [
+                el("span", { class:"grip", text:"⠿⠿" }),
+                el("span", { style:"flex:1", text:byId(solId).name }),
+                el("button", { class:"kebab", style:"opacity:1", text:"✕",
+                  onclick:(e) => { e.stopPropagation(); removeFromGroup(solId); render(); } }),
+              ]);
+              makeDraggable(chip, solId);
+              return chip;
+            })
+          : [el("div", { class:"emptyhint", style:"margin:0", text:"Drag solutions here" })]);
+      makeDropTarget(items, (solId) => moveToGroup(solId, g.id));
+      box.appendChild(headline);
+      box.appendChild(items);
+      return box;
+    })),
+  ]);
+
+  const dlg = el("div", { class:"scrim", onclick:(e) => { if (e.target.classList.contains("scrim")) { state.dialogOpen = false; render(); } } }, [
+    el("div", { class:"dialog" }, [
+      el("header", {}, [
+        el("h2", { text:"Organise solutions" }),
+        el("button", { class:"kebab", style:"opacity:1;font-size:18px", text:"✕", onclick:() => { state.dialogOpen = false; render(); } }),
+      ]),
+      el("div", { class:"body" }, [left, right]),
+      el("footer", {}, [
+        el("button", { class:"btn primary", text:"Done", onclick:() => { state.dialogOpen = false; render(); } }),
+      ]),
+    ]),
+  ]);
+  document.body.appendChild(dlg);
+}
+
+/* =========================================================================
+   VARIANT C — No tree. One group is "in view" at a time, chosen from a
+   switcher at the top of the rail. An explicit Edit mode turns the flat list
+   into an assignment list. Trades browsing across groups for a short rail.
+   ========================================================================= */
+function variantC(body) {
+  body.appendChild(railHead("WORKSPACE"));
+  body.appendChild(primaryNav("Solutions"));
+
+  const cur = state.viewGroupId === "all"
+    ? { id:"all", name:"All solutions", items:state.pinned }
+    : groupById(state.viewGroupId) || { id:"all", name:"All solutions", items:state.pinned };
+
+  const picker = el("button", {
+    class:"ctl",
+    style:"width:100%;justify-content:space-between;height:36px;margin:10px 0 8px;background:var(--panel);border-color:var(--line2);color:var(--ink)",
+  }, [
+    el("span", { style:"overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600", text:cur.name }),
+    el("span", { style:"color:var(--ink3);font-size:10px", text:"▾" }),
+  ]);
+  picker.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const entries = [{ head:"SHOW" }, { label:"All solutions", run:() => { state.viewGroupId = "all"; render(); } }];
+    state.groups.forEach(g => entries.push({ label:g.name + "  (" + g.items.length + ")", run:() => { state.viewGroupId = g.id; render(); } }));
+    entries.push({ sep:true });
+    entries.push({ label:"New group…", run:() => { const g = createGroup("New group"); state.viewGroupId = g.id; renamingId = g.id; render(); } });
+    showMenu(picker, entries);
+  });
+
+  body.appendChild(railHead("VIEW", el("button", {
+    class:"linkbtn", text:state.editMode ? "DONE" : "EDIT",
+    onclick:() => { state.editMode = !state.editMode; render(); },
+  }), true));
+  body.appendChild(picker);
+
+  if (state.viewGroupId !== "all" && renamingId === cur.id) {
+    body.appendChild(el("div", { style:"padding:0 0 8px" }, groupNameNode(cur)));
+  }
+
+  if (state.editMode && state.viewGroupId !== "all") {
+    body.appendChild(el("div", { style:"display:flex;gap:8px;padding:0 0 10px" }, [
+      el("button", { class:"linkbtn", text:"RENAME", onclick:() => { renamingId = cur.id; render(); } }),
+      el("button", { class:"linkbtn", style:"color:var(--error)", text:"DELETE", onclick:() => { deleteGroup(cur.id); state.viewGroupId = "all"; render(); } }),
+    ]));
+  }
+
+  const list = el("div", {});
+  const ids = state.viewGroupId === "all" ? SOLUTIONS.map(s => s.id) : cur.items;
+  ids.forEach(solId => {
+    let trailing = null;
+    if (state.editMode) {
+      const g = groupOf(solId);
+      const tagbtn = el("button", {
+        class:"kebab", style:"opacity:1;font:600 var(--m-sm) var(--font-mono);color:" + (g ? "var(--brandink)" : "var(--ink3)"),
+        text:g ? g.name.slice(0, 10) + " ▾" : "assign ▾",
+      });
+      tagbtn.addEventListener("click", (e) => { e.stopPropagation(); showMenu(tagbtn, moveEntries(solId)); });
+      trailing = tagbtn;
+    }
+    list.appendChild(solutionRow(solId, { noGrip:true, trailing }));
+  });
+  if (!ids.length) list.appendChild(el("div", { class:"emptyhint", text:"No solutions in this group yet" }));
+  body.appendChild(list);
+}
+
+/* =========================================================================
+   VARIANT F — the agreed model. Categories are created, named, ordered and
+   filled by an admin; the user cannot change them. PINNED stays as the
+   separate personal layer. The rail is read-only apart from collapsing.
+   ========================================================================= */
+function variantF(body) {
+  body.appendChild(railHead("WORKSPACE"));
+  body.appendChild(primaryNav("Solutions"));
+
+  body.appendChild(railHead("PINNED", null, true));
+  state.pinned.forEach(solId => body.appendChild(solutionRow(solId)));
+  if (!state.pinned.length) body.appendChild(el("div", { class:"emptyhint", text:"Star a solution to pin it" }));
+
+  body.appendChild(el("div", { class:"raildivider" }));
+
+  state.groups.forEach(g => {
+    const empty = g.items.length === 0;
+    const head = el("button", {
+      class:"grouphead navlevel" + (empty ? " dimmed" : ""),
+      "aria-expanded":String(!g.collapsed),
+      onclick:() => {
+        const opening = g.collapsed;
+        if (opening) state.groups.forEach(x => { x.collapsed = true; });
+        g.collapsed = !opening;
+        render();
+      },
+    }, [
+      el("span", { class:"gname", text:g.name }),
+      el("span", { class:"count", text:String(g.items.length) }),
+      el("span", { class:"caret", text:"▾" }),
+    ]);
+    body.appendChild(head);
+    if (!g.collapsed) {
+      const items = el("div", { class:"groupitems" });
+      g.items.forEach(solId => items.appendChild(solutionRow(solId, { noGrip:true, locked:true })));
+      if (empty) items.appendChild(el("div", { class:"emptyhint", text:"Nothing assigned yet" }));
+      body.appendChild(items);
+    }
+  });
+
+  const inCats = groupedIds();
+  const loose = SOLUTIONS.filter(s => !inCats.has(s.id));
+  if (!loose.length || state.uncStyle === "hidden") return;
+
+  body.appendChild(el("div", { class:"raildivider" }));
+
+  if (state.uncStyle === "toplevel") {
+    // A solution with no category is a first-level entry in its own right.
+    // "No category" becomes a deliberate admin choice, not leftover state.
+    loose.forEach(s => {
+      const row = solutionRow(s.id, { noGrip:true, locked:true });
+      row.classList.add("toplevel");
+      body.appendChild(row);
+    });
+    return;
+  }
+
+  if (state.uncStyle === "link") {
+    // Quiet link: smaller text, muted colour, a count, and no caret — it must
+    // not read as a peer of Financial / Healthcare / Legal.
+    body.appendChild(el("a", {
+      class:"navitem uncrow", href:"#", onclick:(e) => e.preventDefault(),
+      text:"Uncategorised  (" + loose.length + ")",
+    }));
+    return;
+  }
+
+  // Alternative: render it as a full collapsible section, same weight as a
+  // real category. Shown for comparison — heavier, and it dignifies a bucket
+  // that must trend to zero.
+  const open = !state.uncOpen;
+  const head = el("button", {
+    class:"grouphead navlevel dimmed", "aria-expanded":String(open),
+    onclick:() => { state.uncOpen = !state.uncOpen; render(); },
+  }, [
+    el("span", { class:"gname", text:"Uncategorised" }),
+    el("span", { class:"count", text:String(loose.length) }),
+    el("span", { class:"caret", text:"▾" }),
+  ]);
+  body.appendChild(head);
+  if (open) {
+    const items = el("div", { class:"groupitems" });
+    loose.forEach(s => items.appendChild(solutionRow(s.id, { noGrip:true, locked:true })));
+    body.appendChild(items);
+  }
+}
+
+/* =========================================================================
+   Mock main content — enough density to judge the sidebar against.
+   ========================================================================= */
+function renderContent() {
+  const c = document.getElementById("content");
+  c.innerHTML = "";
+  c.appendChild(el("p", { class:"lede", text:"Open any solution to try it live." }));
+  c.appendChild(el("div", { class:"toolbar" }, [
+    el("div", { class:"ctl", style:"width:300px;color:var(--ink3)", text:"Search solutions…" }),
+    el("div", { class:"seg" }, [
+      el("button", { class:"on", text:"All" }),
+      el("button", { text:"Chat" }),
+      el("button", { text:"Embedded" }),
+    ]),
+    el("div", { class:"ctl", text:"Recently opened  ▾" }),
+  ]));
+  c.appendChild(el("div", { class:"thead" }, [
+    el("span", { text:"SOLUTION" }), el("span", { text:"TYPE" }),
+    el("span", { text:"STATUS" }), el("span", { text:"UPDATED" }), el("span", {}),
+  ]));
+  SOLUTIONS.forEach(s => {
+    const g = groupOf(s.id);
+    c.appendChild(el("div", { class:"trow" }, [
+      el("div", { class:"cellname" }, [
+        el("span", { class:"tile", text:s.code }),
+        el("span", { text:s.name }),
+        g ? el("span", { class:"mono", style:"margin-left:10px;color:var(--brandink)", text:"· " + g.name }) : null,
+      ]),
+      el("span", { class:"mono", text:s.type }),
+      el("span", { class:"pill", text:"●READY" }),
+      el("span", { class:"mono", text:s.updated }),
+      el("button", { class:"star", text:state.pinned.includes(s.id) ? "★" : "☆",
+        onclick:() => {
+          state.pinned = state.pinned.includes(s.id)
+            ? state.pinned.filter(x => x !== s.id)
+            : state.pinned.concat(s.id);
+          render();
+        } }),
+    ]));
+  });
+}
+
+/* =========================================================================
+   Variant switching.
+   ========================================================================= */
+const VARIANTS = [
+  { key:"F", name:"Admin categories, read-only for users", render:variantF },
+  { key:"E", name:"Groups as top-level nav + edit mode", render:variantE },
+  { key:"D", name:"Groups under MY GROUPS + edit mode", render:variantD },
+  { key:"A", name:"Groups own the rail (always editable)", render:variantA },
+  { key:"B", name:"Pinned + groups, organiser dialog", render:variantB },
+  { key:"C", name:"One group in view, edit mode", render:variantC },
+];
+function currentKey() {
+  const k = (new URLSearchParams(location.search).get("variant") || "F").toUpperCase();
+  return VARIANTS.some(v => v.key === k) ? k : "F";
+}
+function setVariant(key) {
+  const url = new URL(location.href);
+  url.searchParams.set("variant", key);
+  history.replaceState(null, "", url);
+  closeMenu();
+  render();
+}
+function cycle(step) {
+  const i = VARIANTS.findIndex(v => v.key === currentKey());
+  setVariant(VARIANTS[(i + step + VARIANTS.length) % VARIANTS.length].key);
+}
+
+function render() {
+  closeMenu();
+  document.querySelectorAll(".scrim").forEach(n => n.remove());
+  const body = document.getElementById("sidebody");
+  body.innerHTML = "";
+  const v = VARIANTS.find(x => x.key === currentKey());
+  v.render(body);
+
+  // Every variant opens with the WORKSPACE label and the primary nav. When the
+  // toggle is on, wrap those two nodes so they stay put while the rail scrolls.
+  if (stickyNav && body.children.length > 1) {
+    const wrap = el("div", { class:"navsticky" });
+    body.insertBefore(wrap, body.firstChild);
+    wrap.appendChild(body.children[1]);
+    wrap.appendChild(body.children[1]);
+  }
+  renderContent();
+  document.getElementById("curlabel").textContent = v.key + " · " + v.name;
+  // Rows are the scarce resource in the rail — count what the sidebar spends.
+  const rows = body.querySelectorAll(".navitem, .grouphead, .solitem, .emptyhint").length;
+  document.getElementById("rowcount").textContent = rows + " ROWS";
+  const unc = document.getElementById("unctoggle");
+  unc.textContent = "UNCAT: " + state.uncStyle;
+  unc.style.display = v.key === "F" ? "" : "none";
+  document.getElementById("loadtoggle").textContent = "LOAD: " + SOLUTIONS.length + " solutions";
+  document.getElementById("navtoggle").textContent =
+    stickyNav ? "NAV: sticky" : "NAV: scrolls";
+  document.getElementById("statedump").textContent = JSON.stringify({
+    variant:v.key,
+    active:state.activeId,
+    pinned:state.pinned,
+    viewGroupId:state.viewGroupId,
+    editMode:state.editMode,
+    railEdit:state.railEdit,
+    groups:state.groups.map(g => ({ name:g.name, collapsed:g.collapsed, items:g.items.map(i => byId(i).name) })),
+  }, null, 1);
+}
+
+let stickyNav = true;
+document.getElementById("navtoggle").addEventListener("click", () => {
+  stickyNav = !stickyNav;
+  render();
+});
+document.getElementById("loadtoggle").addEventListener("click", () => {
+  applyScale(loadIdx + 1);
+  render();
+});
+const UNC_STYLES = ["toplevel", "link", "section", "hidden"];
+document.getElementById("unctoggle").addEventListener("click", () => {
+  const i = UNC_STYLES.indexOf(state.uncStyle);
+  state.uncStyle = UNC_STYLES[(i + 1) % UNC_STYLES.length];
+  render();
+});
+document.getElementById("prev").addEventListener("click", () => cycle(-1));
+document.getElementById("next").addEventListener("click", () => cycle(1));
+document.getElementById("themetoggle").addEventListener("click", () => {
+  const r = document.documentElement;
+  r.dataset.theme = r.dataset.theme === "dark" ? "light" : "dark";
+});
+document.addEventListener("keydown", (e) => {
+  const t = e.target;
+  if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+  if (e.key === "ArrowLeft") cycle(-1);
+  if (e.key === "ArrowRight") cycle(1);
+  if (e.key === "Escape" && state.railEdit) { state.railEdit = false; renamingId = null; render(); }
+});
+
+render();
+</script>
+</body>
+</html>
