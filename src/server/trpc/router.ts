@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { categoriesRouter } from "@/features/categories/server/router";
 import { chatRouter } from "@/features/chat/server/router";
 import { groupsRouter } from "@/features/groups/server/router";
 import { solutionsRouter } from "@/features/solutions/server/router";
@@ -19,6 +20,7 @@ export const appRouter = createTRPCRouter({
     greeting: `Hello, ${input?.name ?? "operator"}.`,
   })),
   chat: chatRouter,
+  categories: categoriesRouter,
   groups: groupsRouter,
   themes: themesRouter,
   solutions: solutionsRouter,

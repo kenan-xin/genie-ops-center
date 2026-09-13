@@ -24,6 +24,9 @@ export default async function WorkspaceLayout({ children }: { children: React.Re
   // as favorites/page.tsx.
   prefetch(trpc.solutionsHub.favorites.queryOptions());
 
+  // SidebarCategories self-fetches; prefetch so the rail hydrates with no flash.
+  prefetch(trpc.categories.sidebar.queryOptions());
+
   return (
     <HydrateClient>
       <WorkspaceChrome userName={auth.user.name} userRole={auth.user.role}>

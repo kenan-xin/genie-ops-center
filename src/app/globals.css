@@ -428,6 +428,35 @@
   }
 }
 
+/* The rail scrolls when categories overflow it. A thin, quiet scrollbar keeps
+   the sidebar from gaining heavy chrome. */
+.ws-rail {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+.ws-rail::-webkit-scrollbar {
+  width: 8px;
+}
+.ws-rail::-webkit-scrollbar-track {
+  background: transparent;
+}
+.ws-rail::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border: 2px solid var(--sidebar);
+}
+
+/* The primary nav stays reachable at the top of a long rail. Negative margins
+   pull the background to the rail edges while the rows keep their padding. */
+.ws-navsticky {
+  position: sticky;
+  top: -14px;
+  z-index: 5;
+  background: var(--sidebar);
+  margin: -14px -12px 4px;
+  padding: 14px 12px 8px;
+  border-bottom: 1px solid var(--line2);
+}
+
 /* ============================================================
    Admin shell reflow — same drawer/breakpoint mechanism as the
    workspace shell above (`.ws-side`/`.ws-burger`), scoped to the
