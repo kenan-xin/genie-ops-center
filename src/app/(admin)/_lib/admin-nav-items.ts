@@ -30,6 +30,11 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     isActive: (p) => p.startsWith("/admin/solutions"),
   },
   {
+    href: "/admin/categories",
+    label: "Categories",
+    isActive: (p) => p.startsWith("/admin/categories"),
+  },
+  {
     href: "/admin/themes",
     label: "Theme Builder",
     isActive: (p) => p.startsWith("/admin/themes"),
