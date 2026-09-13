@@ -31,25 +31,62 @@ The Dockerfile checks `/api/health` over loopback using Node, so the runner need
 
 Checks run every 10 seconds, with six consecutive failures marking the container unhealthy. The 180-second startup grace period allows for the entrypoint's default 120-second migration-lock wait and migration/bootstrap work. A successful probe makes the container healthy immediately; it does not have to wait out the grace period. Reassess this allowance if migration duration or `LOCK_TIMEOUT_MS` increases.
 
-Both app Compose services inherit the image's health check. On the installed Coolify 4.3.18, leave its generated HTTP health-check override disabled (`health_check_enabled=false`). Coolify then detects the Dockerfile check (`custom_healthcheck_found=true`) and uses the image's Node command. Enabling the HTTP override before detection replaced it with a failing curl/wget probe in the first deployment. Verify the actual container's `Config.Healthcheck`, rather than relying on the UI toggle alone. Coolify waits through the configured startup period before finishing the deployment, even if Docker reports healthy sooner. Docker health status alone does not automatically restart an unhealthy running container.
+Both app Compose services inherit the image's health check. On this Coolify installation, leave its generated HTTP health-check override disabled (`health_check_enabled=false`). Coolify then detects the Dockerfile check (`custom_healthcheck_found=true`) and uses the image's Node command. Enabling the HTTP override before detection replaced it with a failing curl/wget probe in the first deployment. Verify the actual container's `Config.Healthcheck`, rather than relying on the UI toggle alone. Coolify waits through the configured startup period before finishing the deployment, even if Docker reports healthy sooner. Docker health status alone does not automatically restart an unhealthy running container.
 
-## Required environment
+## Environment contract
 
-| Var                              | Required                     | Notes                                                                           |
-| -------------------------------- | ---------------------------- | ------------------------------------------------------------------------------- |
-| `DATABASE_URL`                   | **yes**                      | Separate PostgreSQL service, e.g. `postgres://user:pass@db.host:5432/dbname`         |
-| `BETTER_AUTH_SECRET`             | **yes**                      | ≥32 chars — `openssl rand -base64 32`                                           |
-| `PUBLIC_BASE_URL`                | **yes**                      | Public base URL of this deployment (auth cookies/reset links, server-side tRPC) |
-| `AUTH_TRUSTED_PROXIES`           | behind multiple proxies      | Comma-separated trusted proxy IPs/CIDRs for Better Auth's `X-Forwarded-For` parsing; empty by default. For Cloudflare + Traefik, use Cloudflare's published ranges and configure the same `forwardedHeaders.trustedIPs` on Traefik's HTTP/HTTPS entrypoints. Never trust all addresses. |
-| `RESEND_API_KEY`                 | when invite/reset email ships | Needed for actual delivery. Admin service invite/reset actions reject missing configuration in production; the public forgot-password path can still report generic success without delivery. |
-| `RESEND_FROM_EMAIL`              | optional                     | Defaults to `onboarding@resend.dev`, which is restricted to the Resend account owner. Use a sender on a verified domain for other recipients. |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | first boot only              | Bootstrap admin; strength-checked; **clear after first boot**                   |
-| `GENIE_CHAT_API_ALLOWED_ORIGINS` | for chat solutions     | Comma-separated approved origins for chat streaming endpoints, e.g. `https://dev-genie.001.gs`. A Chat solution's `apiEndpoint` origin must be on this list. |
-| `ALLOWED_IFRAME_ORIGINS`         | for embedded solutions | Comma-separated origins added to CSP `frame-src`; `self` remains allowed                                     |
+`.env.example` is the copy-safe, complete template. Keep real values in your local `.env`, Coolify variables, or another secret manager; never commit them. The entrypoint validates the three required runtime values before connecting to PostgreSQL or starting Next.js.
+
+Every deployment needs `DATABASE_URL`, `BETTER_AUTH_SECRET`, and `PUBLIC_BASE_URL`. All other runtime values are optional unless the feature in the table says it applies: Resend needs both `RESEND_API_KEY` and a verified `RESEND_FROM_EMAIL` to send real invitation or password-reset messages; bootstrap credentials are needed only when automatically creating the very first administrator.
+
+### App runtime variables
+
+| Variable | Required | Default | Where it applies | Notes |
+| --- | --- | --- | --- | --- |
+| `NODE_ENV` | no | `production` in the image | host `pnpm dev` / runtime | Use `development` locally. The Dockerfile fixes the container to `production`; do not override it in Coolify. |
+| `DATABASE_URL` | **yes** | — | every app deployment | PostgreSQL URL used by migrations, Drizzle, and Better Auth. Inside Docker, `localhost` is the app container, never the database. |
+| `BETTER_AUTH_SECRET` | **yes** | — | every app deployment | Stable random value, at least 32 characters. Generate with `openssl rand -base64 32`; changing it invalidates active sessions. |
+| `PUBLIC_BASE_URL` | **yes** | — | every app deployment | Canonical HTTPS URL for auth cookies, reset links, and server-side tRPC. No trailing path. |
+| `PORT` | no | `3000` | app container | Internal listening port. If changed, update the Coolify domain's internal port and the smoke Compose mapping. |
+| `AUTH_TRUSTED_PROXIES` | no | empty | reverse-proxy deployments | Comma-separated trusted proxy IPs/CIDRs for `X-Forwarded-For`. Cloudflare + Traefik needs Cloudflare's published ranges in both services. Never trust `0.0.0.0/0`. |
+| `RESEND_API_KEY` | email delivery | empty | invitations / password resets | Production admin actions reject absent email configuration. Host `pnpm dev` logs links when empty. |
+| `RESEND_FROM_EMAIL` | no | `onboarding@resend.dev` | email delivery | Use a sender at a verified Resend domain for recipients beyond the account owner. |
+| `ADMIN_EMAIL` | first boot | empty | first empty database only | Initial administrator email. It has no effect after a user exists. |
+| `ADMIN_PASSWORD` | first boot | empty | first empty database only | Strong temporary password. It sets `mustChangePassword`; remove it after the initial boot. |
+| `GENIE_CHAT_API_ALLOWED_ORIGINS` | chat solutions | empty | chat configuration / proxy | Comma-separated HTTPS origins permitted for per-solution chat upstreams. Empty prevents chat solutions being saved or streamed. |
+| `ALLOWED_IFRAME_ORIGINS` | embedded solutions | empty | embedded solution viewer | Comma-separated origins added to CSP `frame-src`; `self` remains allowed. |
+| `LOCK_TIMEOUT_MS` | no | `120000` | startup entrypoint | Maximum milliseconds a replica waits for the Postgres migration advisory lock. |
+
+### Docker Compose helper variables
+
+These configure only the repository's local helpers. Do **not** add them to Coolify unless a future Compose-based resource explicitly consumes them.
+
+| Variable | Default | Used by | Notes |
+| --- | --- | --- | --- |
+| `POSTGRES_USER` | `genie` | local and smoke Postgres | Database role created on a new Compose volume. |
+| `POSTGRES_PASSWORD` | `genie` | local and smoke Postgres | Development-only password. Changing it does not update an existing volume. |
+| `POSTGRES_DB` | `genie` | local and smoke Postgres | Database created on a new Compose volume. |
+| `POSTGRES_PORT` | `5432` | `docker-compose.local.yml` | Host port for local Postgres. Change when 5432 is occupied. |
+| `APP_PORT` | `3000` | `docker-compose.smoke.yml` | Host port for the smoke-test app; it does not change the container's `PORT`. |
+
+### Dockerfile build placeholders
+
+The Dockerfile supplies build-only placeholders for `DATABASE_URL`, `BETTER_AUTH_SECRET`, and `BETTER_AUTH_URL` because `next build` evaluates server modules. They are not runtime configuration, are not copied into the standalone image as secrets, and must not be configured in Coolify. Both image stages set `NEXT_TELEMETRY_DISABLED=1`; the runner also fixes `NODE_ENV=production`, `PORT=3000`, and `HOSTNAME=0.0.0.0` unless you deliberately override `PORT` at runtime.
 
 > The chat streaming endpoint is **per-solution** config (`config.apiEndpoint`), not a single env base — but its origin must be on `GENIE_CHAT_API_ALLOWED_ORIGINS` (the SSRF allow-list, default-seed, and rotation point).
 
 Secrets are supplied via env **only** — never baked into the image.
+
+## Coolify development-environment checklist
+
+Use one Coolify project with separate `development` and `production` environments. Each environment has its own app resource, PostgreSQL database, variables, and public hostname; the image and deployment shape stay the same.
+
+1. Create a private PostgreSQL resource in the `development` environment with persistent storage. Record its internal connection URL from Coolify; do not use the database container's temporary IP address in `DATABASE_URL`.
+2. Create an application from the private Git repository using the existing read-only deploy key. Set its source branch to `develop`, build strategy to **Dockerfile**, base directory to `/`, and internal port to `3000`.
+3. Add the development hostname, currently `https://dev-opscenter.agilgenie.ai`, with internal port `3000`. Create a proxied Cloudflare A record for `dev-opscenter` pointing at `129.226.214.125`, then wait for Coolify's DNS check before the first deployment.
+4. Add the runtime variables from the table above. Use a newly generated `BETTER_AUTH_SECRET`, the development database URL, and `PUBLIC_BASE_URL=https://dev-opscenter.agilgenie.ai`. Keep production and development secrets separate. Add Resend only when development needs to send real invitations or reset emails.
+5. Set `ADMIN_EMAIL` and a strong temporary `ADMIN_PASSWORD` only for the first empty development database. Deploy, verify `/api/health`, sign in, change the password, then delete `ADMIN_PASSWORD` from Coolify.
+6. Configure the Dockerfile health check through the image; do not enable Coolify's generated HTTP health-check override. Confirm the app's Docker health check and the public `/api/health` both report healthy after deployment.
 
 The [Resend test sender restriction](https://resend.com/docs/knowledge-base/403-error-resend-dev-domain) applies even with a valid API key. A configured API key is not proof of successful email delivery. Better Auth can log provider failures while the initiating request reports success. Verify invite/reset delivery with the intended sender before onboarding users; failure visibility is tracked in Beads (`genie-ops-center-xu6`).
 

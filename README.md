@@ -36,7 +36,7 @@ cp .env.example .env
 openssl rand -base64 32
 # Paste the generated value into BETTER_AUTH_SECRET in .env.
 # Set ADMIN_EMAIL and a strong ADMIN_PASSWORD for the first admin.
-# Keep DATABASE_URL=postgres://genie:genie@localhost:5432/genie for local dev.
+# The template documents every runtime and Docker Compose variable.
 
 # 3. Start the local database and wait until it is ready
 # Uses a persistent named volume; requires host port 5432 to be free.
@@ -75,7 +75,7 @@ For local invite/reset testing, leave `RESEND_API_KEY` empty to log links in the
 | `pnpm db:local:down`              | Remove the container (data volume kept)                       |
 | `pnpm db:local:reset`             | **Wipe** the volume and remove the container (does not restart it)                           |
 
-The local DB defaults to `genie:genie@localhost:5432/genie` (matches `.env.example`). Override via `.env`: `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `POSTGRES_PORT`.
+The local DB defaults to `genie:genie@localhost:5432/genie` (matches `.env.example`). The template documents every app runtime variable and every Docker Compose helper variable; if you change `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, or `POSTGRES_PORT`, update `DATABASE_URL` to match.
 
 ## Connecting an external database
 

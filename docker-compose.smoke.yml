@@ -38,6 +38,8 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-genie}:${POSTGRES_PASSWORD:-genie}@db:5432/${POSTGRES_DB:-genie}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET is required}
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:3000}
+      PORT: ${PORT:-3000}
+      AUTH_TRUSTED_PROXIES: ${AUTH_TRUSTED_PROXIES:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-onboarding@resend.dev}
       # First-admin bootstrap. Seeded only on a fresh (empty-user) DB; clear after.
@@ -45,8 +47,9 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       GENIE_CHAT_API_ALLOWED_ORIGINS: ${GENIE_CHAT_API_ALLOWED_ORIGINS:-}
       ALLOWED_IFRAME_ORIGINS: ${ALLOWED_IFRAME_ORIGINS:-}
+      LOCK_TIMEOUT_MS: ${LOCK_TIMEOUT_MS:-120000}
     ports:
-      - "${APP_PORT:-3000}:3000"
+      - "${APP_PORT:-3000}:${PORT:-3000}"
 
 volumes:
   genie-db:
