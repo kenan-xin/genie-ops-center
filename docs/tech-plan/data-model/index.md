@@ -171,7 +171,7 @@ One JSONB column, validated by a discriminated union at the tRPC boundary (no pe
 
 ## Notes & invariants
 
-- **Access = membership ∩ grant.** A user's reachable solutions = `solutions` joined through `group_solution` ← `group` ← `group_member` for that user, minus `archived`. This query backs the hub list and the `assertCanSee` / `assertCanRun` guards (the latter also requires `status = ready`).
+- **Member access = membership ∩ grant; admin access bypasses grants.** A member's reachable solutions = `solutions` joined through `group_solution` ← `group` ← `group_member` for that user, minus `archived`/`draft`. Administrators skip the membership/grant join. This policy backs the hub list and the `assertCanSee` / `assertCanRun` guards (the latter also requires `status = ready`).
 - **Recents & Favorites filter by _current_ access, not just stored rows.** The Recent and Favorites lists join through the same granted + unarchived + customer-visible predicate, so a solution whose grant is revoked / archived / set to draft disappears immediately. The `favorite`/`recent` rows are a cache, not the access source.
 - **Cascade deletes** keep grants consistent: removing a person (FR-ADM-P-06) or deleting a solution (FR-ADM-S-04) strips its `group_member` / `group_solution` rows automatically.
 - **Recents cap (6):** keep one row per `(user, solution)` (upsert `openedAt`); query `ORDER BY opened_at DESC LIMIT 6`. No pruning job needed.

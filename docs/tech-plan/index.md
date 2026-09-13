@@ -52,7 +52,7 @@ flowchart TB
 | Role | Holds | Grants |
 | --- | --- | --- |
 | `user` | every account | Sign in; workspace; solutions granted via their groups |
-| `admin` | *added on top of* `user` | Everything `user` has **plus** the Admin Portal and all admin operations |
+| `admin` | *added on top of* `user` | Everything `user` has **plus** the Admin Portal, all admin operations, and automatic access to every customer-visible solution |
 
 - Stored as better-auth's multi-value `role` string: `"user"` or `"user,admin"`; config `adminRoles: ["admin"]`. UI label: **"Admin"**. *(Verified: better-auth admin plugin supports comma-separated multi-roles.)*
 - An admin is a normal member too — matches the FR's "elevated member."
@@ -74,12 +74,12 @@ Status must control **whether and how** a solution opens (FR-ADM-S-05), and the 
 
 | Guard | Check | Allows |
 | --- | --- | --- |
-| `assertCanSee(user, solution)` | granted via the user's groups **and** not archived | Render the viewer shell + a `Maintenance`/`Down` status notice |
+| `assertCanSee(user, solution)` | member is granted via groups, or user is an admin; **and** not archived/draft | Render the viewer shell + a `Maintenance`/`Down` status notice |
 | `assertCanRun(user, solution)` | `assertCanSee` **and** `status = ready` | `/api/chat` streaming, live embedded iframe, (future native runtime) |
 
-- Hub/catalogue query lists **granted + unarchived** solutions, surfaces `ready | maintenance | down`, and **hides `draft`** from customers. `Draft` is never openable.
-- **Recents & Favorites** are gated by the *same* access predicate (granted + unarchived + visible), not just the stored per-user rows — so revoking/archiving/drafting a solution drops it from those lists immediately. The `favorite`/`recent` rows are a cache, not the access source.
-- Solution access itself = `solutionId ∈ (solutions granted to the user's groups)` (the union query). Used inside both guards.
+- Hub/catalogue query lists **authorized + unarchived** solutions, surfaces `ready | maintenance | down`, and **hides `draft`** from customers. Members are authorized through group grants; administrators bypass grants. `Draft` is never openable.
+- **Recents & Favorites** are gated by the *same* access predicate (authorized + unarchived + visible), not just the stored per-user rows — so revoking a member's grant or archiving/drafting a solution drops it from those lists immediately. The `favorite`/`recent` rows are a cache, not the access source.
+- Member solution access = `solutionId ∈ (solutions granted to the user's groups)` (the union query). Administrators bypass that grant predicate. Used inside both guards.
 
 ### Sessions & lifecycle
 

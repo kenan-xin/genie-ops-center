@@ -5,10 +5,11 @@ import { and, desc, eq, exists, ilike, inArray, or, sql } from "drizzle-orm";
 import { db } from "@/server/db";
 import { favorite, groupMember, groupSolution, recent, solution } from "@/server/db/schema";
 import type { AuthUser } from "@/server/authz";
+import { requiresSolutionGrant } from "@/server/features/solution-access";
 
 /**
  * Access-gated solution catalogue (FR-HUB). Hub, Recent, and Favorites all
- * funnel through the same granted + unarchived + customer-visible predicate
+ * funnel through the same authorized + unarchived + customer-visible predicate
  * (the critique invariant): the stored `favorite`/`recent` rows are a cache, not
  * the access source, so a revoked/archived/drafted solution drops from every
  * list immediately. `draft` is hidden from customers; `native` is hidden from
@@ -51,36 +52,44 @@ const VIEW = {
 /**
  * The granted + unarchived + customer-visible predicate as a drizzle `where`.
  * Drafts are never openable/visible to customers (assertCanSee drops them);
- * native rows are hidden from the catalogue (deferred runtime). Reused by hub,
- * recent, and favorites so all three share one access truth.
+ * native rows are hidden from the catalogue (deferred runtime). Members need
+ * a group grant; administrators bypass that condition. Reused by hub, recent,
+ * and favorites so all three share one access truth.
  */
-function customerVisible(userId: string) {
-  return and(
+function customerVisible(user: AuthUser) {
+  const conditions = [
     eq(solution.archived, false),
     sql`${solution.status} <> 'draft'`,
     sql`${solution.type} <> 'native'`,
-    exists(
-      db
-        .select()
-        .from(groupSolution)
-        .where(
-          and(
-            eq(groupSolution.solutionId, solution.id),
-            exists(
-              db
-                .select()
-                .from(groupMember)
-                .where(
-                  and(
-                    eq(groupMember.groupId, groupSolution.groupId),
-                    eq(groupMember.userId, userId),
+  ];
+
+  if (requiresSolutionGrant(user)) {
+    conditions.push(
+      exists(
+        db
+          .select()
+          .from(groupSolution)
+          .where(
+            and(
+              eq(groupSolution.solutionId, solution.id),
+              exists(
+                db
+                  .select()
+                  .from(groupMember)
+                  .where(
+                    and(
+                      eq(groupMember.groupId, groupSolution.groupId),
+                      eq(groupMember.userId, user.id),
+                    ),
                   ),
-                ),
+              ),
             ),
           ),
-        ),
-    ),
-  );
+      ),
+    );
+  }
+
+  return and(...conditions);
 }
 
 /** Allowed catalogue types (native is enum-only — never surfaced). */
@@ -198,7 +207,7 @@ export async function listHubSolutions(
     .select(VIEW)
     .from(solution)
     .where(
-      applyFilter(customerVisible(user.id), {
+      applyFilter(customerVisible(user), {
         search: opts.search,
         type: opts.type,
       }),
@@ -226,7 +235,7 @@ export async function listRecentSolutions(user: AuthUser): Promise<HubSolution[]
     })
     .from(recent)
     .innerJoin(solution, eq(recent.solutionId, solution.id))
-    .where(and(eq(recent.userId, user.id), customerVisible(user.id)))
+    .where(and(eq(recent.userId, user.id), customerVisible(user)))
     .orderBy(desc(recent.openedAt))
     .limit(6);
 
@@ -250,7 +259,7 @@ export async function listFavoriteSolutions(user: AuthUser): Promise<HubSolution
     .select({ ...VIEW, position: favorite.position })
     .from(favorite)
     .innerJoin(solution, eq(favorite.solutionId, solution.id))
-    .where(and(eq(favorite.userId, user.id), customerVisible(user.id)));
+    .where(and(eq(favorite.userId, user.id), customerVisible(user)));
 
   const { lastOpened } = await userDecoration(
     user,

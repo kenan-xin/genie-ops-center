@@ -47,7 +47,7 @@ flowchart LR
 
 - **Member** — customer-side user; sees only the workspace and only the solutions granted through their groups. No admin affordances.
 - **Workspace Owner** — elevated member who can also reach the Admin Portal via the separate admin sign-in.
-- **Admin** — manages people, access, solutions and themes from the Admin Portal.
+- **Admin** — manages people, access, solutions and themes from the Admin Portal, and can access every customer-visible solution without a group grant.
 - **External systems** — the external Genie chat streaming API (Chat), external web apps embedded via iframe (Embedded), and a Postgres holding this one customer's data.
 
 ## What we're building (high level)
@@ -65,7 +65,7 @@ flowchart LR
 | **Embedded** (Smart-API) | An **external app hosted in an iframe** by per-solution HTTPS URL. Configurable, not themeable. No SSO/token handoff in foundation.                                                                         |
 | **Native**               | Built inside this repo **later**. Foundation ships the **internal enum only** — hidden from admin registration and customer catalogue filters until the first native slice. No openable/grantable path yet. |
 
-**Access model** — access is granted to **groups only** (group → solutions, people → groups). A person's reachable solutions are the union across their groups. No per-user grants.
+**Access model** — ordinary member access is granted to **groups only** (group → solutions, people → groups). A member's reachable solutions are the union across their groups. Administrators bypass group grants. No per-user grants.
 
 ## Security & data invariants (non-negotiable at this stage)
 

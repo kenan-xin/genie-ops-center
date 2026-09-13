@@ -10,7 +10,7 @@ The access-gated catalogue and the Recent/Favorites views (FR-HUB).
 
 ## Scope — in
 
-- **Access-gated list** (FR-HUB-01): only solutions granted via the user's groups; archived hidden; `draft` hidden from customers; empty state when none.
+- **Access-gated list** (FR-HUB-01): members see solutions granted via their groups; administrators bypass grants; archived and `draft` remain hidden; empty state when none.
 - **Live name search** (FR-HUB-02), **type filter** All/Chat/Native/Embedded (FR-HUB-03), **sort** Recent/Name/Status (FR-HUB-04).
 - **Progressive loading** (FR-HUB-05): start 5, extend by 4 via "load more" + auto on scroll-near-bottom; "N OF M SHOWN" counter. **Clear filters** (FR-HUB-06).
 - **Solution row** (FR-HUB-07): monogram, name, description, type label, colour-coded status badge; openable only when not Draft; non-openable dimmed. **Favorites** star toggles from the row without opening (FR-HUB-08).

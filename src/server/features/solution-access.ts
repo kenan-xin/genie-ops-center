@@ -5,15 +5,15 @@ import { and, eq, exists } from "drizzle-orm";
 
 import { db } from "@/server/db";
 import { groupMember, groupSolution, solution } from "@/server/db/schema";
-import type { AuthUser } from "@/server/authz";
+import { isAdmin, type AuthUser } from "@/server/authz";
 
 /**
- * Solution access = membership ∩ grant, minus archived (and minus draft for
- * customers). This query backs the hub list and the see/run guards. A user's
- * reachable solutions = solutions granted to their groups.
+ * Member solution access = membership ∩ grant. Administrators bypass that
+ * grant check. Archived/draft/status lifecycle gates still apply to everyone.
+ * This policy backs the hub list and the see/run guards.
  *
  * see vs run (tech-plan): `assertCanSee` allows rendering the viewer shell +
- * a maintenance/down notice (granted, not archived, not draft). `assertCanRun`
+ * a maintenance/down notice (authorized, not archived, not draft). `assertCanRun`
  * adds `status = ready` — gates `/api/chat` streaming and live embeds.
  * Recents/Favorites reuse the same predicate so a revoked/archived/drafted
  * solution drops from those lists immediately.
@@ -47,6 +47,11 @@ export type SolutionView = {
   archived: boolean;
   themeId: string | null;
 };
+
+/** Administrators inherit access to every solution without group membership. */
+export function requiresSolutionGrant(user: Pick<AuthUser, "role">): boolean {
+  return !isAdmin(user);
+}
 
 /** True iff `userId` is granted `solutionId` through any of their groups. */
 export async function isGrantedSolution(userId: string, solutionId: string): Promise<boolean> {
@@ -86,6 +91,7 @@ export async function canSee(
 ): Promise<boolean> {
   if (s.archived) return false;
   if (s.status === "draft") return false; // draft is never openable, by anyone
+  if (!requiresSolutionGrant(user)) return true;
   return isGrantedSolution(user.id, s.id);
 }
 
@@ -107,6 +113,7 @@ export async function assertCanSee(
   if (s.status === "draft") {
     throw new TRPCError({ code: "NOT_FOUND", message: "Solution not available" });
   }
+  if (!requiresSolutionGrant(user)) return;
   if (!(await isGrantedSolution(user.id, s.id))) {
     throw new TRPCError({ code: "FORBIDDEN", message: "No access to this solution" });
   }

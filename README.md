@@ -54,7 +54,7 @@ docker compose -f docker-compose.local.yml rm -f bootstrap
 pnpm dev    # http://localhost:3000
 ```
 
-The initial container run seeds one admin only when the `user` table is empty and both bootstrap variables are supplied. Sign in at `/admin/login` and change the temporary password. Clear `ADMIN_PASSWORD` from `.env` after seeding. Removing the bootstrap app above also removes its saved container environment. An admin account still needs group grants to open workspace solutions.
+The initial container run seeds one admin only when the `user` table is empty and both bootstrap variables are supplied. Sign in at `/admin/login` and change the temporary password. Clear `ADMIN_PASSWORD` from `.env` after seeding. Removing the bootstrap app above also removes its saved container environment. Administrators can open workspace solutions without group grants; ordinary members receive access through groups.
 
 **`pnpm dev` and `pnpm db:migrate` do not bootstrap an admin.** Once the database is initialized, daily startup is `pnpm db:local`, `pnpm db:migrate` when new migrations exist, then `pnpm dev`. If you change the local DB credentials, update both `.env`'s host URL and the container URL above. Changing Compose credentials does not change an existing PostgreSQL volume's credentials.
 
