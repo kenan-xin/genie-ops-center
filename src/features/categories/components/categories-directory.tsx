@@ -23,12 +23,12 @@ import type { Solution } from "@/features/solutions/schemas/solution";
 
 import {
   useAssignCategory,
+  useAssignments,
   useCategories,
   useCreateCategory,
   useDeleteCategory,
   useRenameCategory,
   useReorderCategories,
-  useSidebarEntries,
 } from "../api/categories";
 import type { CategorySummary } from "../schemas/category";
 
@@ -74,7 +74,7 @@ export function CategoriesDirectory() {
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
   const categoriesQuery = useCategories();
-  const sidebarQuery = useSidebarEntries();
+  const assignmentsQuery = useAssignments();
   const solutionsQuery = useSolutionsQuery({ sort: "name", archived: false });
   const create = useCreateCategory();
   const rename = useRenameCategory();
@@ -84,47 +84,18 @@ export function CategoriesDirectory() {
 
   const categories = categoriesQuery.data ?? [];
 
-  /**
-   * The admin `solutions.list` read carries no categoryId, and no admin-scoped
-   * assignments read exists. The customer sidebar read does expose grouping:
-   * for an admin it covers every non-draft, non-archived solution (admins
-   * bypass grants), so it is the assignment source here. A draft's assignment
-   * is invisible until it publishes; it renders as None until then.
-   */
+  // Solution → category, straight from the admin `assignments` read. Unlike the
+  // customer sidebar read it includes drafts, so a draft's filing survives a
+  // reload and counts as filed below.
   const assignedBySolution = useMemo(() => {
     const map = new Map<string, string>();
-    for (const entry of sidebarQuery.data ?? []) {
-      if (entry.kind === "category") {
-        for (const s of entry.category.solutions) map.set(s.id, entry.category.id);
-      }
-    }
+    for (const a of assignmentsQuery.data ?? []) map.set(a.solutionId, a.categoryId);
     return map;
-  }, [sidebarQuery.data]);
-
-  // Every non-draft solution appears in the sidebar read for an admin, so the
-  // server map is complete for it: absence from a category entry IS "None".
-  // Drafts never reach that read, so their assignment can't be read back from
-  // it — the Select would snap to None after each write. Remember the admin's
-  // last write for those, this session only; the server map stays authoritative
-  // for every solution the sidebar actually shows.
-  const sidebarSolutionIds = useMemo(() => {
-    const ids = new Set<string>();
-    for (const entry of sidebarQuery.data ?? []) {
-      if (entry.kind === "category") {
-        for (const s of entry.category.solutions) ids.add(s.id);
-      } else {
-        ids.add(entry.solution.id);
-      }
-    }
-    return ids;
-  }, [sidebarQuery.data]);
-  const [localAssign, setLocalAssign] = useState<Map<string, string | null>>(new Map());
-  const categoryOf = (solutionId: string): string | null =>
-    sidebarSolutionIds.has(solutionId)
-      ? (assignedBySolution.get(solutionId) ?? null)
-      : (localAssign.get(solutionId) ?? null);
+  }, [assignmentsQuery.data]);
 
   const solutions = solutionsQuery.data ?? [];
+  const categoryOf = (solutionId: string): string | null =>
+    assignedBySolution.get(solutionId) ?? null;
   const unfiledCount = solutions.filter((s) => categoryOf(s.id) === null).length;
 
   const assignItems = useMemo(() => {
@@ -198,7 +169,6 @@ export function CategoriesDirectory() {
       : null;
     try {
       await assign.mutateAsync({ solutionId: solution.id, categoryId });
-      setLocalAssign((m) => new Map(m).set(solution.id, categoryId));
       toast({
         tone: "success",
         description: label
@@ -210,7 +180,7 @@ export function CategoriesDirectory() {
     }
   }
 
-  const listPending = categoriesQuery.isPending || sidebarQuery.isPending;
+  const listPending = categoriesQuery.isPending || assignmentsQuery.isPending;
 
   return (
     <div className="flex flex-col gap-6">

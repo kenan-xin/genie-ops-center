@@ -32,6 +32,17 @@ export async function listCategories(): Promise<CategorySummary[]> {
     .orderBy(asc(category.position), asc(category.name));
 }
 
+/** Every solution-to-category assignment, for the admin screen. Presentation
+ *  data only: this says where a solution is filed, never who may open it. */
+export async function listAssignments(): Promise<{ solutionId: string; categoryId: string }[]> {
+  return db
+    .select({
+      solutionId: solutionCategory.solutionId,
+      categoryId: solutionCategory.categoryId,
+    })
+    .from(solutionCategory);
+}
+
 export async function createCategory(name: string): Promise<{ id: string }> {
   // Append: a new category lands last in the admin's order.
   const [row] = await db

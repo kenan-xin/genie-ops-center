@@ -8,10 +8,11 @@ import { useTRPC } from "@/trpc/provider";
 
 type TRPC = ReturnType<typeof useTRPC>;
 
-/** Any taxonomy write changes both the admin list and the customer rail. */
+/** Any taxonomy write changes the admin views and the customer rail. */
 function invalidateCategoryViews(trpc: TRPC, queryClient: ReturnType<typeof useQueryClient>) {
   return Promise.all([
     queryClient.invalidateQueries(trpc.categories.list.queryFilter()),
+    queryClient.invalidateQueries(trpc.categories.assignments.queryFilter()),
     queryClient.invalidateQueries(trpc.categories.sidebar.queryFilter()),
   ]);
 }
@@ -19,6 +20,11 @@ function invalidateCategoryViews(trpc: TRPC, queryClient: ReturnType<typeof useQ
 export function useCategories() {
   const trpc = useTRPC();
   return useQuery(trpc.categories.list.queryOptions());
+}
+
+export function useAssignments() {
+  const trpc = useTRPC();
+  return useQuery(trpc.categories.assignments.queryOptions());
 }
 
 export function useSidebarEntries() {

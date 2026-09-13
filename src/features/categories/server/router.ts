@@ -21,6 +21,11 @@ export const categoriesRouter = createTRPCRouter({
     return categoryService.listCategories();
   }),
 
+  /** Solution → category pairs for the admin screen's assignment control. */
+  assignments: adminProcedure.query(async () => {
+    return categoryService.listAssignments();
+  }),
+
   create: adminProcedure.input(createCategorySchema).mutation(async ({ input }) => {
     return categoryService.createCategory(input.name);
   }),
