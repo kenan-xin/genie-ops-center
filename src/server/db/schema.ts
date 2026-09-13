@@ -113,6 +113,38 @@ export const theme = pgTable(
   },
 );
 
+/**
+ * Admin-owned presentation taxonomy. A category NEVER grants access — the
+ * `group` → `group_solution` path remains the only grant. The sidebar shows a
+ * category only when the signed-in user is already granted a solution in it.
+ */
+export const category = pgTable("category", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull(),
+  position: integer("position").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const solutionCategory = pgTable(
+  "solution_category",
+  {
+    solutionId: uuid("solution_id")
+      .notNull()
+      .references(() => solution.id, { onDelete: "cascade" }),
+    categoryId: uuid("category_id")
+      .notNull()
+      .references(() => category.id, { onDelete: "cascade" }),
+  },
+  (t) => [
+    // One category per solution TODAY, enforced by the database rather than by
+    // convention: the primary key is solution_id alone. Widening to
+    // many-to-many later changes this key only — no backfill, no data move.
+    primaryKey({ columns: [t.solutionId] }),
+    index("solution_category_category_id_idx").on(t.categoryId),
+  ],
+);
+
 export const favorite = pgTable(
   "favorite",
   {
