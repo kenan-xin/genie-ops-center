@@ -2,7 +2,7 @@
 
 **Topology: the app and database run separately.** Coolify manages an app container and a PostgreSQL container on the same Tencent Lighthouse server. PostgreSQL needs persistent storage and a private network connection from the app. A managed or dedicated PostgreSQL server is also supported through `DATABASE_URL`.
 
-The selected public URL is `https://work.agilgenie.ai`. Resources were provisioned on 2026-09-10. The app is healthy through both Cloudflare and the origin proxy. Tencent Lighthouse permits inbound TCP 443 for HTTPS. Off-server backup storage still needs to be selected before retaining real production data.
+The selected public URL is `https://opscenter.agilgenie.ai`. Resources were provisioned on 2026-09-10. The app is healthy through both Cloudflare and the origin proxy. Tencent Lighthouse permits inbound TCP 443 for HTTPS. Off-server backup storage still needs to be selected before retaining real production data.
 
 ```
 ┌───────────────┐         ┌──────────────────────────┐
@@ -57,11 +57,11 @@ The [Resend test sender restriction](https://resend.com/docs/knowledge-base/403-
 
 The tc1 proxy runs `traefik:v3.7.13` (upgraded on 2026-09-10 after reviewing the [3.7 migration guide](https://doc.traefik.io/traefik/v3.7/migrate/v3/)). Coolify retains the proxy configuration and its backups under `/data/coolify/proxy/` on tc1. The upgrade preserved the existing certificate storage, routing and Cloudflare trust settings; public HTTPS, direct-origin HTTPS, login and HTTP redirects were verified afterward.
 
-Build the repository Dockerfile and route the app's internal port **3000** at `https://work.agilgenie.ai`. PostgreSQL 16 runs as a separate Coolify resource on the same Lighthouse server, with a persistent volume and a private network reachable from the app. Set `DATABASE_URL` to that service's internal hostname, database and credentials. `localhost` inside the app container points to the app itself.
+Build the repository Dockerfile and route the app's internal port **3000** at `https://opscenter.agilgenie.ai`. PostgreSQL 16 runs as a separate Coolify resource on the same Lighthouse server, with a persistent volume and a private network reachable from the app. Set `DATABASE_URL` to that service's internal hostname, database and credentials. `localhost` inside the app container points to the app itself.
 
 Set runtime environment variables in Coolify. Node is supplied by the `node:24-bookworm-slim` image; the Lighthouse host does not need Node or nvm. The image tag tracks Node 24 rather than pinning a patch or digest. Keep `BETTER_AUTH_SECRET` stable across redeploys, and remove bootstrap credentials after the initial admin is created.
 
-Cloudflare DNS proxies `work.agilgenie.ai` to Lighthouse `129.226.214.125`. Traefik on Lighthouse terminates HTTPS and routes to the app; the local Coolify VM at `192.168.50.24:8000` only manages deployment over SSH. Both public and direct-origin HTTPS passed normal TLS validation. The Cloudflare Full (strict) dashboard setting has not been inspected. Both Traefik and Better Auth are configured with Cloudflare's published proxy ranges; client-IP extraction is verified by the deployment smoke check. A database dump restored successfully into a separate temporary database, which was then removed. Scheduled off-server backups remain pending (`genie-ops-center-n3r`); persistent storage does not protect against loss of the server.
+Cloudflare DNS proxies `opscenter.agilgenie.ai` to Lighthouse `129.226.214.125`. Traefik on Lighthouse terminates HTTPS and routes to the app; the local Coolify VM at `192.168.50.24:8000` only manages deployment over SSH. Both public and direct-origin HTTPS passed normal TLS validation. The Cloudflare Full (strict) dashboard setting has not been inspected. Both Traefik and Better Auth are configured with Cloudflare's published proxy ranges; client-IP extraction is verified by the deployment smoke check. A database dump restored successfully into a separate temporary database, which was then removed. Scheduled off-server backups remain pending (`genie-ops-center-n3r`); persistent storage does not protect against loss of the server.
 
 The resources are in **Genie Workspace → production → tc1**:
 
@@ -90,7 +90,7 @@ Connect your database client to `127.0.0.1:15432`, database `genie`, user `genie
 # .env (your real prod values)
 DATABASE_URL=postgres://...your-external-postgres...
 BETTER_AUTH_SECRET=...
-PUBLIC_BASE_URL=https://work.agilgenie.ai
+PUBLIC_BASE_URL=https://opscenter.agilgenie.ai
 RESEND_API_KEY=...
 RESEND_FROM_EMAIL=workspace@your-verified-domain.example
 ADMIN_EMAIL=admin@example.com

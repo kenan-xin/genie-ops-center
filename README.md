@@ -4,7 +4,7 @@
 
 See **[`docs/`](./docs/README.md)** for the full design: [what & why](./docs/epic-brief/index.md), [architecture](./docs/tech-plan/index.md), and the [implementation tickets](./docs/tickets/index.md).
 
-> **Implemented:** authentication and account sessions; admin People, Groups/Access, Solutions and Themes; workspace hub and favorites; embedded viewer; streaming chat with error feedback and retry; Docker startup migrations/bootstrap and a database-aware health check. Public signup is disabled. Native apps and the Everyone/protected-admin model remain planned. The admin overview and live chat theme application still have unfinished behavior tracked in Beads. The first Lighthouse deployment is running at https://work.agilgenie.ai. See [deployment](./docs/deployment.md).
+> **Implemented:** authentication and account sessions; admin People, Groups/Access, Solutions and Themes; workspace hub and favorites; embedded viewer; streaming chat with error feedback and retry; Docker startup migrations/bootstrap and a database-aware health check. Public signup is disabled. Native apps and the Everyone/protected-admin model remain planned. The admin overview and live chat theme application still have unfinished behavior tracked in Beads. The first Lighthouse deployment is running at https://opscenter.agilgenie.ai. See [deployment](./docs/deployment.md).
 
 ## Tech stack
 
