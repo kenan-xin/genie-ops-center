@@ -130,12 +130,7 @@ export async function listSidebarEntries(user: AuthUser): Promise<SidebarEntry[]
   const [solutions, categories, assignments] = await Promise.all([
     listHubSolutions(user, { sort: "name" }),
     db.select({ id: category.id, name: category.name, position: category.position }).from(category),
-    db
-      .select({
-        solutionId: solutionCategory.solutionId,
-        categoryId: solutionCategory.categoryId,
-      })
-      .from(solutionCategory),
+    listAssignments(),
   ]);
   return buildSidebarEntries(
     categories,

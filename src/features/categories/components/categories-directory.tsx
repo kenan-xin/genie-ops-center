@@ -228,9 +228,10 @@ export function CategoriesDirectory() {
             <Skeleton key={i} className="h-11 w-full" />
           ))}
         </div>
-      ) : categoriesQuery.isError ? (
+      ) : categoriesQuery.isError || assignmentsQuery.isError ? (
         <p className="text-small text-[var(--error)]">
-          {(categoriesQuery.error as { message: string }).message || "Couldn't load categories."}
+          {((categoriesQuery.error ?? assignmentsQuery.error) as { message: string } | null)
+            ?.message || "Couldn't load categories."}
         </p>
       ) : categories.length === 0 ? (
         <EmptyState
@@ -488,7 +489,11 @@ function RenameInput({
           onCancel();
         }
       }}
-      onBlur={onCancel}
+      // Guard: in browsers that fire focusout when a focused element becomes
+      // disabled, the pending flip would cancel the edit mid-submit.
+      onBlur={() => {
+        if (!disabled) onCancel();
+      }}
       aria-label={ariaLabel}
       disabled={disabled}
     />
