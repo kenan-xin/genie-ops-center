@@ -60,9 +60,8 @@ export const embeddedConfigSchema = z.object({
     .max(2_000, "Keep it under 2000 characters")
     // Parse as a real https URL (not just a prefix) so junk like "https://"
     // can't be stored and then throw in the viewer's `new URL()`. Blank is the
-    // not-yet-configured state. The ops origin allow-list
-    // (ALLOWED_IFRAME_ORIGINS) is enforced server-side in the solutions
-    // router; safeHttpsUrl is the client-safe baseline.
+    // not-yet-configured state. Any public HTTPS app can be embedded; this
+    // shared schema is enforced by both the editor and server write boundary.
     .refine((v) => v === "" || safeHttpsUrl(v), "Must be a valid https URL"),
   // ASol-07 (honest-hybrid, DEC-C3-B): wired end-to-end to the iframe's
   // `allow="fullscreen"` attribute in the viewer. Optional so the existing

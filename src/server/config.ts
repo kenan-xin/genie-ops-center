@@ -14,7 +14,7 @@ import { z } from "zod";
  * entrypoint at runtime only. See tech-plan → "Config/secrets (env)", ticket 03b.
  *
  * Secrets come only from env (never baked). One image, one deployment per
- * customer. Optional fields (bootstrap creds, chat token, iframe origins) are
+ * customer. Optional fields (bootstrap credentials and chat configuration) are
  * absent until a deployment needs them.
  */
 const configSchema = z.object({
@@ -47,9 +47,6 @@ const configSchema = z.object({
   // solution can be saved/streamed until an origin is approved. See url-guard.ts.
   GENIE_CHAT_API_ALLOWED_ORIGINS: z.string().default(""),
 
-  // iframe CSP frame-src allow-list. Comma-separated origins; empty ⇒ none.
-  ALLOWED_IFRAME_ORIGINS: z.string().default(""),
-
   // First-admin bootstrap. Absent after first boot (ops clears them). The
   // strength of ADMIN_PASSWORD is re-checked by bootstrapAdmin before seeding.
   ADMIN_EMAIL: z.email().or(z.literal("")).default(""),
@@ -71,14 +68,6 @@ export function parseConfig(env: NodeJS.ProcessEnv = process.env): RuntimeConfig
     throw new Error(`Invalid runtime configuration:\n${issues}`);
   }
   return parsed.data;
-}
-
-/** ALLOWED_IFRAME_ORIGINS as a trimmed array (empty string ⇒ []). */
-export function allowedIframeOrigins(env = process.env): string[] {
-  return (env.ALLOWED_IFRAME_ORIGINS ?? "")
-    .split(",")
-    .map((o) => o.trim())
-    .filter(Boolean);
 }
 
 /** GENIE_CHAT_API_ALLOWED_ORIGINS as a trimmed array (empty string ⇒ []). */
