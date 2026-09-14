@@ -53,6 +53,10 @@ dolt-server.activity
 # Backup data (auto-exported JSONL, local-only)
 backup/
 
+# Passive JSONL exports (viewers use Dolt SQL or bd CLI; sync uses refs/dolt/data)
+issues.jsonl
+interactions.jsonl
+
 # Per-project environment file (Dolt connection config, GH#2520)
 .env
 
