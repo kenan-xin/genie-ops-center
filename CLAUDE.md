@@ -90,13 +90,15 @@ chore(beads): close sidebar categories issue
 One flow, always the same:
 
 1. Branch from `develop`.
-2. Merge the finished branch into `develop` with `--no-ff`, after the gates pass.
-3. Open the pull request from `develop` to `main`. `main` only ever receives
-   changes through a pull request.
-4. Delete the feature branch, locally and on the remote, once it is merged.
+2. Open a pull request from that branch into `develop`, after the gates pass.
+3. Delete the feature branch, locally and on the remote, once it is merged.
 
-Run `pnpm test`, `pnpm typecheck`, `pnpm lint`, and `pnpm build` on the MERGED
-result, not only on the branch. A green branch does not prove a green merge.
+To release to production, open a pull request from `develop` into `main` and
+squash merge it. `main` only ever receives changes through a pull request.
+
+Run `pnpm test`, `pnpm typecheck`, `pnpm lint`, and `pnpm build` before you open
+the pull request, and again on the merge result if the merge is not a fast
+forward. A green branch does not prove a green merge.
 
 ## Build & Test
 
