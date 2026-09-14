@@ -1,0 +1,383 @@
+<!doctype html>
+<!--
+  PROTOTYPE — throwaway. Not production code, not imported by anything.
+  Question: what should the Genie Ops Center invite / reset email look like?
+  Three structurally different layouts, switchable via the bottom bar (or arrow keys).
+  Second toggle swaps invite copy for reset copy.
+  Issue: genie-ops-center-uv9. Delete or move to a scratch branch once a variant wins.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Prototype — Genie Ops Center email layouts</title>
+    <style>
+      :root {
+        --brand: #2360c4;
+        --onbrand: #ffffff;
+        --ink: #14161b;
+        --ink2: #4a515c;
+        --ink3: #8b929c;
+        --panel: #f2f4f7;
+        --line: #c8cdd5;
+        --line2: #e2e5ea;
+        --bg: #fbfcfd;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 24px 16px 132px;
+        background: #e7eaee;
+        font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+        color: var(--ink);
+      }
+      header {
+        max-width: 720px;
+        margin: 0 auto 20px;
+      }
+      h1 {
+        font-size: 15px;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        color: var(--ink2);
+        margin: 0 0 4px;
+      }
+      .note {
+        font-size: 13px;
+        color: var(--ink3);
+        margin: 0;
+      }
+      .meta {
+        max-width: 720px;
+        margin: 0 auto 10px;
+        background: #fff;
+        border: 1px solid var(--line);
+        padding: 12px 14px;
+      }
+      .meta dl {
+        margin: 0;
+        display: grid;
+        grid-template-columns: 96px 1fr;
+        gap: 4px 12px;
+        font-size: 13px;
+      }
+      .meta dt {
+        color: var(--ink3);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-size: 11px;
+        align-self: center;
+      }
+      .meta dd {
+        margin: 0;
+        color: var(--ink);
+      }
+      .meta dd.subject {
+        font-weight: 600;
+      }
+      .stage {
+        max-width: 720px;
+        margin: 0 auto;
+        background: #fff;
+        border: 1px solid var(--line);
+      }
+      iframe {
+        display: block;
+        width: 100%;
+        height: 720px;
+        border: 0;
+      }
+      .bar {
+        position: fixed;
+        left: 50%;
+        bottom: 20px;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: stretch;
+        gap: 1px;
+        background: #10131a;
+        color: #fff;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        font-size: 13px;
+        z-index: 10;
+      }
+      .bar button {
+        appearance: none;
+        border: 0;
+        background: #10131a;
+        color: #fff;
+        font: inherit;
+        padding: 10px 14px;
+        cursor: pointer;
+      }
+      .bar button:hover {
+        background: #222735;
+      }
+      .bar .label {
+        padding: 10px 18px;
+        min-width: 230px;
+        text-align: center;
+        background: #191d27;
+        white-space: nowrap;
+      }
+      .bar .sep {
+        width: 1px;
+        background: #333a49;
+      }
+      .bar .mode button[aria-pressed="true"] {
+        background: var(--brand);
+      }
+      .bar .mode {
+        display: flex;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Prototype — invite &amp; reset email</h1>
+      <p class="note">
+        Arrow keys cycle layouts. The mode buttons swap invite copy for reset copy. Throwaway file,
+        not production code.
+      </p>
+    </header>
+
+    <div class="meta">
+      <dl>
+        <dt>Subject</dt>
+        <dd class="subject" id="meta-subject"></dd>
+        <dt>Preview</dt>
+        <dd id="meta-preview"></dd>
+      </dl>
+    </div>
+
+    <div class="stage"><iframe id="frame" title="Email preview"></iframe></div>
+
+    <div class="bar">
+      <button id="prev" aria-label="Previous layout">&#8592;</button>
+      <span class="label" id="label"></span>
+      <button id="next" aria-label="Next layout">&#8594;</button>
+      <span class="sep"></span>
+      <span class="mode">
+        <button data-mode="invite">Invite</button>
+        <button data-mode="reset">Reset</button>
+      </span>
+    </div>
+
+    <script>
+      const T = {
+        brand: "#2360c4",
+        onbrand: "#ffffff",
+        ink: "#14161b",
+        ink2: "#4a515c",
+        ink3: "#8b929c",
+        panel: "#f2f4f7",
+        line: "#c8cdd5",
+        line2: "#e2e5ea",
+        bg: "#fbfcfd",
+      };
+      const FONT =
+        "Archivo, 'Hanken Grotesk', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif";
+      const URL_INVITE =
+        "https://ops.genie.example.com/api/auth/reset-password/9f3c1a7e0b?callbackURL=https://ops.genie.example.com/set-password";
+      const URL_RESET =
+        "https://ops.genie.example.com/api/auth/reset-password/9f3c1a7e0b?callbackURL=https://ops.genie.example.com/reset-password";
+
+      const COPY = {
+        invite: {
+          subject: "Set your Genie Ops Center password",
+          preview: "Choose a password to finish setting up your account.",
+          heading: "Set your password",
+          body: "An administrator added you to Genie Ops Center. Choose a password to finish setting up your account.",
+          cta: "Set password",
+          footer: "If you did not expect this invitation, you can ignore this email.",
+          url: URL_INVITE,
+          reason: "Invited by an administrator",
+        },
+        reset: {
+          subject: "Reset your Genie Ops Center password",
+          preview: "Choose a new password for your account.",
+          heading: "Reset your password",
+          body: "You asked to reset your Genie Ops Center password. Choose a new one below.",
+          cta: "Reset password",
+          footer:
+            "If you did not ask for this, you can ignore this email. Your password stays the same.",
+          url: URL_RESET,
+          reason: "Requested from the sign-in screen",
+        },
+      };
+      const ACCOUNT = "dana.reyes@stengg.com";
+      const EXPIRY = "1 hour";
+
+      const preheader = (text) =>
+        `<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${text}</div>`;
+
+      const shell = (inner, ground) =>
+        `<!doctype html><html><head><meta charset="utf-8">` +
+        `<meta name="viewport" content="width=device-width,initial-scale=1">` +
+        `</head><body style="margin:0;padding:0;background:${ground};">` +
+        `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${ground};">` +
+        `<tr><td align="center" style="padding:32px 12px;">` +
+        `<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">` +
+        inner +
+        `</table></td></tr></table></body></html>`;
+
+      const button = (label, href, align) =>
+        `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="${align}">` +
+        `<tr><td bgcolor="${T.brand}" style="background:${T.brand};">` +
+        `<a href="${href}" style="display:inline-block;padding:13px 26px;font-family:${FONT};` +
+        `font-size:15px;font-weight:600;line-height:1;color:${T.onbrand};text-decoration:none;">${label}</a>` +
+        `</td></tr></table>`;
+
+      // ---- Variant A: centered card -------------------------------------------------
+      const variantA = (c) =>
+        shell(
+          `<tr><td style="background:${T.bg};border:1px solid ${T.line};padding:0;">` +
+            `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">` +
+            `<tr><td align="center" style="padding:26px 32px 20px;border-bottom:1px solid ${T.line2};">` +
+            `<span style="font-family:${FONT};font-size:13px;font-weight:700;letter-spacing:0.16em;` +
+            `text-transform:uppercase;color:${T.ink};">Genie Ops Center</span></td></tr>` +
+            `<tr><td align="center" style="padding:36px 40px 0;">` +
+            `<h1 style="margin:0;font-family:${FONT};font-size:26px;line-height:1.2;font-weight:700;color:${T.ink};">${c.heading}</h1>` +
+            `</td></tr>` +
+            `<tr><td align="center" style="padding:14px 48px 0;">` +
+            `<p style="margin:0;font-family:${FONT};font-size:15px;line-height:1.6;color:${T.ink2};">${c.body}</p>` +
+            `</td></tr>` +
+            `<tr><td align="center" style="padding:28px 40px 0;">${button(c.cta, c.url, "center")}</td></tr>` +
+            `<tr><td align="center" style="padding:18px 48px 0;">` +
+            `<p style="margin:0;font-family:${FONT};font-size:13px;line-height:1.5;color:${T.ink3};">This link expires in ${EXPIRY}.</p>` +
+            `</td></tr>` +
+            `<tr><td align="center" style="padding:26px 40px 36px;">` +
+            `<p style="margin:0 0 6px;font-family:${FONT};font-size:12px;color:${T.ink3};">Button not working? Paste this link into your browser:</p>` +
+            `<a href="${c.url}" style="font-family:${FONT};font-size:12px;line-height:1.5;color:${T.brand};word-break:break-all;">${c.url}</a>` +
+            `</td></tr></table></td></tr>` +
+            `<tr><td align="center" style="padding:18px 24px 0;">` +
+            `<p style="margin:0;font-family:${FONT};font-size:12px;line-height:1.5;color:${T.ink3};">${c.footer}</p>` +
+            `</td></tr>`,
+          T.panel,
+        );
+
+      // ---- Variant B: full-bleed banner ---------------------------------------------
+      const variantB = (c) =>
+        shell(
+          `<tr><td bgcolor="${T.brand}" style="background:${T.brand};padding:22px 32px;">` +
+            `<span style="font-family:${FONT};font-size:13px;font-weight:700;letter-spacing:0.16em;` +
+            `text-transform:uppercase;color:${T.onbrand};">Genie Ops Center</span></td></tr>` +
+            `<tr><td style="background:#ffffff;padding:40px 32px 8px;">` +
+            `<h1 style="margin:0;font-family:${FONT};font-size:30px;line-height:1.15;font-weight:700;color:${T.ink};">${c.heading}</h1>` +
+            `</td></tr>` +
+            `<tr><td style="background:#ffffff;padding:16px 32px 0;">` +
+            `<p style="margin:0;font-family:${FONT};font-size:16px;line-height:1.65;color:${T.ink2};">${c.body}</p>` +
+            `</td></tr>` +
+            `<tr><td style="background:#ffffff;padding:28px 32px 0;">${button(c.cta, c.url, "left")}</td></tr>` +
+            `<tr><td style="background:#ffffff;padding:20px 32px 0;">` +
+            `<p style="margin:0;font-family:${FONT};font-size:14px;line-height:1.6;color:${T.ink2};">` +
+            `The link expires in ${EXPIRY}. If the button does not work, paste this into your browser:</p>` +
+            `<p style="margin:8px 0 0;"><a href="${c.url}" style="font-family:${FONT};font-size:13px;line-height:1.5;color:${T.brand};word-break:break-all;">${c.url}</a></p>` +
+            `</td></tr>` +
+            `<tr><td style="background:#ffffff;padding:32px 32px 0;"><div style="height:1px;background:${T.line};line-height:1px;font-size:0;">&nbsp;</div></td></tr>` +
+            `<tr><td style="background:#ffffff;padding:16px 32px 34px;">` +
+            `<p style="margin:0;font-family:${FONT};font-size:12px;line-height:1.6;color:${T.ink3};">${c.footer}</p>` +
+            `</td></tr>`,
+          "#dfe3e9",
+        );
+
+      // ---- Variant C: two-column data block -----------------------------------------
+      const variantC = (c) =>
+        shell(
+            `<tr><td style="padding:0 0 16px;">` +
+              `<span style="font-family:${FONT};font-size:12px;font-weight:700;letter-spacing:0.18em;` +
+              `text-transform:uppercase;color:${T.ink2};">Genie Ops Center</span></td></tr>` +
+              `<tr><td style="background:#ffffff;border:1px solid ${T.line};padding:0;">` +
+              `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">` +
+              `<tr><td style="padding:30px 30px 0;">` +
+              `<h1 style="margin:0;font-family:${FONT};font-size:21px;line-height:1.25;font-weight:700;color:${T.ink};">${c.heading}</h1>` +
+              `<p style="margin:12px 0 0;font-family:${FONT};font-size:15px;line-height:1.6;color:${T.ink2};">${c.body}</p>` +
+              `</td></tr>` +
+              `<tr><td style="padding:24px 30px 0;">` +
+              `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${T.panel};border:1px solid ${T.line2};">` +
+              [
+                ["Account", ACCOUNT],
+                ["Reason", c.reason],
+                ["Link expires", `in ${EXPIRY}`],
+              ]
+                .map(
+                  ([k, v], i) =>
+                    `<tr>` +
+                    `<td width="132" style="padding:11px 14px;font-family:${FONT};font-size:11px;letter-spacing:0.08em;` +
+                    `text-transform:uppercase;color:${T.ink3};vertical-align:top;` +
+                    (i ? `border-top:1px solid ${T.line2};` : "") +
+                    `">${k}</td>` +
+                    `<td style="padding:11px 14px;font-family:${FONT};font-size:14px;color:${T.ink};` +
+                    (i ? `border-top:1px solid ${T.line2};` : "") +
+                    `">${v}</td></tr>`,
+                )
+                .join("") +
+              `</table></td></tr>` +
+              `<tr><td style="padding:24px 30px 0;">` +
+              `<p style="margin:0;font-family:${FONT};font-size:15px;line-height:1.6;color:${T.ink};">` +
+              `<a href="${c.url}" style="color:${T.brand};font-weight:600;text-decoration:underline;">${c.cta}</a>` +
+              `</p>` +
+              `<p style="margin:10px 0 0;"><a href="${c.url}" style="font-family:${FONT};font-size:12px;line-height:1.5;color:${T.ink3};word-break:break-all;text-decoration:none;">${c.url}</a></p>` +
+              `</td></tr>` +
+              `<tr><td style="padding:26px 30px 28px;">` +
+              `<div style="height:1px;background:${T.line2};line-height:1px;font-size:0;">&nbsp;</div>` +
+              `<p style="margin:14px 0 0;font-family:${FONT};font-size:12px;line-height:1.6;color:${T.ink3};">${c.footer}</p>` +
+              `</td></tr></table></td></tr>`,
+            T.bg,
+          );
+
+      const VARIANTS = [
+        { key: "A", name: "Centered card", render: variantA },
+        { key: "B", name: "Full-bleed banner", render: variantB },
+        { key: "C", name: "Two-column data block", render: variantC },
+      ];
+
+      let mode = "invite";
+
+      function indexFromHash() {
+        const m = /variant=([ABC])/i.exec(location.hash);
+        const key = m ? m[1].toUpperCase() : "A";
+        const i = VARIANTS.findIndex((v) => v.key === key);
+        return i < 0 ? 0 : i;
+      }
+
+      function draw() {
+        const i = indexFromHash();
+        const v = VARIANTS[i];
+        const c = COPY[mode];
+        document.getElementById("label").textContent = `${v.key} — ${v.name}`;
+        document.getElementById("meta-subject").textContent = c.subject;
+        document.getElementById("meta-preview").textContent = c.preview;
+        document.getElementById("frame").srcdoc = preheader(c.preview) + v.render(c);
+        for (const b of document.querySelectorAll(".mode button")) {
+          b.setAttribute("aria-pressed", String(b.dataset.mode === mode));
+        }
+      }
+
+      function step(delta) {
+        const i = (indexFromHash() + delta + VARIANTS.length) % VARIANTS.length;
+        location.hash = `variant=${VARIANTS[i].key}`;
+      }
+
+      document.getElementById("prev").addEventListener("click", () => step(-1));
+      document.getElementById("next").addEventListener("click", () => step(1));
+      for (const b of document.querySelectorAll(".mode button")) {
+        b.addEventListener("click", () => {
+          mode = b.dataset.mode;
+          draw();
+        });
+      }
+      window.addEventListener("hashchange", draw);
+      window.addEventListener("keydown", (e) => {
+        const t = e.target;
+        if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+        if (e.key === "ArrowLeft") step(-1);
+        if (e.key === "ArrowRight") step(1);
+      });
+
+      draw();
+    </script>
+  </body>
+</html>
