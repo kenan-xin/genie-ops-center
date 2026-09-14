@@ -96,6 +96,12 @@ describe("chat error feedback", () => {
 });
 
 describe("chat markdown controls", () => {
+  it("keeps vertical scrolling in the StickToBottom viewport", () => {
+    const html = render();
+
+    expect(html).not.toContain("relative min-h-0 flex-1 overflow-y-auto");
+  });
+
   it("disables Streamdown table controls while a response is streaming", () => {
     chat.status = "streaming";
     chat.messages.push({
