@@ -114,5 +114,25 @@ describe("chat markdown controls", () => {
 
     expect(html).toContain('data-streamdown="table-wrapper"');
     expect(html).toMatch(/<button[^>]*disabled=""[^>]*title="View fullscreen"/);
+    expect(html).not.toContain("max-height:300px");
+  });
+
+  it("routes Vega-Lite fences to the visualization renderer", () => {
+    chat.messages.push({
+      id: "answer",
+      role: "assistant",
+      parts: [
+        {
+          type: "text",
+          text: '```vega-lite\n{"data":{"values":[]},"mark":"line"}\n```',
+          state: "done",
+        },
+      ],
+    });
+
+    const html = render();
+
+    expect(html).toContain("<figure");
+    expect(html).not.toContain("language-vega-lite");
   });
 });
