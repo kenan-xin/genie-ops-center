@@ -9,7 +9,10 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/server/db";
 import { authTrustedProxies } from "@/server/config";
 import { user } from "@/server/db/schema";
-import { passwordStrengthPlugin } from "@/server/features/password";
+import {
+  PASSWORD_RESET_TOKEN_TTL_SECONDS,
+  passwordStrengthPlugin,
+} from "@/server/features/password";
 import { isResendConfigured, sendPasswordResetEmail } from "@/server/mailer";
 import * as schema from "@/server/db/schema";
 
@@ -97,7 +100,8 @@ export const auth = betterAuth({
     requireEmailVerification: false,
     autoSignIn: false, // invitees sign in only after activating via set-password
     revokeSessionsOnPasswordReset: true,
-    resetPasswordTokenExpiresIn: ONE_MINUTE * 60, // invite link valid for 1h
+    // Stated to the recipient in the invite/reset email (PASSWORD_RESET_TOKEN_TTL_LABEL).
+    resetPasswordTokenExpiresIn: PASSWORD_RESET_TOKEN_TTL_SECONDS,
     sendResetPassword: async ({ user: invitedUser, url }) => {
       // Delivery hook. Better Auth runs this via runInBackgroundOrAwait, which
       // swallows rejections (logs only) — so throwing here CANNOT fail the

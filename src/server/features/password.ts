@@ -10,6 +10,14 @@ import { passwordSchema, strength } from "@/lib/password-strength";
 // `@/server/features/password` import surface (auth plugin, bootstrap, etc.).
 export { passwordSchema, strength };
 
+/**
+ * Lifetime of a password reset / invite-activation token. Set on better-auth's
+ * `resetPasswordTokenExpiresIn` in `@/server/auth`, and stated to the recipient
+ * in the invite/reset email. Keep the two lines below in step.
+ */
+export const PASSWORD_RESET_TOKEN_TTL_SECONDS = 60 * 60;
+export const PASSWORD_RESET_TOKEN_TTL_LABEL = "1 hour";
+
 const PASSWORD_SETTING_PATHS = new Set([
   "/sign-up/email",
   "/change-password",
