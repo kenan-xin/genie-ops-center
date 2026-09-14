@@ -1,14 +1,17 @@
 import "server-only";
 
+import type { PasswordEmailVariant } from "@/server/emails/password-email";
+
+export type { PasswordEmailVariant };
+
 const RESEND_API_URL = "https://api.resend.com/emails";
 const DEFAULT_RESEND_FROM_EMAIL = "onboarding@resend.dev";
 
 type PasswordResetEmailArgs = {
   to: string;
   url: string;
+  variant: PasswordEmailVariant;
 };
-
-type PasswordResetEmailContentArgs = Pick<PasswordResetEmailArgs, "url">;
 
 function readEnv(value: string | undefined): string | undefined {
   const trimmed = value?.trim();
@@ -27,29 +30,24 @@ export function getResendFromEmail(env: NodeJS.ProcessEnv = process.env): string
   return readEnv(env.RESEND_FROM_EMAIL) ?? DEFAULT_RESEND_FROM_EMAIL;
 }
 
-export function buildPasswordResetEmail({ url }: PasswordResetEmailContentArgs): {
-  subject: string;
-  html: string;
-  text: string;
-} {
-  const subject = "Set or reset your Genie Workspace password";
-  const intro =
-    "Use the secure link below to set a new password and continue into Genie Workspace.";
-  return {
-    subject,
-    html: [
-      `<p>${intro}</p>`,
-      `<p><a href="${url}">Set your password</a></p>`,
-      `<p>If the button does not work, copy and paste this link into your browser:</p>`,
-      `<p><a href="${url}">${url}</a></p>`,
-      `<p>If you did not expect this email, you can safely ignore it.</p>`,
-    ].join(""),
-    text: `${intro}\n\n${url}\n\nIf you did not expect this email, you can safely ignore it.`,
-  };
+export async function buildPasswordResetEmail({
+  url,
+  variant,
+}: {
+  url: string;
+  variant: PasswordEmailVariant;
+}): Promise<{ subject: string; html: string; text: string }> {
+  // Loaded on demand, never at module scope. `@react-email/render` reaches
+  // `react-dom/server`, which resolves to a file that only throws under the
+  // `react-server` condition that `build:entrypoint` and `reset-admin` bundle
+  // with. Those two bundles reach this module through `@/server/auth` but never
+  // send email, so the import is never evaluated there.
+  const { renderPasswordEmail } = await import("@/server/emails/password-email");
+  return renderPasswordEmail({ url, variant });
 }
 
 export async function sendPasswordResetEmail(
-  { to, url }: PasswordResetEmailArgs,
+  { to, url, variant }: PasswordResetEmailArgs,
   env: NodeJS.ProcessEnv = process.env,
 ): Promise<void> {
   const apiKey = getResendApiKey(env);
@@ -57,7 +55,7 @@ export async function sendPasswordResetEmail(
     throw new Error("RESEND_API_KEY is required to send invite/reset emails via Resend.");
   }
 
-  const email = buildPasswordResetEmail({ url });
+  const email = await buildPasswordResetEmail({ url, variant });
   const response = await fetch(RESEND_API_URL, {
     method: "POST",
     headers: {

@@ -9,7 +9,10 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/server/db";
 import { authTrustedProxies } from "@/server/config";
 import { user } from "@/server/db/schema";
-import { passwordStrengthPlugin } from "@/server/features/password";
+import {
+  PASSWORD_RESET_TOKEN_TTL_SECONDS,
+  passwordStrengthPlugin,
+} from "@/server/features/password";
 import { isResendConfigured, sendPasswordResetEmail } from "@/server/mailer";
 import * as schema from "@/server/db/schema";
 
@@ -97,7 +100,8 @@ export const auth = betterAuth({
     requireEmailVerification: false,
     autoSignIn: false, // invitees sign in only after activating via set-password
     revokeSessionsOnPasswordReset: true,
-    resetPasswordTokenExpiresIn: ONE_MINUTE * 60, // invite link valid for 1h
+    // Stated to the recipient in the invite/reset email (PASSWORD_RESET_TOKEN_TTL_LABEL).
+    resetPasswordTokenExpiresIn: PASSWORD_RESET_TOKEN_TTL_SECONDS,
     sendResetPassword: async ({ user: invitedUser, url }) => {
       // Delivery hook. Better Auth runs this via runInBackgroundOrAwait, which
       // swallows rejections (logs only) — so throwing here CANNOT fail the
@@ -107,7 +111,22 @@ export const auth = betterAuth({
       // environment; otherwise never log the bearer URL in prod, but keep the
       // dev/test console fallback so the flow stays usable without a mailer.
       if (isResendConfigured()) {
-        await sendPasswordResetEmail({ to: invitedUser.email, url });
+        // Invite copy only for an account that has not been activated yet.
+        // Read from the stored status, never from the request: `redirectTo`
+        // reaches the public /api/auth reset endpoint, so anything derived from
+        // the URL would let a caller dress an ordinary reset up as an
+        // invitation. The hook's user object is typed without the additional
+        // fields, hence the lookup.
+        const [row] = await db
+          .select({ status: user.status })
+          .from(user)
+          .where(eq(user.id, invitedUser.id))
+          .limit(1);
+        await sendPasswordResetEmail({
+          to: invitedUser.email,
+          url,
+          variant: row?.status === "pending" ? "invite" : "reset",
+        });
         return;
       }
 
