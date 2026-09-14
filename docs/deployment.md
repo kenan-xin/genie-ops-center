@@ -54,7 +54,7 @@ Set these only when the described feature is needed.
 | Variable | Configure it when | Notes |
 | --- | --- | --- |
 | `RESEND_API_KEY` | Sending invitation or password-reset emails | Required with `RESEND_FROM_EMAIL` for real email delivery. Production admin actions reject absent email configuration; host `pnpm dev` logs links when it is empty. |
-| `RESEND_FROM_EMAIL` | Sending invitation or password-reset emails | Use a sender on a verified Resend domain for recipients beyond the account owner. |
+| `RESEND_FROM_EMAIL` | Sending invitation or password-reset emails | Must be an address on a domain verified in Resend, for example `noreply@agilgenie.ai`. The shared sender `onboarding@resend.dev` reaches only the Resend account owner and returns 403 for every other recipient. |
 | `ADMIN_EMAIL` | Bootstrapping the first administrator in an empty database | Has no effect after a user exists. |
 | `ADMIN_PASSWORD` | Bootstrapping the first administrator in an empty database | Strong temporary password. It sets `mustChangePassword`; remove it after the first successful login. |
 | `GENIE_CHAT_API_ALLOWED_ORIGINS` | Configuring chat solutions | Comma-separated HTTPS origins permitted for per-solution chat upstreams. Empty prevents chat solutions being saved or streamed. |
@@ -105,6 +105,18 @@ Coolify is one way to deploy this image; it is not a runtime dependency or repos
 7. For branch-based promotion, configure the development app for `develop` and the production app for `main`, then enable **Deploy on push (webhooks)** on both. A single GitHub repository webhook can serve both apps, but its secret must match the GitHub webhook secret saved on each app. Pushes to `develop` deploy development; merging `develop` into `main` deploys production.
 
 The [Resend test sender restriction](https://resend.com/docs/knowledge-base/403-error-resend-dev-domain) applies even with a valid API key. A configured API key is not proof of successful email delivery. Better Auth can log provider failures while the initiating request reports success. Verify invite/reset delivery with the intended sender before onboarding users; failure visibility is tracked in Beads (`genie-ops-center-xu6`).
+
+## Email delivery troubleshooting
+
+The application answers a reset request with the same success screen whether or not the address exists. This prevents account enumeration, but it also hides every delivery problem. Work through the steps below in order.
+
+1. Read the server log. The line `Reset Password: User not found` means that no row in the `user` table matches the submitted address.
+2. Open the Resend log at `https://resend.com/emails`. An empty log means that the application never called Resend.
+3. Check `RESEND_API_KEY`. When the key is absent, a development server logs the link to the console instead of sending it.
+4. Check `RESEND_FROM_EMAIL`. The sender must belong to a domain with status `verified` in Resend.
+5. Restart the server after any change to the environment. The application reads the environment once, at startup.
+
+Better Auth runs the delivery hook in the background and swallows the rejection, so a provider error never fails the request. The server log and the Resend log are the only two places where the real cause appears.
 
 ## Deploying on any platform
 

@@ -77,7 +77,7 @@ solutions without group grants; ordinary members receive access through groups.
 
 **`pnpm dev` and `pnpm db:migrate` do not bootstrap an admin.** Once the database is initialized, daily startup is `pnpm db:local`, `pnpm db:migrate` when new migrations exist, then `pnpm dev`. Changing Compose credentials does not change an existing PostgreSQL volume's credentials.
 
-For local invite/reset testing, leave `RESEND_API_KEY` empty to log links in the **development** server console, or configure Resend for real delivery. The bootstrap image runs in production mode and does not log reset links. Generate secret values in the shell and paste them into `.env`; `.env` does not execute `$(...)` shell commands.
+For local invite/reset testing, leave `RESEND_API_KEY` empty to log links in the **development** server console, or configure Resend for real delivery. Real delivery also needs `RESEND_FROM_EMAIL` on a domain verified in Resend, because the shared sender `onboarding@resend.dev` reaches only the Resend account owner. The bootstrap image runs in production mode and does not log reset links. Generate secret values in the shell and paste them into `.env`; `.env` does not execute `$(...)` shell commands.
 
 > **Tip — `next build` needs env present.** Server modules are evaluated during the build, so if you run `pnpm build` locally, set the same env (a throwaway `DATABASE_URL` + `BETTER_AUTH_SECRET` is fine — secrets aren't baked; the standalone server reads `process.env` at runtime).
 
