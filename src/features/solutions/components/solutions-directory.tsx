@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/components/ui/confirm";
 import { EmptyState } from "@/components/ui/empty-state";
+import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { SegmentedControl } from "@/components/ui/segmented";
@@ -376,38 +377,6 @@ function SolutionRow({ solution, onEdit }: { solution: Solution; onEdit: () => v
         </div>
       </TableCell>
     </TableRow>
-  );
-}
-
-function IconButton({
-  label,
-  onClick,
-  disabled,
-  tone = "default",
-  children,
-}: {
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-  tone?: "default" | "brand" | "error";
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      title={label}
-      aria-label={label}
-      onClick={onClick}
-      disabled={disabled}
-      className={cn(
-        "flex size-[30px] shrink-0 items-center justify-center border border-[var(--line)] bg-transparent outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
-        tone === "brand" && "text-[var(--brandink)] hover:bg-[var(--brandtint)]",
-        tone === "error" && "text-[var(--error)] hover:bg-[var(--errortint)]",
-        tone === "default" && "text-[var(--ink2)] hover:bg-[var(--panel)]",
-      )}
-    >
-      {children}
-    </button>
   );
 }
 

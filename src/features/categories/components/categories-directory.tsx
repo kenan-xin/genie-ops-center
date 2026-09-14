@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -307,31 +308,22 @@ export function CategoriesDirectory() {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap items-center justify-end gap-1.5">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title={`Rename ${category.name}`}
-                          aria-label={`Rename ${category.name}`}
+                        <IconButton
+                          label={`Rename ${category.name}`}
                           onClick={() => setRenaming({ id: category.id, name: category.name })}
                           disabled={renaming !== null}
                         >
                           <PencilIcon />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title={`Move ${category.name} up`}
-                          aria-label={`Move ${category.name} up`}
+                        </IconButton>
+                        <IconButton
+                          label={`Move ${category.name} up`}
                           onClick={() => void handleMove(index, -1)}
                           disabled={index === 0 || reorder.isPending || renaming !== null}
                         >
                           <ChevronUpIcon />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title={`Move ${category.name} down`}
-                          aria-label={`Move ${category.name} down`}
+                        </IconButton>
+                        <IconButton
+                          label={`Move ${category.name} down`}
                           onClick={() => void handleMove(index, 1)}
                           disabled={
                             index === categories.length - 1 ||
@@ -340,17 +332,15 @@ export function CategoriesDirectory() {
                           }
                         >
                           <ChevronDownIcon />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          title={`Delete ${category.name}`}
-                          aria-label={`Delete ${category.name}`}
+                        </IconButton>
+                        <IconButton
+                          label={`Delete ${category.name}`}
+                          tone="error"
                           onClick={() => setConfirmingId(category.id)}
                           disabled={renaming !== null}
                         >
                           <TrashIcon />
-                        </Button>
+                        </IconButton>
                       </div>
                     </TableCell>
                   </TableRow>
