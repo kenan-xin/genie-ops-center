@@ -89,7 +89,7 @@ export function PasswordEmail({ url, variant }: { url: string; variant: Password
       <Preview>{copy.preview}</Preview>
       <Body style={{ margin: 0, padding: 0, backgroundColor: COLOR.ground }}>
         <Container
-          style={{ width: "600px", maxWidth: "600px", margin: "0 auto", padding: "32px 12px" }}
+          style={{ width: "100%", maxWidth: "600px", margin: "0 auto", padding: "32px 12px" }}
         >
           <Section style={{ backgroundColor: COLOR.brand, padding: "22px 32px" }}>
             <Text style={wordmark}>{PRODUCT}</Text>
