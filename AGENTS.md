@@ -263,11 +263,14 @@ One flow, always the same:
 
 1. Branch from `develop`.
 2. Open a pull request from that branch into `develop`, after the gates pass.
-3. Keep the issue `in_progress` while the pull request waits for review.
+3. Move the issue to review: `bd update <id> --status=inreview`.
 4. Close the issue after the pull request merges: `bd close <id>`.
 5. Delete the feature branch, locally and on the remote, once it is merged.
 
-Use only the built-in beads statuses. Do not add custom ones.
+`inreview` is a custom status, registered once with
+`bd config set status.custom inreview`. The spelling must stay `inreview`,
+because that is the value the beads web board reads for its In Review lane.
+The setting lives in the beads database, so `bd dolt push` shares it.
 
 To release to production, open a pull request from `develop` into `main` and
 squash merge it. `main` only ever receives changes through a pull request.
