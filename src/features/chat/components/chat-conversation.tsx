@@ -175,7 +175,7 @@ export function ChatConversation({
                     ) : null}
                     {text ? (
                       <MessageContent from="assistant">
-                        <Response>{text}</Response>
+                        <Response isAnimating={isBusy}>{text}</Response>
                       </MessageContent>
                     ) : null}
                     {interrupted ? (

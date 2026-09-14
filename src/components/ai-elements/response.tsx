@@ -21,21 +21,18 @@ export type ResponseProps = Omit<StreamdownProps, "allowedTags" | "urlTransform"
  * explicit hardening boundary (response-hardening.ts); never widen these to
  * allow raw `style` or extra protocols.
  */
-export const Response = memo(
-  ({ className, children, ...props }: ResponseProps) => (
-    <Streamdown
-      allowedTags={CHAT_ALLOWED_TAGS}
-      className={cn(
-        "size-full text-body leading-relaxed [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
-        className,
-      )}
-      urlTransform={chatUrlTransform}
-      {...props}
-    >
-      {mapColorSpansToTone(children)}
-    </Streamdown>
-  ),
-  (prevProps, nextProps) => prevProps.children === nextProps.children,
-);
+export const Response = memo(({ className, children, ...props }: ResponseProps) => (
+  <Streamdown
+    allowedTags={CHAT_ALLOWED_TAGS}
+    className={cn(
+      "size-full text-body leading-relaxed [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
+      className,
+    )}
+    urlTransform={chatUrlTransform}
+    {...props}
+  >
+    {mapColorSpansToTone(children)}
+  </Streamdown>
+));
 
 Response.displayName = "Response";

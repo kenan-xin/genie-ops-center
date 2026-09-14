@@ -2,6 +2,11 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Streamdown renders its table and fullscreen UI with utility classes from
+   its compiled package. Tailwind v4 only emits those classes when the package
+   is an explicit source; this path is relative to this stylesheet. */
+@source "../../node_modules/streamdown/dist/*.js";
+
 /* Tailwind `dark:` variant follows Ledger's [data-theme="dark"] (set by next-themes). */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 

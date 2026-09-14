@@ -94,3 +94,25 @@ describe("chat error feedback", () => {
     expect(html).toContain("We couldn’t start a new chat. Your messages are still here.");
   });
 });
+
+describe("chat markdown controls", () => {
+  it("disables Streamdown table controls while a response is streaming", () => {
+    chat.status = "streaming";
+    chat.messages.push({
+      id: "answer",
+      role: "assistant",
+      parts: [
+        {
+          type: "text",
+          text: "| Metric | Value |\n| --- | --- |\n| Sales | 100 |",
+          state: "streaming",
+        },
+      ],
+    });
+
+    const html = render();
+
+    expect(html).toContain('data-streamdown="table-wrapper"');
+    expect(html).toMatch(/<button[^>]*disabled=""[^>]*title="View fullscreen"/);
+  });
+});
