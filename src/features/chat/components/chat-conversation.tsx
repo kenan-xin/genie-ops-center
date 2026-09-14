@@ -164,7 +164,7 @@ export function ChatConversation({
                     accentColorInvert={accentColorInvert}
                     monogram={botMonogram}
                   />
-                  <div className="flex min-w-0 max-w-[80%] flex-col gap-2">
+                  <div className="flex w-full min-w-0 max-w-[80%] flex-col gap-2">
                     {reasoningPart ? (
                       <Reasoning isStreaming={isBusy && reasoningPart.state === "streaming"}>
                         <ReasoningTrigger>
@@ -174,8 +174,8 @@ export function ChatConversation({
                       </Reasoning>
                     ) : null}
                     {text ? (
-                      <MessageContent from="assistant">
-                        <Response>{text}</Response>
+                      <MessageContent className="w-full max-w-none" from="assistant">
+                        <Response isAnimating={isBusy}>{text}</Response>
                       </MessageContent>
                     ) : null}
                     {interrupted ? (
