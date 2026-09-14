@@ -22,43 +22,62 @@ See **[`docs/`](./docs/README.md)** for the full design: [what & why](./docs/epi
 - **Docker** + Docker Compose (to run the local database and the fresh-deploy smoke test)
 - A **PostgreSQL** connection — either the local Docker DB (default, zero setup) or an external one (see [External DB](#connecting-an-external-database))
 
-## Developing after cloning
+## Quick start
+
+The [`setup-local.sh`](./scripts/setup-local.sh) wizard checks Node, pnpm,
+Docker, the local environment, installed dependencies, the PostgreSQL
+container, migration history, and existing users. Existing environment values
+are kept when you press Enter. See [`.env.example`](./.env.example) for the full
+environment contract.
 
 ```bash
-# 1. Activate pnpm, clone and install (also installs the pre-commit hook)
+# Clone, enter the repository, then run the wizard
 corepack enable
 git clone git@github.com:kenan-xin/genie-ops-center.git
 cd genie-ops-center
-pnpm install --frozen-lockfile
-
-# 2. Copy the env template
-cp .env.example .env
-openssl rand -base64 32
-# Paste the generated value into BETTER_AUTH_SECRET in .env.
-# Set ADMIN_EMAIL and a strong ADMIN_PASSWORD for the first admin.
-# The template documents every runtime and Docker Compose variable.
-
-# 3. Start the local database and wait until it is ready
-# Uses a persistent named volume; requires host port 5432 to be free.
-docker compose -f docker-compose.local.yml up -d --wait
-
-# 4. First initialization: use the optional bootstrap service. It uses the app
-# image's migration/bootstrap entrypoint and reaches the DB as "db" internally.
-docker compose -f docker-compose.local.yml --profile bootstrap up --build --wait
-
-# 5. Stop and remove only the bootstrap app, keeping the initialized local DB.
-docker compose -f docker-compose.local.yml stop bootstrap
-docker compose -f docker-compose.local.yml rm -f bootstrap
-
-# 6. Run Next on the host with hot reload, using .env's localhost DB URL.
-pnpm dev    # http://localhost:3000
+./scripts/setup-local.sh
+pnpm dev
 ```
 
-The initial container run seeds one admin only when the `user` table is empty and both bootstrap variables are supplied. Sign in at `/admin/login` and change the temporary password. Clear `ADMIN_PASSWORD` from `.env` after seeding. Removing the bootstrap app above also removes its saved container environment. Administrators can open workspace solutions without group grants; ordinary members receive access through groups.
+The wizard offers:
 
-**`pnpm dev` and `pnpm db:migrate` do not bootstrap an admin.** Once the database is initialized, daily startup is `pnpm db:local`, `pnpm db:migrate` when new migrations exist, then `pnpm dev`. If you change the local DB credentials, update both `.env`'s host URL and the container URL above. Changing Compose credentials does not change an existing PostgreSQL volume's credentials.
+1. **Set up a new clone:** install dependencies, create or review `.env`, start
+   PostgreSQL, apply migrations, and seed the first administrator when the
+   database is empty.
+2. **Apply migrations:** start PostgreSQL when needed, compare the checkout with
+   the migration journal, apply pending migrations, and report user/admin counts.
+3. **Reset:** require `RESET`, delete the local database volume, then run fresh
+   setup. This permanently removes local users, solutions, groups, and chats.
 
-For local invite/reset testing, leave `RESEND_API_KEY` empty to log links in the **development** server console, or configure Resend for real delivery. The bootstrap image runs in production mode and does not log reset links. Generate secret values in the shell and paste them into `.env`; `.env` does not execute `$(...)` shell commands.
+Reference files: [`.env.example`](./.env.example) documents every setting,
+[`docker-compose.local.yml`](./docker-compose.local.yml) defines local
+PostgreSQL, and [`docs/deployment.md`](./docs/deployment.md) covers container
+deployment. The wizard handles local Docker only and refuses a non-local
+`DATABASE_URL`.
+
+To run the core setup manually:
+
+```bash
+pnpm install --frozen-lockfile
+cp .env.example .env             # fill BETTER_AUTH_SECRET
+pnpm db:local                    # start PostgreSQL
+pnpm db:migrate                  # safe to repeat; applies pending migrations
+pnpm dev                         # http://localhost:3000
+```
+
+Manual setup does not seed an administrator. Use the wizard for the first
+bootstrap, or follow the full container procedure in the
+[deployment guide](./docs/deployment.md).
+
+The initial bootstrap seeds one administrator only when the `user` table is
+empty. Sign in at `/admin/login` and change the temporary password. The wizard
+passes bootstrap credentials directly to the one-time container and does not
+save the temporary password in `.env`. Administrators can open workspace
+solutions without group grants; ordinary members receive access through groups.
+
+**`pnpm dev` and `pnpm db:migrate` do not bootstrap an admin.** Once the database is initialized, daily startup is `pnpm db:local`, `pnpm db:migrate` when new migrations exist, then `pnpm dev`. Changing Compose credentials does not change an existing PostgreSQL volume's credentials.
+
+For local invite/reset testing, leave `RESEND_API_KEY` empty to log links in the **development** server console, or configure Resend for real delivery. Real delivery also needs `RESEND_FROM_EMAIL` on a domain verified in Resend, because the shared sender `onboarding@resend.dev` reaches only the Resend account owner. The bootstrap image runs in production mode and does not log reset links. Generate secret values in the shell and paste them into `.env`; `.env` does not execute `$(...)` shell commands.
 
 > **Tip — `next build` needs env present.** Server modules are evaluated during the build, so if you run `pnpm build` locally, set the same env (a throwaway `DATABASE_URL` + `BETTER_AUTH_SECRET` is fine — secrets aren't baked; the standalone server reads `process.env` at runtime).
 
@@ -66,6 +85,7 @@ For local invite/reset testing, leave `RESEND_API_KEY` empty to log links in the
 
 | Command                         | Does                                                            |
 | ------------------------------- | --------------------------------------------------------------- |
+| `pnpm setup:local`              | Open the local setup, migration, and reset wizard               |
 | `pnpm dev`                      | Next dev server (http://localhost:3000)                         |
 | `pnpm typecheck` / `lint` / `format` | `tsc --noEmit` / oxlint / oxfmt                             |
 | `pnpm db:migrate`               | Apply new migrations to the dev DB                              |
@@ -150,6 +170,7 @@ This uses [`docker-compose.smoke.yml`](./docker-compose.smoke.yml) — an **all-
 
 | Script                                                         | Does                                                            |
 | -------------------------------------------------------------- | --------------------------------------------------------------- |
+| `pnpm setup:local`                                             | Interactive local setup, migration, and reset wizard            |
 | `pnpm dev`                                                     | Next dev server (http://localhost:3000)                         |
 | `pnpm build` / `start`                                         | Next build / `next start` (does not run container startup steps)               |
 | `pnpm build:entrypoint`                                        | Bundle the container entrypoint (migrate+bootstrap) via esbuild |

@@ -41,7 +41,7 @@ services:
       PORT: ${PORT:-3000}
       AUTH_TRUSTED_PROXIES: ${AUTH_TRUSTED_PROXIES:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
-      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-onboarding@resend.dev}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-noreply@agilgenie.ai}
       # First-admin bootstrap. Seeded only on a fresh (empty-user) DB; clear after.
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
