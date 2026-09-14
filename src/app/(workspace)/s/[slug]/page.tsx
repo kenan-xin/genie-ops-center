@@ -50,11 +50,12 @@ export default async function SolutionViewerPage({
   caller.solutionsHub.recordRecent({ solutionId: surface.solution.id }).catch(() => {});
 
   const { solution: s } = surface;
+  const surfaceOwnsScrolling = surface.kind === "chat-slot" || surface.kind === "embedded";
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", minHeight: 0 }}>
       <ViewerToolbar name={s.name} type={s.type} />
-      <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+      <div style={{ flex: 1, minHeight: 0, overflow: surfaceOwnsScrolling ? "hidden" : "auto" }}>
         {surface.kind === "status-notice" ? (
           <StatusNotice status={surface.status} name={s.name} />
         ) : surface.kind === "embedded" ? (
