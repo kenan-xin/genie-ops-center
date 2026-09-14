@@ -135,6 +135,7 @@ function EditSolutionForm({
         ) ?? "",
       );
       toast({ tone: "success", description: "Solution saved." });
+      onOpenChange(false);
     } catch (e) {
       setError("root", {
         message: e instanceof Error ? e.message : "Couldn't save these changes.",
