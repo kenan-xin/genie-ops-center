@@ -111,7 +111,22 @@ export const auth = betterAuth({
       // environment; otherwise never log the bearer URL in prod, but keep the
       // dev/test console fallback so the flow stays usable without a mailer.
       if (isResendConfigured()) {
-        await sendPasswordResetEmail({ to: invitedUser.email, url });
+        // Invite copy only for an account that has not been activated yet.
+        // Read from the stored status, never from the request: `redirectTo`
+        // reaches the public /api/auth reset endpoint, so anything derived from
+        // the URL would let a caller dress an ordinary reset up as an
+        // invitation. The hook's user object is typed without the additional
+        // fields, hence the lookup.
+        const [row] = await db
+          .select({ status: user.status })
+          .from(user)
+          .where(eq(user.id, invitedUser.id))
+          .limit(1);
+        await sendPasswordResetEmail({
+          to: invitedUser.email,
+          url,
+          variant: row?.status === "pending" ? "invite" : "reset",
+        });
         return;
       }
 

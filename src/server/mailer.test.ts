@@ -6,7 +6,6 @@ import {
   buildPasswordResetEmail,
   getResendFromEmail,
   isResendConfigured,
-  resolvePasswordEmailVariant,
   sendPasswordResetEmail,
 } from "./mailer";
 
@@ -35,22 +34,6 @@ describe("mailer", () => {
     expect(getResendFromEmail(env({}))).toBe("onboarding@resend.dev");
     expect(getResendFromEmail(env({ RESEND_FROM_EMAIL: "team@example.com" }))).toBe(
       "team@example.com",
-    );
-  });
-
-  it("reads the message variant off the callbackURL", () => {
-    expect(resolvePasswordEmailVariant(resetUrl("/set-password"))).toBe("invite");
-    expect(resolvePasswordEmailVariant(resetUrl("/set-password/"))).toBe("invite");
-    expect(resolvePasswordEmailVariant(resetUrl("/reset-password"))).toBe("reset");
-  });
-
-  it("falls back to the reset variant when the callbackURL is missing or unusable", () => {
-    expect(resolvePasswordEmailVariant("http://localhost:3000/api/auth/reset-password/tok")).toBe(
-      "reset",
-    );
-    expect(resolvePasswordEmailVariant("not a url")).toBe("reset");
-    expect(resolvePasswordEmailVariant("http://localhost:3000/x?callbackURL=/elsewhere")).toBe(
-      "reset",
     );
   });
 
@@ -85,7 +68,7 @@ describe("mailer", () => {
 
     const url = resetUrl("/reset-password");
     await sendPasswordResetEmail(
-      { to: "person@example.com", url },
+      { to: "person@example.com", url, variant: "reset" },
       env({ RESEND_API_KEY: "re_test", RESEND_FROM_EMAIL: "onboarding@resend.dev" }),
     );
 
@@ -112,7 +95,11 @@ describe("mailer", () => {
 
     await expect(
       sendPasswordResetEmail(
-        { to: "person@example.com", url: "http://localhost:3000/reset?token=test" },
+        {
+          to: "person@example.com",
+          url: "http://localhost:3000/reset?token=test",
+          variant: "reset",
+        },
         env({ RESEND_API_KEY: "re_test" }),
       ),
     ).rejects.toThrow("Resend rejected invite/reset email");
