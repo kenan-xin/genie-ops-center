@@ -1,0 +1,498 @@
+<!doctype html>
+<!--
+  THROWAWAY PROTOTYPE - not shipped, not imported by the app.
+  Question: what does the row-action icon button hover look like?
+
+  Four variants of the hover treatment, switchable via ?variant= , rendered in a
+  real table row so the row hover collision is visible. Token values are copied
+  verbatim from src/app/globals.css. Markup mirrors the action lane in
+  src/features/solutions/components/solutions-directory.tsx.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Icon button hover - prototype</title>
+    <style>
+      :root {
+        --ink: #14161b;
+        --ink2: #4a515c;
+        --ink3: #8b929c;
+        --bg: #fbfcfd;
+        --surface: #ffffff;
+        --panel: #f2f4f7;
+        --line: #c8cdd5;
+        --line2: #e2e5ea;
+        --brandink: #2360c4;
+        --brandtint: #eef4fc;
+        --error: #d94032;
+        --errortint: #fbeae8;
+        /* Prototype-only: the darker fill step the "fill" variants need. */
+        --brandtint-strong: #dce9fa;
+        --errortint-strong: #f6d6d2;
+      }
+
+      [data-theme="dark"] {
+        --ink: #eef1f4;
+        --ink2: #9aa3b0;
+        --ink3: #6b7585;
+        --bg: #13171e;
+        --surface: #181d25;
+        --panel: #1d242e;
+        --line: #313a46;
+        --line2: #262e38;
+        --brandink: #7fb2f0;
+        --brandtint: #1c2738;
+        --error: #e06a5e;
+        --errortint: #2a1714;
+        --brandtint-strong: #24344a;
+        --errortint-strong: #3a1f1a;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 40px 24px 120px;
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          "Hanken Grotesk",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        font-size: 14px;
+      }
+
+      .wrap {
+        max-width: 860px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        margin: 0 0 4px;
+      }
+
+      .sub {
+        color: var(--ink2);
+        margin: 0 0 4px;
+      }
+
+      .note {
+        color: var(--ink3);
+        font-size: 13px;
+        margin: 0 0 28px;
+      }
+
+      .verdict {
+        border: 1px solid var(--line);
+        border-left: none;
+        background: var(--surface);
+        padding: 14px 16px;
+        margin: 0 0 24px;
+        font-size: 13px;
+        line-height: 1.55;
+        color: var(--ink2);
+      }
+
+      .verdict b {
+        color: var(--ink);
+      }
+
+      .scroll {
+        border: 1px solid var(--line);
+        background: var(--surface);
+        overflow-x: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+      }
+
+      th {
+        border-bottom: 1px solid var(--line);
+        background: var(--panel);
+        padding: 12px 16px;
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: var(--ink2);
+      }
+
+      tbody tr {
+        border-bottom: 1px solid var(--line2);
+        transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      tbody tr:last-child {
+        border-bottom: 0;
+      }
+
+      /* The collision: the row is ALREADY --panel by the time you reach a button. */
+      tbody tr:hover {
+        background: var(--panel);
+      }
+
+      td {
+        padding: 16px;
+        vertical-align: middle;
+      }
+
+      .name {
+        font-weight: 600;
+      }
+
+      .type {
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 12px;
+        letter-spacing: 0.06em;
+        color: var(--ink2);
+      }
+
+      .lane {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 6px;
+      }
+
+      /* ---- icon button: shared base (matches src/components/ui/icon-button.tsx) ---- */
+      .ib {
+        display: flex;
+        width: 30px;
+        height: 30px;
+        flex-shrink: 0;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--line);
+        background: transparent;
+        color: var(--ink2);
+        cursor: pointer;
+        outline: none;
+        transition:
+          background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+          border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+          color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .ib:focus-visible {
+        box-shadow: 0 0 0 2px var(--brandink);
+      }
+
+      .ib.brand {
+        color: var(--brandink);
+      }
+
+      .ib.error {
+        color: var(--error);
+      }
+
+      .ib:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+      }
+
+      /* ---- variant: current (the bug) ---- */
+      [data-variant="current"] .ib:not(:disabled):hover {
+        background: var(--panel);
+      }
+      [data-variant="current"] .ib.brand:not(:disabled):hover {
+        background: var(--brandtint);
+      }
+      [data-variant="current"] .ib.error:not(:disabled):hover {
+        background: var(--errortint);
+      }
+
+      /* ---- variant: border (shipped) ---- */
+      [data-variant="border"] .ib:not(:disabled):hover {
+        border-color: var(--ink);
+        color: var(--ink);
+      }
+      [data-variant="border"] .ib.brand:not(:disabled):hover {
+        border-color: var(--brandink);
+        color: var(--brandink);
+      }
+      [data-variant="border"] .ib.error:not(:disabled):hover {
+        border-color: var(--error);
+        color: var(--error);
+      }
+
+      /* ---- variant: fill (darker fill step) ---- */
+      [data-variant="fill"] .ib:not(:disabled):hover {
+        background: var(--line2);
+      }
+      [data-variant="fill"] .ib.brand:not(:disabled):hover {
+        background: var(--brandtint-strong);
+      }
+      [data-variant="fill"] .ib.error:not(:disabled):hover {
+        background: var(--errortint-strong);
+      }
+
+      /* ---- variant: both ---- */
+      [data-variant="both"] .ib:not(:disabled):hover {
+        border-color: var(--ink);
+        color: var(--ink);
+        background: var(--line2);
+      }
+      [data-variant="both"] .ib.brand:not(:disabled):hover {
+        border-color: var(--brandink);
+        color: var(--brandink);
+        background: var(--brandtint);
+      }
+      [data-variant="both"] .ib.error:not(:disabled):hover {
+        border-color: var(--error);
+        color: var(--error);
+        background: var(--errortint);
+      }
+
+      /* ---- state readout ---- */
+      .state {
+        margin-top: 20px;
+        border: 1px solid var(--line);
+        background: var(--surface);
+        padding: 14px 16px;
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 12px;
+        line-height: 1.7;
+        color: var(--ink2);
+        white-space: pre;
+        overflow-x: auto;
+      }
+
+      /* ---- floating switcher ---- */
+      .bar {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        background: #14161b;
+        color: #fff;
+        padding: 6px;
+        box-shadow: 0 6px 24px rgba(8, 10, 14, 0.35);
+        z-index: 50;
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 12px;
+      }
+
+      .bar button {
+        background: transparent;
+        border: 1px solid #3a4454;
+        color: #fff;
+        height: 28px;
+        min-width: 28px;
+        padding: 0 8px;
+        cursor: pointer;
+        font: inherit;
+      }
+
+      .bar button:hover {
+        background: #262e38;
+      }
+
+      .bar .label {
+        padding: 0 12px;
+        min-width: 260px;
+        text-align: center;
+        letter-spacing: 0.04em;
+      }
+
+      .bar .tag {
+        background: #2360c4;
+        padding: 2px 6px;
+        margin-left: 8px;
+        font-size: 10px;
+        letter-spacing: 0.08em;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <h1>Row-action icon button hover</h1>
+      <p class="sub">Hover a row, then hover the four buttons in the ACTIONS lane.</p>
+      <p class="note">
+        Throwaway prototype. Token values copied from src/app/globals.css. Use the arrow keys or the
+        bar at the bottom to switch variant.
+      </p>
+
+      <div class="verdict" id="verdict"></div>
+
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Solution</th>
+              <th>Type</th>
+              <th style="text-align: right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+
+      <div class="state" id="state"></div>
+    </div>
+
+    <div class="bar">
+      <button type="button" id="prev" aria-label="Previous variant">&#8592;</button>
+      <span class="label" id="label"></span>
+      <button type="button" id="next" aria-label="Next variant">&#8594;</button>
+      <button type="button" id="theme">dark</button>
+    </div>
+
+    <script>
+      const ICON = {
+        gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+        duplicate:
+          '<rect x="9" y="9" width="12" height="12" rx="0"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>',
+        archive:
+          '<rect x="3" y="4" width="18" height="4"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8"/><path d="M10 12h4"/>',
+        trash:
+          '<path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6"/>',
+      };
+
+      const VARIANTS = [
+        {
+          key: "current",
+          name: "Current - fill shift",
+          tag: "THE BUG",
+          verdict:
+            "<b>The bug.</b> The button hovers to --panel (#f2f4f7). The row under it is already --panel, because you cannot reach the button without hovering the row. Net change: zero. The brand and error tints (#eef4fc, #fbeae8) sit ~1% from --panel, so they read as dead too.",
+          readout: [
+            "default  bg transparent -> #f2f4f7   row is #f2f4f7   delta NONE",
+            "brand    bg transparent -> #eef4fc   row is #f2f4f7   delta ~1%",
+            "error    bg transparent -> #fbeae8   row is #f2f4f7   delta ~1%",
+          ],
+        },
+        {
+          key: "border",
+          name: "Border + ink shift",
+          tag: "SHIPPED",
+          verdict:
+            "<b>What I shipped.</b> The hairline border and the ink carry the state, the fill never moves. Border contrast does not depend on what the row is painted, so it reads the same on a white row and a hovered row. Matches the Ledger idiom, where hairlines define everything.",
+          readout: [
+            "default  border #c8cdd5 -> #14161b   icon #4a515c -> #14161b",
+            "brand    border #c8cdd5 -> #2360c4   icon #2360c4 (held)",
+            "error    border #c8cdd5 -> #d94032   icon #d94032 (held)",
+          ],
+        },
+        {
+          key: "fill",
+          name: "Darker fill step",
+          tag: "ALT",
+          verdict:
+            "<b>Alternative.</b> The fill steps one level past the row instead of matching it. Visible, but it needs two tint values the design package does not define today, and on a white row the grey block is heavier than the hairline idiom wants.",
+          readout: [
+            "default  bg transparent -> #e2e5ea (--line2)",
+            "brand    bg transparent -> #dce9fa (NEW token)",
+            "error    bg transparent -> #f6d6d2 (NEW token)",
+          ],
+        },
+        {
+          key: "both",
+          name: "Border + ink + fill",
+          tag: "ALT",
+          verdict:
+            "<b>Alternative.</b> Unmistakable, but four adjacent buttons each with a dark border and a fill make the action lane shout louder than the row content it acts on.",
+          readout: [
+            "default  border -> #14161b  icon -> #14161b  bg -> #e2e5ea",
+            "brand    border -> #2360c4  icon held        bg -> #eef4fc",
+            "error    border -> #d94032  icon held        bg -> #fbeae8",
+          ],
+        },
+      ];
+
+      const ROWS = [
+        { name: "Loan Review", type: "EMBED" },
+        { name: "Claims Assistant", type: "CHAT" },
+        { name: "Policy Lookup", type: "CHAT" },
+      ];
+
+      function svg(path) {
+        return (
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+          'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+          path +
+          "</svg>"
+        );
+      }
+
+      document.getElementById("rows").innerHTML = ROWS.map(
+        (r) =>
+          '<tr><td class="name">' +
+          r.name +
+          '</td><td class="type">' +
+          r.type +
+          '</td><td><div class="lane">' +
+          '<button class="ib brand" title="Configure">' +
+          svg(ICON.gear) +
+          "</button>" +
+          '<button class="ib" title="Duplicate">' +
+          svg(ICON.duplicate) +
+          "</button>" +
+          '<button class="ib" title="Archive">' +
+          svg(ICON.archive) +
+          "</button>" +
+          '<button class="ib error" title="Delete">' +
+          svg(ICON.trash) +
+          "</button>" +
+          "</div></td></tr>",
+      ).join("");
+
+      let index = Math.max(
+        0,
+        VARIANTS.findIndex((v) => v.key === new URLSearchParams(location.search).get("variant")),
+      );
+
+      function render() {
+        const v = VARIANTS[index];
+        document.body.dataset.variant = v.key;
+        document.getElementById("label").innerHTML =
+          v.name + '<span class="tag">' + v.tag + "</span>";
+        document.getElementById("verdict").innerHTML = v.verdict;
+        document.getElementById("state").textContent =
+          "variant   " +
+          v.key +
+          "\nrow hover #f2f4f7 (--panel)\n\n" +
+          v.readout.join("\n");
+        const url = new URL(location.href);
+        url.searchParams.set("variant", v.key);
+        history.replaceState(null, "", url);
+      }
+
+      function step(delta) {
+        index = (index + delta + VARIANTS.length) % VARIANTS.length;
+        render();
+      }
+
+      document.getElementById("prev").onclick = () => step(-1);
+      document.getElementById("next").onclick = () => step(1);
+      document.getElementById("theme").onclick = (e) => {
+        const dark = document.documentElement.dataset.theme === "dark";
+        document.documentElement.dataset.theme = dark ? "light" : "dark";
+        e.target.textContent = dark ? "dark" : "light";
+      };
+
+      addEventListener("keydown", (e) => {
+        if (/^(INPUT|TEXTAREA)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+        if (e.key === "ArrowLeft") step(-1);
+        if (e.key === "ArrowRight") step(1);
+      });
+
+      render();
+    </script>
+  </body>
+</html>
