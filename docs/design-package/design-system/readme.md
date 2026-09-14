@@ -44,7 +44,7 @@ The aesthetic is **"Ledger"**: firm, utilitarian, precise. Think a well-set fina
 - **Backgrounds:** solid only. No images, textures, meshes, or grain.
 - **Borders/cards:** card = `1px solid var(--line)` on `--surface`, no radius, no shadow. Avoid the "rounded card + colored left-border" cliché — accents are full hairline borders or tint fills, not a single colored edge.
 - **Motion:** short and mechanical (.15–.22s, ease `cubic-bezier(.4,0,.2,1)`). Drawer/slide-over translate; toasts fade-up 6px; spinners rotate; skeletons shimmer opacity. No bounce, no scale-pop.
-- **Hover:** ghost buttons & rows → `--panel` fill; text links/nav → color deepens toward `--ink`. **Press/active:** no shrink — color shift only. **Focus:** `outline:2px solid var(--brand); outline-offset:-1px` on inputs/selects/textareas.
+- **Hover:** ghost buttons & rows → `--panel` fill; **row-action icon buttons (`IconButton`) shift border + ink, never fill** — the row under them is already `--panel` on hover, so a fill shift is invisible; text links/nav → color deepens toward `--ink`. **Press/active:** no shrink — color shift only. **Focus:** `outline:2px solid var(--brand); outline-offset:-1px` on inputs/selects/textareas.
 - **Layout:** mobile-first. Sidebar is a fixed off-canvas drawer under 920px (hamburger), static 212px column above. Two content-width tiers — `--content-wide` (grid / dual-pane: hub, access, overview, admin) and `--content-list` (single-column: recent, favorites, account) — both scale per breakpoint so nothing is stranded narrow. Tables scroll horizontally inside a bordered, `overflow:auto` container with a `min-width`.
 - **Transparency/blur:** only modal scrims — `rgba(8,10,14,.45–.55)`, no blur.
 
