@@ -38,7 +38,12 @@ const rowBase: CSSProperties = {
   fontSize: "var(--t-body)",
   cursor: "pointer",
   textAlign: "left",
-  borderLeft: "3px solid transparent",
+  // Long-hand, not the `borderLeft` shorthand: the active row only overrides
+  // the color, and React warns when a rerender removes a long-hand property
+  // while the conflicting shorthand stays set.
+  borderLeftWidth: 3,
+  borderLeftStyle: "solid",
+  borderLeftColor: "transparent",
   color: "var(--ink2)",
 };
 
