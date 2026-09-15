@@ -56,3 +56,6 @@ next-env.d.ts
 # ignore rule (~/.gitignore) excludes CLAUDE.md by default; this negation
 # overrides it, because a repository .gitignore outranks the global file.
 !CLAUDE.md
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/
