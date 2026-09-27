@@ -35,6 +35,25 @@ type ChatConversationProps = {
 };
 
 /**
+ * The dead-air state: request in flight but no `reasoning`/`text` part has
+ * streamed yet (upstream is initiating/processing), so there is otherwise
+ * nothing to render next to the avatar. Same visual language as the live
+ * `ReasoningTrigger` ("● THINKING" pulse) — when reasoning arrives this is
+ * seamlessly replaced by the collapsible.
+ */
+const ThinkingIndicator = () => (
+  <output
+    aria-live="polite"
+    className="flex w-full items-center gap-2 border border-[var(--line)] bg-[var(--panel)] px-3 py-2 font-mono text-mono-sm font-semibold uppercase tracking-[0.08em] text-[var(--ink3)]"
+  >
+    <span aria-hidden className="text-[var(--warn)] motion-safe:animate-pulse">
+      ●
+    </span>
+    <span className="flex-1 text-left">THINKING</span>
+  </output>
+);
+
+/**
  * The interactive chat surface mounted by `ChatSlot` (ticket 12's placeholder,
  * replaced here). Owns `useChat` + the "New chat" mutation — self-contained
  * so the brand header ticket 12 already built stays untouched.
@@ -153,6 +172,7 @@ export function ChatConversation({
             const vote = votes[message.id];
             const isLast = message.id === messages.at(-1)?.id;
             const interrupted = isLast && !!error;
+            const showThinking = isLast && isBusy && !reasoningPart && text.length === 0;
             const showFeedback =
               feedbackEnabled && text.length > 0 && !(isLast && isBusy) && !interrupted;
 
@@ -165,6 +185,7 @@ export function ChatConversation({
                     monogram={botMonogram}
                   />
                   <div className="flex w-full min-w-0 max-w-[80%] flex-col gap-2">
+                    {showThinking ? <ThinkingIndicator /> : null}
                     {reasoningPart ? (
                       <Reasoning isStreaming={isBusy && reasoningPart.state === "streaming"}>
                         <ReasoningTrigger>
@@ -206,6 +227,18 @@ export function ChatConversation({
               </div>
             );
           })}
+          {isBusy && !error && messages.at(-1)?.role === "user" ? (
+            <Message from="assistant">
+              <MessageAvatar
+                accentColor={accentColor}
+                accentColorInvert={accentColorInvert}
+                monogram={botMonogram}
+              />
+              <div className="flex w-full min-w-0 max-w-[80%] flex-col">
+                <ThinkingIndicator />
+              </div>
+            </Message>
+          ) : null}
           {error ? (
             <div
               className="flex flex-wrap items-center gap-3 border border-[var(--error)] bg-[var(--errortint)] px-3 py-2 text-small text-[var(--error)]"

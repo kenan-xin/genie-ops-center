@@ -95,6 +95,35 @@ describe("chat error feedback", () => {
   });
 });
 
+describe("chat streaming feedback", () => {
+  it("shows a thinking indicator while the request is in flight with no parts yet", () => {
+    chat.status = "submitted";
+    chat.messages.push({ id: "answer", role: "assistant", parts: [] });
+    const html = render();
+    expect(html).toContain("<output");
+    expect(html).toContain("THINKING");
+    expect(html).not.toContain("Helpful");
+  });
+
+  it("keeps the thinking indicator before the assistant placeholder appears", () => {
+    chat.status = "submitted";
+    const html = render();
+    expect(html).toContain("THINKING");
+  });
+
+  it("hides the thinking indicator once text starts streaming", () => {
+    chat.status = "streaming";
+    chat.messages.push({
+      id: "answer",
+      role: "assistant",
+      parts: [{ type: "text", text: "Partial answer", state: "streaming" }],
+    });
+    const html = render();
+    expect(html).toContain("Partial answer");
+    expect(html).not.toContain("THINKING");
+  });
+});
+
 describe("chat markdown controls", () => {
   it("keeps vertical scrolling in the StickToBottom viewport", () => {
     const html = render();
