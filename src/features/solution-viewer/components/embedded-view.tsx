@@ -9,11 +9,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
  * controls). Loading and error states with retry are driven by real iframe
  * load/error events.
  *
- * Security (tech-plan → Embedded):
- *  - explicit `sandbox` — no `allow-same-origin` token handoff, no top-nav, no
- *    popups/modals. The embed is unauthenticated; there is NO SSO/token in the
- *    URL or postMessage. `allow-scripts` lets the app run; everything else is
- *    denied.
+ * Security (tech-plan → Embedded, revised by genie-ops-center-4ao):
+ *  - `sandbox` — scripts+forms always. The resolver grants `allow-same-origin`
+ *    for CROSS-origin embed URLs only (`sandboxAllowSameOrigin`): without it
+ *    the frame sits on an opaque origin where every storage API throws and the
+ *    frame is not a secure context (no mic/camera), which broke real apps.
+ *    A same-origin embed URL keeps the strict set — a framed opscenter page
+ *    must never script the signed-in user's origin. There is still NO
+ *    SSO/token in the URL or postMessage, and no allow-popups/allow-top-
+ *    navigation (an embed must not window.open() or navigate us).
+ *  - `allow` delegates microphone/camera to the frame (voice/camera apps);
+ *    the app must still win the browser's own permission prompt.
+ *    `fullscreen` follows the per-solution toggle.
  *  - CSP `frame-src` permits HTTPS child frames. The shared solution schema
  *    limits iframe URLs to public HTTPS URLs at editor and server write time.
  *
@@ -24,9 +31,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 export function EmbeddedView({
   iframeUrl,
   allowFullscreen,
+  sandboxAllowSameOrigin = false,
 }: {
   iframeUrl: string;
   allowFullscreen?: boolean;
+  sandboxAllowSameOrigin?: boolean;
 }) {
   const [state, setState] = useState<"loading" | "loaded" | "error">("loading");
   const [reloadNonce, setReloadNonce] = useState(0);
@@ -265,11 +274,18 @@ export function EmbeddedView({
               src={src}
               title="Embedded solution"
               onLoad={() => setState("loaded")}
-              // No allow-popups/allow-popups-to-escape-sandbox: an embed must not
-              // be able to window.open() into an unsandboxed top-level tab. No
-              // allow-same-origin either (no token/SSO handoff). Scripts+forms only.
-              sandbox="allow-scripts allow-forms"
-              allow={allowFullscreen ? "fullscreen" : undefined}
+              // allow-same-origin is server-decided (see embed-sandbox.ts):
+              // cross-origin embeds get their real origin back; same-origin
+              // embed URLs stay on the strict set. No allow-popups and no
+              // allow-same-origin for our own origin (no token/SSO handoff).
+              sandbox={
+                sandboxAllowSameOrigin
+                  ? "allow-scripts allow-forms allow-same-origin"
+                  : "allow-scripts allow-forms"
+              }
+              allow={["microphone", "camera", allowFullscreen ? "fullscreen" : null]
+                .filter(Boolean)
+                .join("; ")}
               referrerPolicy="no-referrer"
               style={{
                 position: "absolute",

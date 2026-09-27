@@ -12,6 +12,7 @@ import {
   type EmbeddedConfig,
 } from "@/features/solutions/schemas/solution";
 import { assertCanRun, assertCanSee } from "@/server/features/solution-access";
+import { embedSandboxAllowSameOrigin } from "@/features/solution-viewer/lib/embed-sandbox";
 
 /**
  * The `/s/[slug]` viewer resolver (FR-VIEW). Server-side resolution applies the
@@ -37,6 +38,7 @@ export type ViewerSurface =
       solution: ViewerSolutionMeta;
       iframeUrl: string;
       allowFullscreen?: boolean;
+      sandboxAllowSameOrigin: boolean;
     }
   | {
       kind: "chat-slot";
@@ -131,6 +133,15 @@ export async function resolveViewerSurface(user: AuthUser, slug: string): Promis
       solution: meta,
       iframeUrl: cfg.iframeUrl,
       allowFullscreen: cfg.allowFullscreen,
+      // Cross-origin embeds get their real origin back (storage + secure
+      // context, see embed-sandbox.ts); same-origin embed URLs fail closed to
+      // the strict sandbox — a framed opscenter page must never script our
+      // origin. PUBLIC_BASE_URL is boot-validated, so a missing/malformed value
+      // (tests, odd runtimes) just keeps the strict sandbox.
+      sandboxAllowSameOrigin: embedSandboxAllowSameOrigin(
+        cfg.iframeUrl,
+        process.env.PUBLIC_BASE_URL ?? "",
+      ),
     };
   }
 
